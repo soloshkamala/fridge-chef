@@ -1,0 +1,13 @@
+﻿@using FridgeChef.Models
+
+<MudPaper Class="pa-4">
+    <div>
+        <strong>@Item.Ingredient.Name</strong>
+        <div>@Item.Quantity @Item.Unit</div>
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public FridgeItem Item { get; set; } = new();
+}

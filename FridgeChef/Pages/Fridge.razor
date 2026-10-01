@@ -1,0 +1,94 @@
+﻿@page "/fridge"
+
+@using FridgeChef.Models
+@using FridgeChef.Components
+@using FridgeChef.Services
+
+@inject FridgeService FridgeService
+@inject IDialogService DialogService
+
+<PageTitle>Холодильник</PageTitle>
+
+<h1>
+    Що приготувати з того,<br />
+    що є в холодильнику?
+</h1>
+
+<p>
+    FridgeChef допоможе тобі створити смачні, корисні та прості
+    рецепти з наявних продуктів.
+</p>
+
+<h3>Що є у вашому холодильнику?</h3>
+
+<MudTextField T="string"
+              @bind-Value="searchText"
+              Placeholder="Знайти та додати продукт..."
+              Immediate="true"
+              Variant="Variant.Outlined" />
+
+@if (!string.IsNullOrWhiteSpace(searchText))
+{
+    <div>
+        @foreach (var ingredient in FilteredIngredients)
+        {
+            <MudPaper @key="ingredient.Id"
+                      Class="pa-3 mt-2"
+                      Style="cursor: pointer;"
+                      @onclick="() => OpenIngredientDialog(ingredient)">
+                @ingredient.Name
+            </MudPaper>
+        }
+    </div>
+}
+
+@if (FridgeService.FridgeItems.Count > 0)
+{
+    <h3>У вашому холодильнику:</h3>
+
+    <div>
+        @foreach (var item in FridgeService.FridgeItems)
+        {
+            <IngredientCard @key="item.Id"
+                            Item="item" />
+        }
+    </div>
+}
+
+
+@code {
+    private string searchText = "";
+
+    private IEnumerable<Ingredient> FilteredIngredients =>
+        FridgeService.Ingredients
+            .Where(x => x.Name.Contains(
+                searchText,
+                StringComparison.OrdinalIgnoreCase));
+
+    private async Task OpenIngredientDialog(Ingredient ingredient)
+    {
+        var parameters = new DialogParameters<AddIngredientDialog>
+    {
+        { x => x.Ingredient, ingredient }
+    };
+
+        var dialog = await DialogService.ShowAsync<AddIngredientDialog>(
+            "Додати продукт",
+            parameters);
+
+        var result = await dialog.Result;
+
+        if (result != null &&
+            !result.Canceled &&
+            result.Data is FridgeItem item)
+        {
+            FridgeService.AddToFridge(
+                item.Ingredient,
+                item.Quantity,
+                item.Unit);
+
+            searchText = "";
+        }
+    }
+}
+

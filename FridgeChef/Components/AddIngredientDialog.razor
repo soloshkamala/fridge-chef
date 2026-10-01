@@ -1,0 +1,86 @@
+﻿@using FridgeChef.Models
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            @Ingredient.Name
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+
+        <MudNumericField T="double"
+                         @bind-Value="quantity"
+                         Label="Кількість"
+                         Variant="Variant.Outlined"
+                         Min="0.1"
+                         Class="mb-4" />
+
+        <MudSelect T="string"
+                   @bind-Value="unit"
+                   Label="Одиниця вимірювання"
+                   Variant="Variant.Outlined">
+
+            @foreach (var allowedUnit in Ingredient.AllowedUnits)
+            {
+                <MudSelectItem T="string"
+                               Value="@allowedUnit">
+                    @allowedUnit
+                </MudSelectItem>
+            }
+
+        </MudSelect>
+
+    </DialogContent>
+
+    <DialogActions>
+
+        <MudButton OnClick="Cancel">
+            Скасувати
+        </MudButton>
+
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="Add">
+            Додати
+        </MudButton>
+
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Ingredient Ingredient { get; set; } = new();
+
+    private double quantity = 1;
+
+    private string unit = "";
+
+    protected override void OnParametersSet()
+    {
+        if (Ingredient.AllowedUnits.Count > 0)
+        {
+            unit = Ingredient.AllowedUnits[0];
+        }
+    }
+
+    private void Add()
+    {
+        var result = new FridgeItem
+        {
+            Ingredient = Ingredient,
+            Quantity = quantity,
+            Unit = unit
+        };
+
+        MudDialog.Close(DialogResult.Ok(result));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
