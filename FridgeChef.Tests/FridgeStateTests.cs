@@ -16,5 +16,18 @@ namespace FridgeChef.Tests
 
             Assert.Contains("Ваш холодильник порожній", page.Markup);
         }
+
+        [Fact]
+        public void Loading_fridge_shows_loading_state()
+        {
+            Services.AddScoped<FridgeService>();
+
+            var service = Services.GetRequiredService<FridgeService>();
+            service.IsLoading = true;
+
+            var page = Render<Fridge>();
+
+            Assert.Contains("Завантаження...", page.Markup);
+        }
     }
 }
