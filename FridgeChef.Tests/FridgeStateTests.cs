@@ -29,5 +29,18 @@ namespace FridgeChef.Tests
 
             Assert.Contains("Завантаження...", page.Markup);
         }
+
+        [Fact]
+        public void Error_fridge_shows_error_state()
+        {
+            Services.AddScoped<FridgeService>();
+
+            var service = Services.GetRequiredService<FridgeService>();
+            service.ErrorMessage = "Не вдалося завантажити продукти";
+
+            var page = Render<Fridge>();
+
+            Assert.Contains("Не вдалося завантажити продукти", page.Markup);
+        }
     }
 }
