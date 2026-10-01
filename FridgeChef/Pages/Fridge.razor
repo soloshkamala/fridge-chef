@@ -46,6 +46,10 @@
 {
     <p>Завантаження...</p>
 }
+else if (!string.IsNullOrWhiteSpace(FridgeService.ErrorMessage))
+{
+    <p>@FridgeService.ErrorMessage</p>
+}
 else if (FridgeService.FridgeItems.Count > 0)
 {
     <h3>У вашому холодильнику:</h3>
