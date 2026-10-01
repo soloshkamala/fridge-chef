@@ -42,7 +42,11 @@
     </div>
 }
 
-@if (FridgeService.FridgeItems.Count > 0)
+@if (FridgeService.IsLoading)
+{
+    <p>Завантаження...</p>
+}
+else if (FridgeService.FridgeItems.Count > 0)
 {
     <h3>У вашому холодильнику:</h3>
 

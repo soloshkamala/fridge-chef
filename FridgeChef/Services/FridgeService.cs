@@ -4,6 +4,7 @@ namespace FridgeChef.Services
 {
     public class FridgeService
     {
+        public bool IsLoading { get; set; } = false;
         public List<Ingredient> Ingredients { get; } = new()
         {
             new Ingredient
