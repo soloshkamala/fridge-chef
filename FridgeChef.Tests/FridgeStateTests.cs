@@ -42,5 +42,21 @@ namespace FridgeChef.Tests
 
             Assert.Contains("Не вдалося завантажити продукти", page.Markup);
         }
+
+        [Fact]
+        public void Data_fridge_shows_products_and_recipes_section()
+        {
+            Services.AddScoped<FridgeService>();
+
+            var service = Services.GetRequiredService<FridgeService>();
+            var ingredient = service.Ingredients.First(x => x.Name == "Молоко");
+
+            service.AddToFridge(ingredient, 1, "л");
+
+            var page = Render<Fridge>();
+
+            Assert.Contains("Молоко", page.Markup);
+            Assert.Contains("Підібрані рецепти", page.Markup);
+        }
     }
 }
