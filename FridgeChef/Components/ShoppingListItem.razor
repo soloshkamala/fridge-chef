@@ -1,0 +1,47 @@
+﻿@using FridgeChef.Models
+
+<div class="product-row">
+
+    <MudCheckBox T="bool"
+                 Value="@Item.IsPurchased"
+                 ValueChanged="PurchasedChanged" />
+
+    <MudText Class="product-name">
+        @Item.Name
+    </MudText>
+
+    <div class="product-status">
+        <MudCheckBox T="bool"
+                     Value="@Item.IsInFridge"
+                     ValueChanged="FridgeChanged"
+                     Label="У холодильнику" />
+    </div>
+
+    <MudText Class="product-quantity">
+        @Item.Quantity @Item.Unit
+    </MudText>
+
+</div>
+
+@code {
+    [Parameter]
+    public ShoppingItem Item { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<ShoppingItem> OnPurchasedChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<ShoppingItem> OnFridgeChanged { get; set; }
+
+    private async Task PurchasedChanged(bool value)
+    {
+        Item.IsPurchased = value;
+        await OnPurchasedChanged.InvokeAsync(Item);
+    }
+
+    private async Task FridgeChanged(bool value)
+    {
+        Item.IsInFridge = value;
+        await OnFridgeChanged.InvokeAsync(Item);
+    }
+}

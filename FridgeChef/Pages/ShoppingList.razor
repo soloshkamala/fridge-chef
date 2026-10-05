@@ -1,0 +1,212 @@
+﻿@page "/shopping-list"
+@using FridgeChef.Models
+@using FridgeChef.Components
+
+<PageTitle>Список покупок</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="shopping-page">
+
+    <div class="shopping-header">
+        <div>
+            <MudText Typo="Typo.h4">
+                Список покупок
+            </MudText>
+
+            <MudText Typo="Typo.body2">
+                Плануй покупки легко разом із FridgeChef!
+            </MudText>
+        </div>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add">
+            Додати продукт
+        </MudButton>
+    </div>
+
+    @if (CurrentState == ShoppingListState.Loading)
+    {
+        <div class="shopping-loading">
+
+            <MudSkeleton Width="100%" Height="55px" />
+
+            <MudPaper Class="category-block" Elevation="0">
+                <MudSkeleton Width="180px" Height="25px" />
+
+                <MudSkeleton Width="100%" Height="45px" />
+                <MudSkeleton Width="100%" Height="45px" />
+                <MudSkeleton Width="100%" Height="45px" />
+            </MudPaper>
+
+            <MudPaper Class="category-block" Elevation="0">
+                <MudSkeleton Width="160px" Height="25px" />
+
+                <MudSkeleton Width="100%" Height="45px" />
+                <MudSkeleton Width="100%" Height="45px" />
+            </MudPaper>
+
+        </div>
+    }
+    else if (CurrentState == ShoppingListState.Error)
+    {
+        <div class="shopping-message error-state">
+
+            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline"
+                     Size="Size.Large" />
+
+            <MudText Typo="Typo.h6">
+                Не вдалося завантажити список покупок
+            </MudText>
+
+            <MudText Typo="Typo.body2">
+                Перевірте підключення до інтернету та спробуйте ще раз.
+            </MudText>
+
+            <MudButton Variant="Variant.Filled"
+                       Class="retry-button">
+                Спробувати ще раз
+            </MudButton>
+
+        </div>
+    }
+    else if (CurrentState == ShoppingListState.Empty)
+    {
+        <div class="shopping-message empty-state">
+
+            <MudIcon Icon="@Icons.Material.Filled.ShoppingCart"
+                     Size="Size.Large" />
+
+            <MudText Typo="Typo.h6">
+                Список покупок порожній
+            </MudText>
+
+            <MudText Typo="Typo.body2">
+                Додайте продукти, які потрібно купити.
+            </MudText>
+
+            <MudButton Variant="Variant.Filled"
+                       Class="add-first-button"
+                       StartIcon="@Icons.Material.Filled.Add">
+                Додати продукт
+            </MudButton>
+
+        </div>
+    }
+    else
+    {
+        @foreach (var category in Categories)
+        {
+            <MudPaper Class="category-block" Elevation="1">
+
+                <div class="category-header">
+
+                    <MudText Typo="Typo.h6">
+                        @category
+                    </MudText>
+
+                    <MudIcon Icon="@Icons.Material.Filled.ExpandMore" />
+
+                </div>
+
+                <MudDivider />
+
+                @foreach (var item in Items.Where(x => x.Category == category))
+                {
+                    <ShoppingListItem Item="item"
+                                      OnPurchasedChanged="HandlePurchasedChanged"
+                                      OnFridgeChanged="HandleFridgeChanged"
+                                      @key="item.Id" />
+                }
+
+            </MudPaper>
+        }
+    }
+
+</MudContainer>
+
+@code {
+
+    private List<ShoppingItem> Items = new()
+    {
+        new ShoppingItem
+        {
+            Id = 1,
+            Name = "Помідори",
+            Quantity = 2,
+            Unit = "кг",
+            Category = "Овочі та фрукти"
+        },
+
+        new ShoppingItem
+        {
+            Id = 2,
+            Name = "Огірки",
+            Quantity = 1,
+            Unit = "кг",
+            Category = "Овочі та фрукти"
+        },
+
+        new ShoppingItem
+        {
+            Id = 3,
+            Name = "Яблука",
+            Quantity = 5,
+            Unit = "шт.",
+            Category = "Овочі та фрукти"
+        },
+
+        new ShoppingItem
+        {
+            Id = 4,
+            Name = "Куряче філе",
+            Quantity = 1,
+            Unit = "кг",
+            Category = "М'ясо та птиця"
+        },
+
+        new ShoppingItem
+        {
+            Id = 5,
+            Name = "Індичка",
+            Quantity = 0.5,
+            Unit = "кг",
+            Category = "М'ясо та птиця"
+        }
+    };
+
+    private List<string> Categories = new()
+    {
+        "Овочі та фрукти",
+        "М'ясо та птиця"
+    };
+
+    private enum ShoppingListState
+    {
+        Loading,
+        Empty,
+        Error,
+        WithData
+    }
+
+    private ShoppingListState CurrentState = ShoppingListState.WithData;
+
+    private void HandlePurchasedChanged(ShoppingItem item)
+    {
+        var existingItem = Items.FirstOrDefault(x => x.Id == item.Id);
+
+        if (existingItem != null)
+        {
+            existingItem.IsPurchased = item.IsPurchased;
+        }
+    }
+
+    private void HandleFridgeChanged(ShoppingItem item)
+    {
+        var existingItem = Items.FirstOrDefault(x => x.Id == item.Id);
+
+        if (existingItem != null)
+        {
+            existingItem.IsInFridge = item.IsInFridge;
+        }
+    }
+}
