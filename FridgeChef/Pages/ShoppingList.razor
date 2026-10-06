@@ -8,114 +8,135 @@
 
     <div class="shopping-header">
         <div>
-            <MudText Typo="Typo.h4">
-                Список покупок
-            </MudText>
+            <MudText Typo="Typo.h4">Список покупок</MudText>
 
             <MudText Typo="Typo.body2">
                 Плануй покупки легко разом із FridgeChef!
             </MudText>
         </div>
 
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Add">
-            Додати продукт
-        </MudButton>
+        @if (CurrentState == ShoppingListState.WithData)
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add">
+                Додати продукт
+            </MudButton>
+        }
     </div>
 
     @if (CurrentState == ShoppingListState.Loading)
     {
         <div class="shopping-loading">
 
-            <MudSkeleton Width="100%" Height="55px" />
+            <div class="loading-buttons">
+                <MudSkeleton Width="140px" Height="45px" />
+                <MudSkeleton Width="140px" Height="45px" />
+                <MudSkeleton Width="140px" Height="45px" />
+                <MudSkeleton Width="140px" Height="45px" />
+            </div>
 
-            <MudPaper Class="category-block" Elevation="0">
-                <MudSkeleton Width="180px" Height="25px" />
+            <MudSkeleton Width="100%" Height="18px" Class="loading-line" />
 
-                <MudSkeleton Width="100%" Height="45px" />
-                <MudSkeleton Width="100%" Height="45px" />
-                <MudSkeleton Width="100%" Height="45px" />
+            <MudPaper Class="category-block loading-category" Elevation="0">
+                <MudSkeleton Width="150px" Height="25px" />
+
+                <MudDivider Class="my-3" />
+
+                <MudSkeleton Width="95%" Height="20px" />
+                <MudSkeleton Width="85%" Height="20px" />
+                <MudSkeleton Width="90%" Height="20px" />
             </MudPaper>
 
-            <MudPaper Class="category-block" Elevation="0">
-                <MudSkeleton Width="160px" Height="25px" />
+            <MudPaper Class="category-block loading-category" Elevation="0">
+                <MudSkeleton Width="130px" Height="25px" />
 
-                <MudSkeleton Width="100%" Height="45px" />
-                <MudSkeleton Width="100%" Height="45px" />
+                <MudDivider Class="my-3" />
+
+                <MudSkeleton Width="90%" Height="20px" />
+                <MudSkeleton Width="80%" Height="20px" />
             </MudPaper>
-
-        </div>
-    }
-    else if (CurrentState == ShoppingListState.Error)
-    {
-        <div class="shopping-message error-state">
-
-            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline"
-                     Size="Size.Large" />
-
-            <MudText Typo="Typo.h6">
-                Не вдалося завантажити список покупок
-            </MudText>
-
-            <MudText Typo="Typo.body2">
-                Перевірте підключення до інтернету та спробуйте ще раз.
-            </MudText>
-
-            <MudButton Variant="Variant.Filled"
-                       Class="retry-button">
-                Спробувати ще раз
-            </MudButton>
 
         </div>
     }
     else if (CurrentState == ShoppingListState.Empty)
     {
-        <div class="shopping-message empty-state">
+        <MudPaper Class="shopping-state-card" Elevation="0">
 
             <MudIcon Icon="@Icons.Material.Filled.ShoppingCart"
+                     Class="state-icon"
                      Size="Size.Large" />
 
-            <MudText Typo="Typo.h6">
+            <MudText Typo="Typo.h5">
                 Список покупок порожній
             </MudText>
 
-            <MudText Typo="Typo.body2">
-                Додайте продукти, які потрібно купити.
+            <MudText Typo="Typo.body2" Class="state-description">
+                Додай продукти, які потрібно купити.
             </MudText>
 
             <MudButton Variant="Variant.Filled"
-                       Class="add-first-button"
+                       Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Add">
                 Додати продукт
             </MudButton>
 
-        </div>
+        </MudPaper>
     }
-    else
+    else if (CurrentState == ShoppingListState.Error)
+    {
+        <MudPaper Class="shopping-state-card error-state" Elevation="0">
+
+            <MudIcon Icon="@Icons.Material.Filled.SentimentDissatisfied"
+                     Class="state-icon error-icon"
+                     Size="Size.Large" />
+
+            <MudText Typo="Typo.h5" Class="error-title">
+                Не вдалося завантажити список покупок
+            </MudText>
+
+            <MudText Typo="Typo.body2" Class="state-description">
+                Перевір підключення до інтернету та спробуй ще раз.
+            </MudText>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="Retry">
+                Спробувати ще раз
+            </MudButton>
+
+        </MudPaper>
+    }
+    else if (CurrentState == ShoppingListState.WithData)
     {
         @foreach (var category in Categories)
         {
-            <MudPaper Class="category-block" Elevation="1">
+            <MudPaper Class="category-block" Elevation="0">
 
-                <div class="category-header">
+                <div class="category-header"
+                     @onclick="() => ToggleCategory(category)">
 
                     <MudText Typo="Typo.h6">
                         @category
                     </MudText>
 
-                    <MudIcon Icon="@Icons.Material.Filled.ExpandMore" />
-
+                    <MudIcon Icon="@(IsCategoryExpanded(category)
+                                      ? Icons.Material.Filled.ExpandLess
+                                      : Icons.Material.Filled.ExpandMore)" />
                 </div>
 
-                <MudDivider />
-
-                @foreach (var item in Items.Where(x => x.Category == category))
+                @if (IsCategoryExpanded(category))
                 {
-                    <ShoppingListItem Item="item"
-                                      OnPurchasedChanged="HandlePurchasedChanged"
-                                      OnFridgeChanged="HandleFridgeChanged"
-                                      @key="item.Id" />
+                    <MudDivider />
+
+                    @foreach (var item in Items.Where(x => x.Category == category))
+                    {
+                        <ShoppingListItem Item="item"
+                                          OnPurchasedChanged="HandlePurchasedChanged"
+                                          OnFridgeChanged="HandleFridgeChanged"
+                                          @key="item.Id" />
+                    }
                 }
 
             </MudPaper>
@@ -125,6 +146,9 @@
 </MudContainer>
 
 @code {
+
+    [Parameter]
+    public ShoppingListState CurrentState { get; set; } = ShoppingListState.WithData;
 
     private List<ShoppingItem> Items = new()
     {
@@ -180,15 +204,28 @@
         "М'ясо та птиця"
     };
 
-    private enum ShoppingListState
+    private HashSet<string> ExpandedCategories = new()
     {
-        Loading,
-        Empty,
-        Error,
-        WithData
+        "Овочі та фрукти",
+        "М'ясо та птиця"
+    };
+
+    private bool IsCategoryExpanded(string category)
+    {
+        return ExpandedCategories.Contains(category);
     }
 
-    private ShoppingListState CurrentState = ShoppingListState.WithData;
+    private void ToggleCategory(string category)
+    {
+        if (ExpandedCategories.Contains(category))
+        {
+            ExpandedCategories.Remove(category);
+        }
+        else
+        {
+            ExpandedCategories.Add(category);
+        }
+    }
 
     private void HandlePurchasedChanged(ShoppingItem item)
     {
@@ -208,5 +245,10 @@
         {
             existingItem.IsInFridge = item.IsInFridge;
         }
+    }
+
+    private void Retry()
+    {
+        CurrentState = ShoppingListState.Loading;
     }
 }
