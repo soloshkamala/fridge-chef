@@ -8,16 +8,19 @@
     </TitleContent>
 
     <DialogContent>
+        <EditForm Model="@model" OnValidSubmit="Add">
+    <DataAnnotationsValidator />
 
         <MudNumericField T="double"
-                         @bind-Value="quantity"
+                         @bind-Value="model.Quantity"
+                             For="@(() => model.Quantity)"
                          Label="Кількість"
                          Variant="Variant.Outlined"
-                         Min="0.1"
                          Class="mb-4" />
 
         <MudSelect T="string"
-                   @bind-Value="unit"
+                   @bind-Value="model.Unit"
+                       For="@(() => model.Unit)"
                    Label="Одиниця вимірювання"
                    Variant="Variant.Outlined">
 
@@ -30,6 +33,13 @@
             }
 
         </MudSelect>
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       ButtonType="ButtonType.Submit"
+                       Class="mt-3">
+                Додати
+            </MudButton>
+        </EditForm>
 
     </DialogContent>
 
@@ -39,11 +49,7 @@
             Скасувати
         </MudButton>
 
-        <MudButton Color="Color.Primary"
-                   Variant="Variant.Filled"
-                   OnClick="Add">
-            Додати
-        </MudButton>
+        
 
     </DialogActions>
 </MudDialog>
@@ -55,15 +61,13 @@
     [Parameter]
     public Ingredient Ingredient { get; set; } = new();
 
-    private double quantity = 1;
-
-    private string unit = "";
+    private AddIngredientModel model = new();
 
     protected override void OnParametersSet()
     {
         if (Ingredient.AllowedUnits.Count > 0)
         {
-            unit = Ingredient.AllowedUnits[0];
+            model.Unit = Ingredient.AllowedUnits[0];
         }
     }
 
@@ -72,8 +76,8 @@
         var result = new FridgeItem
         {
             Ingredient = Ingredient,
-            Quantity = quantity,
-            Unit = unit
+            Quantity = model.Quantity,
+            Unit = model.Unit ?? ""
         };
 
         MudDialog.Close(DialogResult.Ok(result));
