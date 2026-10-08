@@ -84,5 +84,18 @@ namespace FridgeChef.Tests
 
             Assert.Empty(service.FridgeItems);
         }
+
+        [Fact]
+        public void AddToFridge_rejects_invalid_unit()
+        {
+            var service = new FridgeService();
+
+            var milk = service.Ingredients
+                .First(x => x.Name == "Молоко");
+
+            service.AddToFridge(milk, 2, "шт");
+
+            Assert.Empty(service.FridgeItems);
+        }
     }
 }
