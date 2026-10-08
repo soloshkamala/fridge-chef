@@ -71,5 +71,18 @@ namespace FridgeChef.Tests
 
             Assert.Contains("Продуктів не знайдено", page.Markup);
         }
+
+        [Fact]
+        public void AddToFridge_rejects_negative_quantity()
+        {
+            var service = new FridgeService();
+
+            var milk = service.Ingredients
+                .First(x => x.Name == "Молоко");
+
+            service.AddToFridge(milk, -5, "мл");
+
+            Assert.Empty(service.FridgeItems);
+        }
     }
 }
