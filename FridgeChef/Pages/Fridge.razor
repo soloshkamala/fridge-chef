@@ -29,17 +29,26 @@
 
 @if (!string.IsNullOrWhiteSpace(searchText))
 {
-    <div>
-        @foreach (var ingredient in FilteredIngredients)
-        {
-            <MudPaper @key="ingredient.Id"
-                      Class="pa-3 mt-2"
-                      Style="cursor: pointer;"
-                      @onclick="() => OpenIngredientDialog(ingredient)">
-                @ingredient.Name
-            </MudPaper>
-        }
-    </div>
+    @if (!FilteredIngredients.Any())
+    {
+        <MudText Color="Color.Secondary" Class="mt-2">
+            Продуктів не знайдено
+        </MudText>
+    }
+    else
+    {
+        <div>
+            @foreach (var ingredient in FilteredIngredients)
+            {
+                <MudPaper @key="ingredient.Id"
+                          Class="pa-3 mt-2"
+                          Style="cursor: pointer;"
+                          @onclick="() => OpenIngredientDialog(ingredient)">
+                    @ingredient.Name
+                </MudPaper>
+            }
+        </div>
+    }
 }
 
 @if (FridgeService.IsLoading)
