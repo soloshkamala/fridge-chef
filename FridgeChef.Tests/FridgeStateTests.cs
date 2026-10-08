@@ -58,5 +58,18 @@ namespace FridgeChef.Tests
             Assert.Contains("Молоко", page.Markup);
             Assert.Contains("Підібрані рецепти", page.Markup);
         }
+
+        [Fact]
+        public void Search_shows_message_when_no_products_found()
+        {
+            Services.AddScoped<FridgeService>();
+
+            var page = Render<Fridge>();
+
+            var search = page.Find("input");
+            search.Input("Ананас");
+
+            Assert.Contains("Продуктів не знайдено", page.Markup);
+        }
     }
 }
