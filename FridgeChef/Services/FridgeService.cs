@@ -74,6 +74,10 @@ namespace FridgeChef.Services
             {
                 return;
             }
+            if (!ingredient.AllowedUnits.Contains(unit))
+            {
+                return;
+            }
 
             FridgeItems.Add(new FridgeItem
             {
