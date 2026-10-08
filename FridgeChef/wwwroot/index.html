@@ -8,8 +8,6 @@
     <base href="/" />
     <link rel="stylesheet" href="css/app.css" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-    <!-- If you add any scoped CSS files, uncomment the following to load them
-    <link href="FridgeChef.styles.css" rel="stylesheet" /> -->
 </head>
 
 <body>
@@ -26,6 +24,16 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+    <script>
+        window.fridgeCulture = {
+            get: function () {
+                return localStorage.getItem("fridgeCulture") || "uk-UA";
+            },
+            set: function (culture) {
+                localStorage.setItem("fridgeCulture", culture);
+            }
+        };
+    </script>
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>

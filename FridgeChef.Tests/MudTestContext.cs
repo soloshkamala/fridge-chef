@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 using Xunit;
+using System.Globalization;
 
 namespace FridgeChef.Tests
 {
@@ -9,6 +10,10 @@ namespace FridgeChef.Tests
     {
         protected MudTestContext()
         {
+            var culture = new CultureInfo("uk-UA");
+            CultureInfo.CurrentCulture = culture;
+            CultureInfo.CurrentUICulture = culture;
+
             Services.AddMudServices();
             Services.AddLocalization();
 

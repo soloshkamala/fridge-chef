@@ -1,13 +1,29 @@
 ﻿@using FridgeChef.Models
+@using Microsoft.Extensions.Localization
+
+@inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 
 <MudPaper Class="pa-4">
     <div>
-        <strong>@Item.Ingredient.Name</strong>
-        <div>@Item.Quantity @Item.Unit</div>
+        <strong>@Localizer[$"Ingredient{Item.Ingredient.Id}"]</strong>
+        <div>@Item.Quantity @GetUnitTranslation(Item.Unit)</div>
     </div>
 </MudPaper>
 
 @code {
     [Parameter]
     public FridgeItem Item { get; set; } = new();
+
+    private string GetUnitTranslation(string unit)
+    {
+        return unit switch
+        {
+            "шт" => Localizer["UnitPieces"].Value,
+            "мл" => Localizer["UnitMilliliters"].Value,
+            "л" => Localizer["UnitLiters"].Value,
+            "г" => Localizer["UnitGrams"].Value,
+            "кг" => Localizer["UnitKilograms"].Value,
+            _ => unit
+        };
+    }
 }

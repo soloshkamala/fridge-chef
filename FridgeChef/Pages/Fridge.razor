@@ -3,27 +3,38 @@
 @using FridgeChef.Models
 @using FridgeChef.Components
 @using FridgeChef.Services
+@using Microsoft.Extensions.Localization
+@using Microsoft.JSInterop
 
+@inject IJSRuntime JS
+@inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 @inject FridgeService FridgeService
 @inject IDialogService DialogService
 
-<PageTitle>Холодильник</PageTitle>
+<PageTitle>@Localizer["PageTitle"]</PageTitle>
+
+<MudButton OnClick='() => ChangeLanguage("uk-UA")'>
+    UA
+</MudButton>
+
+<MudButton OnClick='() => ChangeLanguage("en-US")'>
+    EN
+</MudButton>
 
 <h1>
-    Що приготувати з того,<br />
-    що є в холодильнику?
+    @Localizer["HeroTitleFirst"]<br />
+    @Localizer["HeroTitleSecond"]
 </h1>
 
 <p>
-    FridgeChef допоможе тобі створити смачні, корисні та прості
-    рецепти з наявних продуктів.
+    @Localizer["HeroDescription"]
 </p>
 
-<h3>Що є у вашому холодильнику?</h3>
+<h3>@Localizer["FridgeTitle"]</h3>
 
 <MudTextField T="string"
               @bind-Value="searchText"
-              Placeholder="Знайти та додати продукт..."
+              Placeholder="@Localizer["SearchPlaceholder"]"
               Immediate="true"
               Variant="Variant.Outlined" />
 
@@ -32,7 +43,7 @@
     @if (!FilteredIngredients.Any())
     {
         <MudText Color="Color.Secondary" Class="mt-2">
-            Продуктів не знайдено
+            @Localizer["NoProductsFound"]
         </MudText>
     }
     else
@@ -44,7 +55,7 @@
                           Class="pa-3 mt-2"
                           Style="cursor: pointer;"
                           @onclick="() => OpenIngredientDialog(ingredient)">
-                    @ingredient.Name
+                    @Localizer[$"Ingredient{ingredient.Id}"]
                 </MudPaper>
             }
         </div>
@@ -53,7 +64,7 @@
 
 @if (FridgeService.IsLoading)
 {
-    <p>Завантаження...</p>
+    <p>@Localizer["Loading"]</p>
 }
 else if (!string.IsNullOrWhiteSpace(FridgeService.ErrorMessage))
 {
@@ -61,7 +72,7 @@ else if (!string.IsNullOrWhiteSpace(FridgeService.ErrorMessage))
 }
 else if (FridgeService.FridgeItems.Count > 0)
 {
-    <h3>У вашому холодильнику:</h3>
+    <h3>@Localizer["FridgeItemsTitle"]</h3>
 
     <div>
         @foreach (var item in FridgeService.FridgeItems)
@@ -70,32 +81,39 @@ else if (FridgeService.FridgeItems.Count > 0)
                             Item="item" />
         }
     </div>
-    <h3>Підібрані рецепти</h3>
+
+    <h3>@Localizer["RecipesTitle"]</h3>
 }
 else
 {
-    <p>Ваш холодильник порожній</p>
+    <p>@Localizer["EmptyFridge"]</p>
 }
 
-
 @code {
+
+    private async Task ChangeLanguage(string culture)
+    {
+        await JS.InvokeVoidAsync("fridgeCulture.set", culture);
+        await JS.InvokeVoidAsync("location.reload");
+    }
     private string searchText = "";
 
     private IEnumerable<Ingredient> FilteredIngredients =>
-        FridgeService.Ingredients
-            .Where(x => x.Name.Contains(
-                searchText,
-                StringComparison.OrdinalIgnoreCase));
+     FridgeService.Ingredients
+         .Where(x =>
+             Localizer[$"Ingredient{x.Id}"].Value.Contains(
+                 searchText,
+                 StringComparison.CurrentCultureIgnoreCase));
 
     private async Task OpenIngredientDialog(Ingredient ingredient)
     {
         var parameters = new DialogParameters<AddIngredientDialog>
-    {
-        { x => x.Ingredient, ingredient }
-    };
+        {
+            { x => x.Ingredient, ingredient }
+        };
 
         var dialog = await DialogService.ShowAsync<AddIngredientDialog>(
-            "Додати продукт",
+            Localizer["AddProductTitle"].Value,
             parameters);
 
         var result = await dialog.Result;
@@ -113,4 +131,3 @@ else
         }
     }
 }
-

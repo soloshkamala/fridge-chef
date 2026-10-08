@@ -1,56 +1,57 @@
 ﻿@using FridgeChef.Models
+@using Microsoft.Extensions.Localization
+@using System.Globalization
+
+@inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">
-            @Ingredient.Name
+            @Localizer[$"Ingredient{Ingredient.Id}"]
         </MudText>
     </TitleContent>
 
     <DialogContent>
         <EditForm Model="@model" OnValidSubmit="Add">
-    <DataAnnotationsValidator />
+            <DataAnnotationsValidator />
 
-        <MudNumericField T="double"
-                         @bind-Value="model.Quantity"
+            <MudNumericField T="double"
+                             @bind-Value="model.Quantity"
                              For="@(() => model.Quantity)"
-                         Label="Кількість"
-                         Variant="Variant.Outlined"
-                         Class="mb-4" />
+                             Culture="@CultureInfo.CurrentCulture"
+                             Label="@Localizer["QuantityLabel"]"
+                             Variant="Variant.Outlined"
+                             Class="mb-4" />
 
-        <MudSelect T="string"
-                   @bind-Value="model.Unit"
+            <MudSelect T="string"
+                       @bind-Value="model.Unit"
                        For="@(() => model.Unit)"
-                   Label="Одиниця вимірювання"
-                   Variant="Variant.Outlined">
+                       ToStringFunc="GetUnitTranslation"
+                       Label="@Localizer["UnitLabel"]"
+                       Variant="Variant.Outlined">
 
-            @foreach (var allowedUnit in Ingredient.AllowedUnits)
-            {
-                <MudSelectItem T="string"
-                               Value="@allowedUnit">
-                    @allowedUnit
-                </MudSelectItem>
-            }
+                @foreach (var allowedUnit in Ingredient.AllowedUnits)
+                {
+                    <MudSelectItem T="string" Value="@allowedUnit">
+                        @GetUnitTranslation(allowedUnit)
+                    </MudSelectItem>
+                }
 
-        </MudSelect>
+            </MudSelect>
+
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        ButtonType="ButtonType.Submit"
                        Class="mt-3">
-                Додати
+                @Localizer["AddButton"]
             </MudButton>
         </EditForm>
-
     </DialogContent>
 
     <DialogActions>
-
         <MudButton OnClick="Cancel">
-            Скасувати
+            @Localizer["CancelButton"]
         </MudButton>
-
-        
-
     </DialogActions>
 </MudDialog>
 
@@ -86,5 +87,18 @@
     private void Cancel()
     {
         MudDialog.Cancel();
+    }
+
+    private string GetUnitTranslation(string unit)
+    {
+        return unit switch
+        {
+            "шт" => Localizer["UnitPieces"].Value,
+            "мл" => Localizer["UnitMilliliters"].Value,
+            "л" => Localizer["UnitLiters"].Value,
+            "г" => Localizer["UnitGrams"].Value,
+            "кг" => Localizer["UnitKilograms"].Value,
+            _ => unit
+        };
     }
 }
