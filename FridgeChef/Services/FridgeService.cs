@@ -69,6 +69,12 @@ namespace FridgeChef.Services
 
         public void AddToFridge(Ingredient ingredient, double quantity, string unit)
         {
+
+            if (quantity <= 0)
+            {
+                return;
+            }
+
             FridgeItems.Add(new FridgeItem
             {
                 Id = FridgeItems.Count + 1,
