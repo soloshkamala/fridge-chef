@@ -1,7 +1,10 @@
 ﻿using Bunit;
+using FridgeChef.Models;
 using FridgeChef.Pages;
 using FridgeChef.Services;
 using Microsoft.Extensions.DependencyInjection;
+using System.ComponentModel.DataAnnotations;
+
 
 namespace FridgeChef.Tests
 {
@@ -96,6 +99,26 @@ namespace FridgeChef.Tests
             service.AddToFridge(milk, 2, "шт");
 
             Assert.Empty(service.FridgeItems);
+        }
+
+        [Fact]
+        public void AddIngredientModel_rejects_zero_quantity()
+        {
+            var model = new AddIngredientModel
+            {
+                Quantity = 0,
+                Unit = "мл"
+            };
+
+            var results = new List<ValidationResult>();
+            var context = new ValidationContext(model);
+
+            var isValid = Validator.TryValidateObject(
+                model, context, results, true);
+
+            Assert.False(isValid);
+            Assert.Contains(results, r =>
+                r.ErrorMessage == "Кількість повинна бути більшою за нуль");
         }
     }
 }
