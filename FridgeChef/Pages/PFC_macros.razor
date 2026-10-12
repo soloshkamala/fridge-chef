@@ -1,0 +1,897 @@
+@page "/kbzhv"
+
+<PageTitle>КБЖВ</PageTitle>
+
+<style>
+    .macro-page {
+        min-height: 100vh;
+        background: #f3efe9;
+        color: #1d1d1b;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 0 0 48px;
+    }
+
+    .macro-topbar {
+        max-width: 1440px;
+        margin: 0 auto;
+        height: 82px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 30px;
+        border-bottom: 1px solid rgba(34, 33, 30, 0.18);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 2.1rem;
+        font-weight: 800;
+        letter-spacing: -0.06em;
+        line-height: 1;
+    }
+
+    .brand-mark {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #f28a46 0%, #ef6b2c 100%);
+        position: relative;
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+    }
+
+    .brand-mark::before {
+        content: "";
+        position: absolute;
+        inset: 7px 7px 7px 7px;
+        background: rgba(255,255,255,0.8);
+        border-radius: 4px;
+        clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
+
+    .brand-mark::after {
+        content: "";
+        position: absolute;
+        width: 9px;
+        height: 9px;
+        background: rgba(255,255,255,0.9);
+        border-radius: 50%;
+        left: 10px;
+        top: 9px;
+    }
+
+    .nav {
+        display: flex;
+        gap: 28px;
+        align-items: center;
+        margin-left: 40px;
+        font-size: 1.05rem;
+        color: #2b2b2a;
+    }
+
+    .nav a {
+        text-decoration: none;
+        color: #2b2b2a;
+        opacity: 0.9;
+        font-weight: 500;
+    }
+
+    .nav a.active {
+        color: #1d1d1b;
+        font-weight: 600;
+    }
+
+    .logout-btn {
+        background: linear-gradient(180deg, #f79a4d 0%, #f46d2c 100%);
+        border: 0;
+        color: white;
+        font-weight: 700;
+        font-size: 1rem;
+        padding: 12px 24px;
+        border-radius: 14px;
+        box-shadow: 0 8px 18px rgba(244, 109, 44, 0.2);
+        cursor: pointer;
+    }
+
+    .macro-content {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 48px 30px 0;
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 56px;
+        align-items: start;
+    }
+
+    .intro {
+        padding-top: 40px;
+    }
+
+    .main-title {
+        font-size: clamp(3rem, 3vw, 5rem);
+        line-height: 0.94;
+        letter-spacing: -0.08em;
+        font-weight: 900;
+        margin: 0;
+        color: #1d1d1b;
+    }
+
+    .highlight {
+        color: #f1712c;
+    }
+
+    .intro-copy {
+        margin-top: 26px;
+        font-size: 1.08rem;
+        line-height: 1.5;
+        color: rgba(29, 29, 27, 0.76);
+        max-width: 560px;
+    }
+
+    .feature-list {
+        margin-top: 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        max-width: 600px;
+    }
+
+    .feature-icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ef6b2c;
+        flex-shrink: 0;
+        margin-top: 3px;
+        font-size: 1.3rem;
+    }
+
+    .feature-text strong {
+        display: block;
+        font-size: 1.15rem;
+        color: #1d1d1b;
+        margin-bottom: 4px;
+    }
+
+    .feature-text span {
+        display: block;
+        color: rgba(29, 29, 27, 0.72);
+        line-height: 1.45;
+        font-size: 1rem;
+    }
+
+    .promo {
+        margin-top: 32px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+
+    .food-badge {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #f7d5a4 0%, #d8d2ab 15%, #78a25a 28%, #2f6331 60%, #1b3f20 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        box-shadow: inset 0 0 0 4px rgba(255,255,255,0.3);
+    }
+
+    .promo-text {
+        font-size: clamp(2rem, 3vw, 3rem);
+        line-height: 1.05;
+        letter-spacing: -0.07em;
+        font-weight: 900;
+        color: #f1712c;
+        margin: 0;
+    }
+
+    .promo-sub {
+        font-size: 0.9rem;
+        color: rgba(29, 29, 27, 0.76);
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .promo-sub .mini-brand {
+        font-size: 0.82rem;
+        color: #f1712c;
+    }
+
+    .panel-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: start;
+        padding-top: 30px;
+    }
+
+    .state-card {
+        width: 100%;
+        max-width: 610px;
+        background: #f5f2ee;
+        border-radius: 30px;
+        border: 2px solid rgba(241, 113, 44, 0.8);
+        padding: 28px 26px 22px;
+        box-shadow: 0 10px 24px rgba(35, 31, 29, 0.04);
+    }
+
+    .state-card.loading {
+        border-color: rgba(113, 113, 113, 0.18);
+        background: rgba(247, 245, 242, 0.95);
+    }
+
+    .state-card.error {
+        border-color: rgba(241, 113, 44, 0.8);
+        background: rgba(255, 239, 232, 0.5);
+    }
+
+    .state-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        color: #1d1d1b;
+        margin: 0;
+    }
+
+    .card-button {
+        background: rgba(241, 113, 44, 0.12);
+        color: #ef6b2c;
+        border: 1px solid rgba(239, 107, 44, 0.32);
+        font-weight: 700;
+        border-radius: 12px;
+        padding: 10px 16px;
+        cursor: pointer;
+    }
+
+    .empty-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .card-subtitle {
+        color: rgba(29, 29, 27, 0.72);
+        margin: 0 0 14px;
+        font-size: 1rem;
+    }
+
+    .label {
+        font-size: 0.9rem;
+        color: rgba(29, 29, 27, 0.72);
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .full-width {
+        grid-column: 1 / -1;
+    }
+
+    .submit-btn {
+        width: 100%;
+        margin-top: 12px;
+        background: linear-gradient(180deg, #f69a4f 0%, #ef6b2c 100%);
+        border: 0;
+        border-radius: 14px;
+        color: white;
+        font-weight: 900;
+        font-size: 1.02rem;
+        padding: 18px 18px;
+        cursor: pointer;
+        box-shadow: 0 12px 16px rgba(244, 109, 44, 0.2);
+    }
+
+    .loading-block {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 12px 0 0;
+    }
+
+    .loading-line {
+        height: 54px;
+        border-radius: 12px;
+        background: linear-gradient(90deg, rgba(214,214,214,0.55) 25%, rgba(184,184,184,0.28) 50%, rgba(214,214,214,0.55) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.2s infinite linear;
+    }
+
+    @@keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    .error-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 18px;
+        padding: 10px 12px 6px;
+    }
+
+    .error-icon {
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        border: 3px solid #ef6b2c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #ef6b2c;
+        background: rgba(255,255,255,0.18);
+    }
+
+    .error-title {
+        font-size: 2.05rem;
+        letter-spacing: -0.06em;
+        color: #1d1d1b;
+        margin: 0;
+        line-height: 1.1;
+    }
+
+    .error-text {
+        max-width: 340px;
+        color: rgba(29, 29, 27, 0.74);
+        line-height: 1.55;
+        margin: 0;
+        font-size: 1.05rem;
+    }
+
+    .retry-btn {
+        width: 100%;
+        background: linear-gradient(180deg, #f69a4f 0%, #ef6b2c 100%);
+        border: 0;
+        color: white;
+        border-radius: 14px;
+        font-weight: 900;
+        padding: 18px 18px;
+        cursor: pointer;
+        font-size: 1.02rem;
+        box-shadow: 0 12px 16px rgba(244, 109, 44, 0.2);
+    }
+
+    .result-panel {
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 22px;
+        align-items: center;
+        padding-top: 6px;
+    }
+
+    .ring-wrap {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .macro-ring {
+        width: 170px;
+        height: 170px;
+        border-radius: 50%;
+        background: conic-gradient(#3ec77b 0 72%, #f4f0ed 0 100%);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .macro-ring::before {
+        content: "";
+        position: absolute;
+        inset: 18px;
+        border-radius: 50%;
+        background: #f5f2ee;
+        border: 8px solid rgba(255,255,255,0.5);
+    }
+
+    .ring-center {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+    }
+
+    .ring-center strong {
+        display: block;
+        font-size: 2.2rem;
+        letter-spacing: -0.06em;
+        line-height: 1;
+        color: #1d1d1b;
+    }
+
+    .ring-center span {
+        font-size: 0.82rem;
+        color: rgba(29, 29, 27, 0.7);
+    }
+
+    .macro-summary {
+        width: 100%;
+    }
+
+    .macro-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-top: 10px;
+    }
+
+    .macro-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .macro-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .macro-label {
+        flex: 1;
+        color: #1d1d1b;
+        font-weight: 600;
+    }
+
+    .macro-value {
+        color: rgba(29, 29, 27, 0.72);
+        font-size: 0.9rem;
+        min-width: 80px;
+        text-align: right;
+    }
+
+    .macro-bar {
+        flex: 1;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(29, 29, 27, 0.1);
+        position: relative;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .macro-bar-fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        border-radius: inherit;
+    }
+
+    .macro-form-grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .info-pill {
+        background: rgba(29,29,27,0.04);
+        border: 1px solid rgba(29,29,27,0.08);
+        border-radius: 12px;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 52px;
+    }
+
+    .pill-label {
+        color: rgba(29,29,27,0.7);
+        font-size: 0.9rem;
+    }
+
+    .pill-value {
+        color: #1d1d1b;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+
+    @@media (max-width: 980px) {
+        .macro-content {
+            grid-template-columns: 1fr;
+        }
+
+        .topbar {
+            flex-wrap: wrap;
+            gap: 16px;
+            height: auto;
+            padding-top: 16px;
+            padding-bottom: 16px;
+        }
+
+        .nav {
+            order: 3;
+            width: 100%;
+            justify-content: center;
+            margin-left: 0;
+        }
+
+        .result-panel {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="macro-page">
+    <header class="macro-topbar">
+        <div class="brand">
+            <span class="brand-mark"></span>
+            <span>FridgeChef</span>
+        </div>
+
+        <nav class="nav" aria-label="Main navigation">
+            <a href="/" class="active">Головна</a>
+            <a href="/">Холодильник</a>
+            <a href="/">Рецепти</a>
+            <a href="/">Про нас</a>
+        </nav>
+
+        <button class="logout-btn" type="button">Вийти</button>
+    </header>
+
+    <main class="macro-content">
+        <section class="intro">
+            <h1 class="main-title">
+                Контролюй<br />
+                своє харчування<br />
+                з <span class="highlight">FridgeChef!</span>
+            </h1>
+
+            <p class="intro-copy">
+                Розрахуй свою добову норму КБЖВ та отримуй<br />
+                рекомендації для щоденних страв.
+            </p>
+
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="feature-icon">◌</div>
+                    <div class="feature-text">
+                        <strong>Персональна норма</strong>
+                        <span>Калькулятор розраховує добовий обсяг калорій саме для вашого організму.</span>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">↗</div>
+                    <div class="feature-text">
+                        <strong>Баланс КБЖВ</strong>
+                        <span>Оптимальне співвідношення білків, жирів та вуглеводів для вашої цілі.</span>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">♥</div>
+                    <div class="feature-text">
+                        <strong>Підтримка цілей</strong>
+                        <span>Контроль ваги, сушки чи набору м’язової маси під вашу мету.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="promo">
+                <div class="food-badge">🥗</div>
+                <div>
+                    <p class="promo-text">Здорове харчування — це просто</p>
+                    <div class="promo-sub">
+                        <span>— команда</span>
+                        <span class="mini-brand">FridgeChef</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel-wrapper">
+            @switch (CurrentState)
+            {
+                case MacroPageState.Empty:
+                    <div class="state-card">
+                        <div class="state-card-header">
+                            <h2 class="card-title">Калькулятор КБЖВ</h2>
+                        </div>
+
+                        <p class="card-subtitle">Введіть своє дані, щоб розрахувати добову норму</p>
+
+                        <div class="empty-form">
+                            <div>
+                                <label class="label">Стать</label>
+                                <MudSelect @bind-Value="Gender"
+                                           Variant="Variant.Outlined"
+                                           Label="Обрати стать..."
+                                           Dense="true">
+                                    <MudSelectItem Value="@("Жінка")">Жінка</MudSelectItem>
+                                    <MudSelectItem Value="@("Чоловік")">Чоловік</MudSelectItem>
+                                </MudSelect>
+                            </div>
+
+                            <div class="field-row">
+                                <div class="full-width">
+                                    <label class="label">Вік</label>
+                                    <MudTextField @bind-Value="Age"
+                                                  Variant="Variant.Outlined"
+                                                  InputType="InputType.Number"
+                                                  Placeholder="Наприклад: 25"
+                                                  Adornment="Adornment.End"
+                                                  AdornmentText="років" />
+                                </div>
+                            </div>
+
+                            <div class="field-row">
+                                <div>
+                                    <label class="label">Зріст</label>
+                                    <MudTextField @bind-Value="Height"
+                                                  Variant="Variant.Outlined"
+                                                  InputType="InputType.Number"
+                                                  Placeholder="см" />
+                                </div>
+                                <div>
+                                    <label class="label">Вага</label>
+                                    <MudTextField @bind-Value="Weight"
+                                                  Variant="Variant.Outlined"
+                                                  InputType="InputType.Number"
+                                                  Placeholder="кг" />
+                                </div>
+                            </div>
+
+                            <div class="field-row">
+                                <div>
+                                    <label class="label">Рівень активності</label>
+                                    <MudSelect @bind-Value="Activity"
+                                               Variant="Variant.Outlined"
+                                               Label="Обрати..."
+                                               Dense="true">
+                                        <MudSelectItem Value="@("Низька")">Низька</MudSelectItem>
+                                        <MudSelectItem Value="@("Середня")">Середня</MudSelectItem>
+                                        <MudSelectItem Value="@("Висока")">Висока</MudSelectItem>
+                                        <MudSelectItem Value="@("Дуже висока")">Дуже висока</MudSelectItem>
+                                    </MudSelect>
+                                </div>
+                                <div>
+                                    <label class="label">Мета</label>
+                                    <MudSelect @bind-Value="Goal"
+                                               Variant="Variant.Outlined"
+                                               Label="Обрати..."
+                                               Dense="true">
+                                        <MudSelectItem Value="@("Підтримка ваги")">Підтримка ваги</MudSelectItem>
+                                        <MudSelectItem Value="@("Схуднення")">Схуднення</MudSelectItem>
+                                        <MudSelectItem Value="@("Набір маси")">Набір маси</MudSelectItem>
+                                    </MudSelect>
+                                </div>
+                            </div>
+
+                            <button class="submit-btn" type="button" @onclick="CalculateAsync">Розрахувати норму</button>
+                        </div>
+                    </div>
+                    break;
+
+                case MacroPageState.Loading:
+                    <div class="state-card loading">
+                        <div class="state-card-header">
+                            <h2 class="card-title">Калькулятор КБЖВ</h2>
+                        </div>
+
+                        <p class="card-subtitle">Аналізуємо ваші параметри...</p>
+
+                        <div class="loading-block">
+                            <div class="loading-line"></div>
+                            <div class="loading-line"></div>
+                            <div class="loading-line"></div>
+                            <div class="loading-line"></div>
+                            <div class="loading-line"></div>
+                        </div>
+                    </div>
+                    break;
+
+                case MacroPageState.Error:
+                    <div class="state-card error">
+                        <div class="error-box">
+                            <div class="error-icon">◔</div>
+                            <h3 class="error-title">Не вдалося розрахувати норму</h3>
+                            <p class="error-text">Перевірте введені дані та спробуйте ще раз.</p>
+                            <button class="retry-btn" type="button" @onclick="RetryAsync">Спробувати ще раз</button>
+                        </div>
+                    </div>
+                    break;
+
+                case MacroPageState.Ready:
+                    <div class="state-card">
+                        <div class="state-card-header">
+                            <h2 class="card-title">Калькулятор КБЖВ</h2>
+                            <button type="button" class="card-button" @onclick="ResetForm">Редагувати</button>
+                        </div>
+
+                        <div class="result-panel">
+                            <div class="ring-wrap">
+                                <div class="macro-ring" style="background: conic-gradient(#3ec77b 0 78%, #f0ece6 0 100%);">
+                                    <div class="ring-center">
+                                        <strong>@Math.Round(DailyCalories)</strong>
+                                        <span>ккал</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="macro-summary">
+                                <div class="macro-list">
+                                    <div class="macro-item">
+                                        <span class="macro-dot" style="background: #3ec77b;"></span>
+                                        <span class="macro-label">Білки</span>
+                                        <span class="macro-value">@Math.Round(Protein) г / @Math.Round(Protein * 4) ккал</span>
+                                    </div>
+                                    <div class="macro-bar">
+                                        <span class="macro-bar-fill" style="width: 78%; background: #3ec77b;"></span>
+                                    </div>
+
+                                    <div class="macro-item">
+                                        <span class="macro-dot" style="background: #f28a46;"></span>
+                                        <span class="macro-label">Жири</span>
+                                        <span class="macro-value">@Math.Round(Fat) г / @Math.Round(Fat * 9) ккал</span>
+                                    </div>
+                                    <div class="macro-bar">
+                                        <span class="macro-bar-fill" style="width: 62%; background: #f28a46;"></span>
+                                    </div>
+
+                                    <div class="macro-item">
+                                        <span class="macro-dot" style="background: #7cb9e8;"></span>
+                                        <span class="macro-label">Вуглеводи</span>
+                                        <span class="macro-value">@Math.Round(Carbs) г / @Math.Round(Carbs * 4) ккал</span>
+                                    </div>
+                                    <div class="macro-bar">
+                                        <span class="macro-bar-fill" style="width: 72%; background: #7cb9e8;"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="macro-form-grid">
+                            <div class="info-pill">
+                                <span class="pill-label">Стать</span>
+                                <span class="pill-value">@Gender</span>
+                            </div>
+                            <div class="info-pill">
+                                <span class="pill-label">Вага</span>
+                                <span class="pill-value">@Weight кг</span>
+                            </div>
+                            <div class="info-pill">
+                                <span class="pill-label">Вік</span>
+                                <span class="pill-value">@Age років</span>
+                            </div>
+                            <div class="info-pill">
+                                <span class="pill-label">Зріст</span>
+                                <span class="pill-value">@Height см</span>
+                            </div>
+                            <div class="info-pill">
+                                <span class="pill-label">Рівень активності</span>
+                                <span class="pill-value">@Activity</span>
+                            </div>
+                            <div class="info-pill">
+                                <span class="pill-label">Мета</span>
+                                <span class="pill-value">@Goal</span>
+                            </div>
+                        </div>
+
+                        <button class="submit-btn" type="button" @onclick="ResetForm">Оновити дані</button>
+                    </div>
+                    break;
+            }
+        </section>
+    </main>
+</div>
+
+@code {
+    private MacroPageState CurrentState { get; set; } = MacroPageState.Empty;
+
+    private string Gender { get; set; } = "Жінка";
+    private int? Age { get; set; }
+    private int? Height { get; set; }
+    private int? Weight { get; set; }
+    private string Activity { get; set; } = "Середня";
+    private string Goal { get; set; } = "Підтримка ваги";
+
+    private double Bmr { get; set; }
+    private double DailyCalories { get; set; }
+    private double Protein { get; set; }
+    private double Fat { get; set; }
+    private double Carbs { get; set; }
+
+    private enum MacroPageState
+    {
+        Empty,
+        Loading,
+        Error,
+        Ready
+    }
+
+    private async Task CalculateAsync()
+    {
+        if (!Age.HasValue || !Height.HasValue || !Weight.HasValue ||
+            Age.Value <= 0 || Height.Value <= 0 || Weight.Value <= 0)
+        {
+            CurrentState = MacroPageState.Error;
+            return;
+        }
+
+        CurrentState = MacroPageState.Loading;
+        StateHasChanged();
+
+        await Task.Delay(1200);
+
+        var weight = Weight.Value;
+        var height = Height.Value;
+        var age = Age.Value;
+
+        if (Gender == "Жінка")
+        {
+            Bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+        }
+        else
+        {
+            Bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+        }
+
+        var activityMultiplier = Activity switch
+        {
+            "Низька" => 1.2,
+            "Середня" => 1.375,
+            "Висока" => 1.55,
+            "Дуже висока" => 1.725,
+            _ => 1.375
+        };
+
+        var goalModifier = Goal switch
+        {
+            "Схуднення" => 0.85,
+            "Набір маси" => 1.10,
+            "Підтримка ваги" => 1.00,
+            _ => 1.00
+        };
+
+        DailyCalories = Math.Round(Bmr * activityMultiplier * goalModifier, 0);
+
+        Protein = Math.Round(weight * 1.8, 0);
+        Fat = Math.Round(weight * 0.9, 0);
+        var remainingCalories = DailyCalories - (Protein * 4 + Fat * 9);
+        Carbs = Math.Round(remainingCalories / 4, 0);
+
+        CurrentState = MacroPageState.Ready;
+    }
+
+    private async Task RetryAsync()
+    {
+        CurrentState = MacroPageState.Empty;
+        await Task.CompletedTask;
+    }
+
+    private void ResetForm()
+    {
+        CurrentState = MacroPageState.Empty;
+    }
+}
+
