@@ -1,29 +1,57 @@
 ﻿@page "/shopping-list"
 @using FridgeChef.Models
 @using FridgeChef.Components
+@using FridgeChef.Resources
+@using Microsoft.Extensions.Localization
+@using Microsoft.JSInterop
+@inject IStringLocalizer<ShoppingListResource> L
+@inject IJSRuntime JS
 
-<PageTitle>Список покупок</PageTitle>
+<PageTitle>@L["PageTitle"]</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="shopping-page">
 
     <div class="shopping-header">
         <div>
-            <MudText Typo="Typo.h4">Список покупок</MudText>
+            <MudText Typo="Typo.h4">@L["PageTitle"]</MudText>
 
             <MudText Typo="Typo.body2">
-                Плануй покупки легко разом із FridgeChef!
+                @L["PageSubtitle"]
             </MudText>
         </div>
 
-        @if (CurrentState == ShoppingListState.WithData)
-        {
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Add">
-                Додати продукт
-            </MudButton>
-        }
+        <div class="shopping-header-actions">
+
+            <div class="language-switcher">
+                <MudButton Variant="Variant.Text"
+                           OnClick="@(() => ChangeLanguage("uk-UA"))">
+                    UA
+                </MudButton>
+
+                <MudButton Variant="Variant.Text"
+                           OnClick="@(() => ChangeLanguage("en-US"))">
+                    EN
+                </MudButton>
+            </div>
+
+            @if (CurrentState == ShoppingListState.WithData)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddForm">
+                    @L["AddProduct"]
+                </MudButton>
+            }
+
+        </div>
     </div>
+
+    @if (ShowAddForm)
+    {
+        <AddShoppingItemForm OnAdd="AddProduct"
+                             OnCancel="CloseAddForm" />
+    }
 
     @if (CurrentState == ShoppingListState.Loading)
     {
@@ -68,17 +96,18 @@
                      Size="Size.Large" />
 
             <MudText Typo="Typo.h5">
-                Список покупок порожній
+                @L["EmptyTitle"]
             </MudText>
 
             <MudText Typo="Typo.body2" Class="state-description">
-                Додай продукти, які потрібно купити.
+                @L["EmptyDescription"]
             </MudText>
 
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Add">
-                Додати продукт
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddForm">
+                @L["AddProduct"]
             </MudButton>
 
         </MudPaper>
@@ -92,18 +121,18 @@
                      Size="Size.Large" />
 
             <MudText Typo="Typo.h5" Class="error-title">
-                Не вдалося завантажити список покупок
+                @L["ErrorTitle"]
             </MudText>
 
             <MudText Typo="Typo.body2" Class="state-description">
-                Перевір підключення до інтернету та спробуй ще раз.
+                @L["ErrorDescription"]
             </MudText>
 
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Refresh"
                        OnClick="Retry">
-                Спробувати ще раз
+                @L["Retry"]
             </MudButton>
 
         </MudPaper>
@@ -118,7 +147,7 @@
                      @onclick="() => ToggleCategory(category)">
 
                     <MudText Typo="Typo.h6">
-                        @category
+                        @GetCategoryName(category)
                     </MudText>
 
                     <MudIcon Icon="@(IsCategoryExpanded(category)
@@ -149,6 +178,46 @@
 
     [Parameter]
     public ShoppingListState CurrentState { get; set; } = ShoppingListState.WithData;
+
+    private bool ShowAddForm = false;
+    private async Task ChangeLanguage(string language)
+    {
+        await JS.InvokeVoidAsync("fridgeChefLanguage.set", language);
+    }
+
+    private void OpenAddForm()
+    {
+        ShowAddForm = true;
+    }
+
+    private void CloseAddForm()
+    {
+        ShowAddForm = false;
+    }
+
+    private void AddProduct(ShoppingItemForm form)
+    {
+        var item = new ShoppingItem
+            {
+                Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1,
+                Name = form.Name.Trim(),
+                Quantity = form.Quantity!.Value,
+                Unit = form.Unit,
+                Category = form.Category
+            };
+
+        Items.Add(item);
+
+        if (!Categories.Contains(item.Category))
+        {
+            Categories.Add(item.Category);
+        }
+
+        ExpandedCategories.Add(item.Category);
+
+        CurrentState = ShoppingListState.WithData;
+        ShowAddForm = false;
+    }
 
     private List<ShoppingItem> Items = new()
     {
@@ -209,6 +278,16 @@
         "Овочі та фрукти",
         "М'ясо та птиця"
     };
+
+    private string GetCategoryName(string category)
+    {
+        return category switch
+        {
+            "Овочі та фрукти" => L["FruitsVegetables"].Value,
+            "М'ясо та птиця" => L["MeatPoultry"].Value,
+            _ => category
+        };
+    }
 
     private bool IsCategoryExpanded(string category)
     {

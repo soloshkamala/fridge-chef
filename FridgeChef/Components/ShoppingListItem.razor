@@ -1,4 +1,7 @@
 ﻿@using FridgeChef.Models
+@using FridgeChef.Resources
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<ShoppingListResource> L
 
 <div class="product-row">
 
@@ -14,11 +17,11 @@
         <MudCheckBox T="bool"
                      Value="@Item.IsInFridge"
                      ValueChanged="FridgeChanged"
-                     Label="У холодильнику" />
+                     Label="@L["InFridge"]" />
     </div>
 
     <MudText Class="product-quantity">
-        @Item.Quantity @Item.Unit
+        @Item.Quantity @GetUnitName(Item.Unit)
     </MudText>
 
 </div>
@@ -32,6 +35,17 @@
 
     [Parameter]
     public EventCallback<ShoppingItem> OnFridgeChanged { get; set; }
+
+    private string GetUnitName(string unit)
+    {
+        return unit switch
+        {
+            "кг" => L["UnitKg"].Value,
+            "шт." => L["UnitPieces"].Value,
+            "л" => L["UnitLiters"].Value,
+            _ => unit
+        };
+    }
 
     private async Task PurchasedChanged(bool value)
     {

@@ -5,7 +5,7 @@ VisualStudioVersion = 17.14.37628.2
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FridgeChef", "FridgeChef\FridgeChef.csproj", "{7D8225C5-23AF-48E0-A52C-2E64ECAD4090}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FridgeChef.Tests", "FridgeChef.Tests\FridgeChef.Tests.csproj", "{134DE552-B5E5-4B00-8335-4042EEDD8CE3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FridgeChef.Tests", "FridgeChef.Tests\FridgeChef.Tests.csproj", "{134DE552-B5E5-4B00-8335-4042EEDD8CE3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -76,9 +76,6 @@ code {
     color: #c02d76;
 }
 
-
-/* SHOPPING LIST */
-
 body {
     margin: 0;
     background-color: #fffaf4;
@@ -87,7 +84,6 @@ body {
 }
 
 
-/* PAGE */
 
 .shopping-page {
     padding-top: 55px;
@@ -95,7 +91,6 @@ body {
 }
 
 
-/* HEADER */
 
 .shopping-header {
     display: flex;
@@ -130,8 +125,6 @@ body {
             background-color: #eb6928 !important;
         }
 
-
-/* CATEGORY */
 
 .category-block {
     background-color: #fff3ec !important;
@@ -170,8 +163,6 @@ body {
 }
 
 
-/* PRODUCT */
-
 .product-row {
     display: flex;
     align-items: center;
@@ -208,8 +199,6 @@ body {
     color: #ff7a32;
 }
 
-
-/* EMPTY AND ERROR STATES */
 
 .shopping-message {
     width: 100%;
@@ -279,9 +268,6 @@ body {
         background-color: #ed612c !important;
     }
 
-
-/* STATE CARD */
-
 .shopping-state-card {
     width: 100%;
     min-height: 390px;
@@ -334,9 +320,6 @@ body {
     color: #dc4c43 !important;
 }
 
-
-/* LOADING */
-
 .shopping-loading {
     width: 100%;
 }
@@ -361,8 +344,6 @@ body {
     box-sizing: border-box;
 }
 
-
-/* TABLET / MOBILE */
 
 @media (max-width: 700px) {
 
@@ -423,5 +404,74 @@ body {
 
     .product-quantity {
         font-size: 13px;
+    }
+}
+.add-product-form {
+    max-width: 550px;
+    width: 100%;
+    margin: 25px auto;
+    padding: 30px;
+    background-color: #fff3ec !important;
+    border: 1px solid #ffd6c0;
+    border-radius: 12px !important;
+}
+
+.form-title {
+    font-weight: 700 !important;
+    color: #2d2926;
+    margin-bottom: 25px !important;
+}
+
+.form-field {
+    width: 100%;
+    margin-bottom: 18px !important;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.save-product-button {
+    background-color: #ff7a32 !important;
+    color: white !important;
+    border-radius: 8px !important;
+    text-transform: none !important;
+}
+
+    .save-product-button:hover {
+        background-color: #eb6928 !important;
+    }
+
+@media (max-width: 600px) {
+    .add-product-form {
+        padding: 20px;
+    }
+}
+
+.shopping-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.language-switcher {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+    .language-switcher .mud-button-root {
+        min-width: 40px;
+        padding: 6px 10px;
+    }
+
+@media (max-width: 600px) {
+    .shopping-header-actions {
+        width: 100%;
+        justify-content: space-between;
     }
 }

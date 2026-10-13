@@ -3,20 +3,39 @@ using FridgeChef.Models;
 using FridgeChef.Pages;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
+using System.Globalization;
 
 namespace FridgeChef.Tests
 {
     public class ShoppingListTests
     {
+
         private BunitContext CreateContext()
         {
             var context = new BunitContext();
 
+            var culture = new CultureInfo("uk-UA");
+            CultureInfo.CurrentCulture = culture;
+            CultureInfo.CurrentUICulture = culture;
+
             context.JSInterop.Mode = JSRuntimeMode.Loose;
+
             context.Services.AddMudServices();
+            context.Services.AddLocalization();
+
+            var localizer = context.Services.GetService<
+                Microsoft.Extensions.Localization.IStringLocalizer<
+                    FridgeChef.Resources.ShoppingListResource>>();
+
+            if (localizer == null)
+            {
+                throw new InvalidOperationException(
+                    "Localization service is not registered in the test context.");
+            }
 
             return context;
         }
+
 
         [Fact]
         public async Task ShoppingList_LoadingState()
