@@ -10,10 +10,20 @@ public class LoginTests : BunitContext
     [Fact]
     public void LoginPage_ShowsWelcomeTitle()
     {
-        // Arrange + Act: створюємо сторінку
+        // Перевіряємо заголовок сторінки
         var page = Render<Login>();
 
-        // Assert: перевіряємо заголовок
         Assert.Contains("Ласкаво просимо", page.Markup);
+    }
+
+    [Fact]
+    public void LoginPage_ShowsLoginForm()
+    {
+        // Перевіряємо поля форми входу
+        var page = Render<Login>();
+
+        Assert.Contains("Email", page.Markup);
+        Assert.Contains("Пароль", page.Markup);
+        Assert.Contains("Увійти", page.Markup);
     }
 }
