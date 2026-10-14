@@ -1,4 +1,6 @@
 
+@using FridgeChef.Models
+@using Microsoft.AspNetCore.Components.Forms
 @using MudBlazor
 
 <MudPaper Class="pa-6" Elevation="2">
@@ -11,25 +13,47 @@
         Увійдіть у свій обліковий запис
     </MudText>
 
-    <MudTextField T="string"
-                  Label="Email"
-                  Variant="Variant.Outlined"
-                  Class="mb-3" />
+    <EditForm Model="@loginModel"
+              OnValidSubmit="HandleLogin">
 
-    <MudTextField T="string"
-                  Label="Пароль"
-                  InputType="InputType.Password"
-                  Variant="Variant.Outlined"
-                  Class="mb-3" />
+        <DataAnnotationsValidator />
 
-    <MudCheckBox T="bool"
-                 Label="Запам'ятати мене" />
+        <MudTextField T="string"
+                      Label="Email"
+                      @bind-Value="loginModel.Email"
+                      For="@(() => loginModel.Email)"
+                      Variant="Variant.Outlined"
+                      Class="mb-3" />
 
-    <MudButton Variant="Variant.Filled"
-               Color="Color.Primary"
-               FullWidth="true"
-               Class="mt-4">
-        Увійти
-    </MudButton>
+        <MudTextField T="string"
+                      Label="Пароль"
+                      InputType="InputType.Password"
+                      @bind-Value="loginModel.Password"
+                      For="@(() => loginModel.Password)"
+                      Variant="Variant.Outlined"
+                      Class="mb-3" />
+
+        <MudCheckBox T="bool"
+                     Label="Запам'ятати мене"
+                     @bind-Value="loginModel.RememberMe" />
+
+        <MudButton ButtonType="ButtonType.Submit"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   FullWidth="true"
+                   Class="mt-4">
+            Увійти
+        </MudButton>
+
+    </EditForm>
 
 </MudPaper>
+
+@code {
+    private LoginModel loginModel = new();
+
+    private void HandleLogin()
+    {
+        // Логіку авторизації додамо пізніше
+    }
+}
