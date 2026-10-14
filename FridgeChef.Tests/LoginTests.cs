@@ -1,16 +1,41 @@
 
 using Bunit;
 using Xunit;
+using MudBlazor.Services;
+using Microsoft.Extensions.DependencyInjection;
 using FridgeChef.Pages;
 
 namespace FridgeChef.Tests;
 
-public class LoginTests : BunitContext
+public class LoginTests : BunitContext, IAsyncLifetime
 {
+    public LoginTests()
+    {
+        // Підключаємо сервіси MudBlazor
+        Services.AddMudServices();
+
+        // Реєструємо TimeProvider
+        Services.AddSingleton<TimeProvider>(
+            TimeProvider.System
+        );
+
+        // Дозволяємо JS-виклики у тестах
+        JSInterop.Mode = JSRuntimeMode.Loose;
+    }
+
+    public Task InitializeAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync()
+    {
+        await Services.DisposeAsync();
+    }
+
     [Fact]
     public void LoginPage_ShowsWelcomeTitle()
     {
-        // Перевіряємо заголовок сторінки
         var page = Render<Login>();
 
         Assert.Contains("Ласкаво просимо", page.Markup);
@@ -19,7 +44,6 @@ public class LoginTests : BunitContext
     [Fact]
     public void LoginPage_ShowsLoginForm()
     {
-        // Перевіряємо поля форми входу
         var page = Render<Login>();
 
         Assert.Contains("Email", page.Markup);
