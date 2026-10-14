@@ -1,8 +1,9 @@
 
 @page "/login"
+@using FridgeChef.Components
 
 <PageTitle>FridgeChef - Вхід</PageTitle>
 
-<h2>Ласкаво просимо!</h2>
-
-<p>Увійдіть у свій обліковий запис FridgeChef.</p>
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <LoginForm />
+</MudContainer>

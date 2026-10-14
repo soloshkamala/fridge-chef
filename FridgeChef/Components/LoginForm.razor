@@ -1,0 +1,35 @@
+
+@using MudBlazor
+
+<MudPaper Class="pa-6" Elevation="2">
+
+    <MudText Typo="Typo.h5" Class="mb-4">
+        Ласкаво просимо!
+    </MudText>
+
+    <MudText Typo="Typo.body2" Class="mb-4">
+        Увійдіть у свій обліковий запис
+    </MudText>
+
+    <MudTextField T="string"
+                  Label="Email"
+                  Variant="Variant.Outlined"
+                  Class="mb-3" />
+
+    <MudTextField T="string"
+                  Label="Пароль"
+                  InputType="InputType.Password"
+                  Variant="Variant.Outlined"
+                  Class="mb-3" />
+
+    <MudCheckBox T="bool"
+                 Label="Запам'ятати мене" />
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               FullWidth="true"
+               Class="mt-4">
+        Увійти
+    </MudButton>
+
+</MudPaper>
