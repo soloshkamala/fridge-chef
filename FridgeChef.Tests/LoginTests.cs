@@ -50,4 +50,20 @@ public class LoginTests : BunitContext, IAsyncLifetime
         Assert.Contains("Пароль", page.Markup);
         Assert.Contains("Увійти", page.Markup);
     }
+    
+[Fact]
+public void LoginForm_ShowsErrors_WhenFieldsAreEmpty()
+{
+    // Створюємо сторінку
+    var page = Render<Login>();
+
+    // Натискаємо кнопку входу
+    var button = page.Find("button");
+    button.Click();
+
+    // Перевіряємо повідомлення про помилки
+    Assert.Contains("Введіть електронну пошту", page.Markup);
+    Assert.Contains("Введіть пароль", page.Markup);
+}
+
 }
