@@ -28,10 +28,10 @@ public class LoginTests : BunitContext, IAsyncLifetime
         return Task.CompletedTask;
     }
 
-    public async Task DisposeAsync()
-    {
-        await Services.DisposeAsync();
-    }
+  public new async Task DisposeAsync()
+{
+    await base.DisposeAsync();
+}
 
     [Fact]
     public void LoginPage_ShowsWelcomeTitle()
