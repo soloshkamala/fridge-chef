@@ -1,0 +1,28 @@
+﻿@using FridgeChef.Models
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<FridgeChef.ProfileResource> L
+
+<MudCard Class="recipe-card">
+    <MudCardMedia Image="@Recipe.ImageUrl" Height="120" />
+
+    <MudCardContent>
+        <MudText Typo="Typo.subtitle2">
+            @Recipe.Title
+        </MudText>
+
+        <MudChip T="string" Size="Size.Small">
+            @Recipe.Minutes @L["MinutesShort"]
+        </MudChip>
+
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Color="Color.Success">
+            @Recipe.Kcal @L["KcalShort"]
+        </MudChip>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public RecipeSummary Recipe { get; set; } = default!;
+}

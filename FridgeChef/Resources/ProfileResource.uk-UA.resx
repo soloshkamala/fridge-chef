@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>2.0</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+	</resheader>
+
+	<data name="ProfileTitle" xml:space="preserve">
+    <value>Мій профіль</value>
+  </data>
+	<data name="SavedRecipes" xml:space="preserve">
+    <value>Збережені рецепти</value>
+  </data>
+	<data name="ProfileSettings" xml:space="preserve">
+    <value>Налаштування профілю</value>
+  </data>
+	<data name="Name" xml:space="preserve">
+    <value>Ім'я</value>
+  </data>
+	<data name="Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+	<data name="SaveChanges" xml:space="preserve">
+    <value>Зберегти зміни</value>
+  </data>
+	<data name="Retry" xml:space="preserve">
+    <value>Повторити</value>
+  </data>
+	<data name="NoSavedRecipes" xml:space="preserve">
+  <value>У вас поки немає збережених рецептів</value>
+</data>
+	<data name="AddFavoriteDishes" xml:space="preserve">
+  <value>Додайте улюблені страви з каталогу.</value>
+</data>
+	<data name="DietaryRestrictions" xml:space="preserve">
+  <value>Харчові обмеження</value>
+</data>
+	<data name="GlutenFree" xml:space="preserve">
+  <value>Без глютену</value>
+</data>
+	<data name="LactoseFree" xml:space="preserve">
+  <value>Без лактози</value>
+	</data>
+		<data name="FavoriteIngredients" xml:space="preserve">
+  <value>Улюблені інгредієнти</value>
+</data>
+	<data name="Logout" xml:space="preserve">
+  <value>Вийти з акаунта</value>
+</data>
+	<data name="RegisteredOn" xml:space="preserve">
+  <value>Зареєстровано</value>
+</data>
+	<data name="FavoriteCatalogs" xml:space="preserve">
+  <value>Улюблені каталоги</value>
+</data>
+	<data name="UserAvatar" xml:space="preserve">
+  <value>Аватар користувача</value>
+</data>
+	<data name="MinutesShort" xml:space="preserve">
+  <value>хв</value>
+</data>
+	<data name="KcalShort" xml:space="preserve">
+  <value>ккал</value>
+</data>
+</root>
