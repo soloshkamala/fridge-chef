@@ -171,6 +171,24 @@
   <data name="Loading" xml:space="preserve">
     <value>Завантаження...</value>
   </data>
+  <data name="NavCalculator" xml:space="preserve">
+    <value>Калькулятор КБЖВ</value>
+  </data>
+  <data name="NavFridge" xml:space="preserve">
+    <value>Холодильник</value>
+  </data>
+  <data name="NavHome" xml:space="preserve">
+    <value>Головна</value>
+  </data>
+  <data name="NavLogout" xml:space="preserve">
+    <value>Вихід</value>
+  </data>
+  <data name="NavRecipes" xml:space="preserve">
+    <value>Рецепти</value>
+  </data>
+  <data name="NavShoppingList" xml:space="preserve">
+    <value>Список покупок</value>
+  </data>
   <data name="NoProductsFound" xml:space="preserve">
     <value>Продуктів не знайдено</value>
   </data>

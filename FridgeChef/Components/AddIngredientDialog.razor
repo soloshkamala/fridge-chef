@@ -4,7 +4,7 @@
 
 @inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 
-<MudDialog>
+<MudDialog Class="ingredient-dialog" Options="@(new DialogOptions { BackdropClick = false })">
     <TitleContent>
         <MudText Typo="Typo.h6">
             @Localizer[$"Ingredient{Ingredient.Id}"]

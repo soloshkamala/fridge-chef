@@ -75,3 +75,43 @@
 code {
     color: #c02d76;
 }
+
+nav a.active {
+    color: #f97316;
+}
+
+html,
+body,
+button,
+input,
+select,
+textarea {
+    font-family: 'Geist', sans-serif;
+}
+
+body {
+    margin: 0;
+    background-color: #faf8f4;
+    color: #242424;
+}
+
+
+.ingredient-dialog {
+    width: min(420px, calc(100vw - 32px));
+    max-width: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+    font-family: 'Geist', sans-serif;
+}
+
+    .ingredient-dialog .mud-dialog-title {
+        padding: 24px 28px 12px;
+    }
+
+    .ingredient-dialog .mud-dialog-content {
+        padding: 16px 28px;
+    }
+
+    .ingredient-dialog .mud-dialog-actions {
+        padding: 12px 28px 24px;
+    }

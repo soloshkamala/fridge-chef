@@ -4,130 +4,174 @@
 @using FridgeChef.Components
 @using FridgeChef.Services
 @using Microsoft.Extensions.Localization
-@using Microsoft.JSInterop
 
-@inject IJSRuntime JS
 @inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 @inject FridgeService FridgeService
 @inject IDialogService DialogService
 
 <PageTitle>@Localizer["PageTitle"]</PageTitle>
 
-<MudButton OnClick='() => ChangeLanguage("uk-UA")'>
-    UA
-</MudButton>
+<div class="fridge-page">
 
-<MudButton OnClick='() => ChangeLanguage("en-US")'>
-    EN
-</MudButton>
+    <section class="hero">
+        <div class="hero-content">
+ 
 
-<h1>
-    @Localizer["HeroTitleFirst"]<br />
-    @Localizer["HeroTitleSecond"]
-</h1>
+            <h1>
+                @Localizer["HeroTitleFirst"]
+                <br />
+                <span>@Localizer["HeroTitleSecond"]</span>
+            </h1>
 
-<p>
-    @Localizer["HeroDescription"]
-</p>
+            <p class="hero-description">
+                @Localizer["HeroDescription"]
+            </p>
+        </div>
 
-<h3>@Localizer["FridgeTitle"]</h3>
+        <div class="hero-image">
+            <img src="images/fridge-hero.jpg"
+                 alt="Fresh ingredients and food" />
+        </div>
+    </section>
 
-<MudTextField T="string"
-              @bind-Value="searchText"
-              Placeholder="@Localizer["SearchPlaceholder"]"
-              Immediate="true"
-              Variant="Variant.Outlined" />
+    <section class="fridge-section">
 
-@if (!string.IsNullOrWhiteSpace(searchText))
-{
-    @if (!FilteredIngredients.Any())
-    {
-        <MudText Color="Color.Secondary" Class="mt-2">
-            @Localizer["NoProductsFound"]
-        </MudText>
-    }
-    else
-    {
-        <div>
-            @foreach (var ingredient in FilteredIngredients)
+        <div class="section-heading">
+            <h2>@Localizer["FridgeTitle"]</h2>
+        </div>
+
+        <div class="search-container">
+            <MudTextField T="string"
+                          @bind-Value="searchText"
+                          Placeholder="@Localizer["SearchPlaceholder"]"
+                          Immediate="true"
+                          Variant="Variant.Outlined"
+                          Class="ingredient-search" />
+
+            @if (!string.IsNullOrWhiteSpace(searchText) && !isDialogOpen)
             {
-                <MudPaper @key="ingredient.Id"
-                          Class="pa-3 mt-2"
-                          Style="cursor: pointer;"
-                          @onclick="() => OpenIngredientDialog(ingredient)">
-                    @Localizer[$"Ingredient{ingredient.Id}"]
-                </MudPaper>
+                <div class="search-results">
+
+                    @if (!FilteredIngredients.Any())
+                    {
+                        <div class="search-empty">
+                            @Localizer["NoProductsFound"]
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var ingredient in FilteredIngredients)
+                        {
+                            <MudPaper @key="ingredient.Id"
+                                      Class="search-result-item"
+                                      Elevation="0"
+                                      @onclick="() => OpenIngredientDialog(ingredient)">
+                                <span>
+                                    @Localizer[$"Ingredient{ingredient.Id}"]
+                                </span>
+                                <span class="add-symbol">+</span>
+                            </MudPaper>
+                        }
+                    }
+                </div>
             }
         </div>
-    }
-}
 
-@if (FridgeService.IsLoading)
-{
-    <p>@Localizer["Loading"]</p>
-}
-else if (!string.IsNullOrWhiteSpace(FridgeService.ErrorMessage))
-{
-    <p>@FridgeService.ErrorMessage</p>
-}
-else if (FridgeService.FridgeItems.Count > 0)
-{
-    <h3>@Localizer["FridgeItemsTitle"]</h3>
-
-    <div>
-        @foreach (var item in FridgeService.FridgeItems)
+        @if (FridgeService.IsLoading)
         {
-            <IngredientCard @key="item.Id"
-                            Item="item" />
+            <div class="status-card">
+                <MudProgressCircular Indeterminate="true"
+                                     Color="Color.Warning"
+                                     Size="Size.Medium" />
+                <p>@Localizer["Loading"]</p>
+            </div>
         }
-    </div>
+        else if (!string.IsNullOrWhiteSpace(FridgeService.ErrorMessage))
+        {
+            <div class="status-card error-card">
+                <p>@FridgeService.ErrorMessage</p>
+            </div>
+        }
+        else if (FridgeService.FridgeItems.Count > 0)
+        {
+            <div class="fridge-content">
 
-    <h3>@Localizer["RecipesTitle"]</h3>
-}
-else
-{
-    <p>@Localizer["EmptyFridge"]</p>
-}
+                <h3>@Localizer["FridgeItemsTitle"]</h3>
+
+                <div class="ingredients-grid">
+                    @foreach (var item in FridgeService.FridgeItems)
+                    {
+                        <div class="ingredient-wrapper" @key="item.Id">
+                            <IngredientCard Item="item" />
+                        </div>
+                    }
+                </div>
+
+                <div class="recipes-section">
+                    <h2>@Localizer["RecipesTitle"]</h2>
+                </div>
+
+            </div>
+        }
+        else
+        {
+            <div class="empty-fridge">
+                <div class="empty-icon">
+                    <MudIcon Icon="@Icons.Material.Filled.Kitchen"
+                             Size="Size.Large" />
+                </div>
+
+                <p>@Localizer["EmptyFridge"]</p>
+            </div>
+        }
+
+    </section>
+</div>
 
 @code {
-
-    private async Task ChangeLanguage(string culture)
-    {
-        await JS.InvokeVoidAsync("fridgeCulture.set", culture);
-        await JS.InvokeVoidAsync("location.reload");
-    }
     private string searchText = "";
 
+    private bool isDialogOpen = false;
+
     private IEnumerable<Ingredient> FilteredIngredients =>
-     FridgeService.Ingredients
-         .Where(x =>
-             Localizer[$"Ingredient{x.Id}"].Value.Contains(
-                 searchText,
-                 StringComparison.CurrentCultureIgnoreCase));
+        FridgeService.Ingredients
+            .Where(x =>
+                Localizer[$"Ingredient{x.Id}"].Value.Contains(
+                    searchText,
+                    StringComparison.CurrentCultureIgnoreCase));
 
     private async Task OpenIngredientDialog(Ingredient ingredient)
     {
-        var parameters = new DialogParameters<AddIngredientDialog>
+        isDialogOpen = true;
+
+        try
+        {
+            var parameters = new DialogParameters<AddIngredientDialog>
         {
             { x => x.Ingredient, ingredient }
         };
 
-        var dialog = await DialogService.ShowAsync<AddIngredientDialog>(
-            Localizer["AddProductTitle"].Value,
-            parameters);
+            var dialog = await DialogService.ShowAsync<AddIngredientDialog>(
+                Localizer["AddProductTitle"].Value,
+                parameters);
 
-        var result = await dialog.Result;
+            var result = await dialog.Result;
 
-        if (result != null &&
-            !result.Canceled &&
-            result.Data is FridgeItem item)
+            if (result != null &&
+                !result.Canceled &&
+                result.Data is FridgeItem item)
+            {
+                FridgeService.AddToFridge(
+                    item.Ingredient,
+                    item.Quantity,
+                    item.Unit);
+
+                searchText = "";
+            }
+        }
+        finally
         {
-            FridgeService.AddToFridge(
-                item.Ingredient,
-                item.Quantity,
-                item.Unit);
-
-            searchText = "";
+            isDialogOpen = false;
         }
     }
 }
