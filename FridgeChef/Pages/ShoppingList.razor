@@ -1,0 +1,333 @@
+﻿@page "/shopping-list"
+@using FridgeChef.Models
+@using FridgeChef.Components
+@using FridgeChef.Resources
+@using Microsoft.Extensions.Localization
+@using Microsoft.JSInterop
+@inject IStringLocalizer<ShoppingListResource> L
+@inject IJSRuntime JS
+
+<PageTitle>@L["PageTitle"]</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="shopping-page">
+
+    <div class="shopping-header">
+        <div>
+            <MudText Typo="Typo.h4">@L["PageTitle"]</MudText>
+
+            <MudText Typo="Typo.body2">
+                @L["PageSubtitle"]
+            </MudText>
+        </div>
+
+        <div class="shopping-header-actions">
+
+            <div class="language-switcher">
+                <MudButton Variant="Variant.Text"
+                           OnClick="@(() => ChangeLanguage("uk-UA"))">
+                    UA
+                </MudButton>
+
+                <MudButton Variant="Variant.Text"
+                           OnClick="@(() => ChangeLanguage("en-US"))">
+                    EN
+                </MudButton>
+            </div>
+
+            @if (CurrentState == ShoppingListState.WithData)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddForm">
+                    @L["AddProduct"]
+                </MudButton>
+            }
+
+        </div>
+    </div>
+
+    @if (ShowAddForm)
+    {
+        <AddShoppingItemForm OnAdd="AddProduct"
+                             OnCancel="CloseAddForm" />
+    }
+
+    @if (CurrentState == ShoppingListState.Loading)
+    {
+        <div class="shopping-loading">
+
+            <div class="loading-buttons">
+                <MudSkeleton Width="140px" Height="45px" />
+                <MudSkeleton Width="140px" Height="45px" />
+                <MudSkeleton Width="140px" Height="45px" />
+                <MudSkeleton Width="140px" Height="45px" />
+            </div>
+
+            <MudSkeleton Width="100%" Height="18px" Class="loading-line" />
+
+            <MudPaper Class="category-block loading-category" Elevation="0">
+                <MudSkeleton Width="150px" Height="25px" />
+
+                <MudDivider Class="my-3" />
+
+                <MudSkeleton Width="95%" Height="20px" />
+                <MudSkeleton Width="85%" Height="20px" />
+                <MudSkeleton Width="90%" Height="20px" />
+            </MudPaper>
+
+            <MudPaper Class="category-block loading-category" Elevation="0">
+                <MudSkeleton Width="130px" Height="25px" />
+
+                <MudDivider Class="my-3" />
+
+                <MudSkeleton Width="90%" Height="20px" />
+                <MudSkeleton Width="80%" Height="20px" />
+            </MudPaper>
+
+        </div>
+    }
+    else if (CurrentState == ShoppingListState.Empty)
+    {
+        <MudPaper Class="shopping-state-card" Elevation="0">
+
+            <MudIcon Icon="@Icons.Material.Filled.ShoppingCart"
+                     Class="state-icon"
+                     Size="Size.Large" />
+
+            <MudText Typo="Typo.h5">
+                @L["EmptyTitle"]
+            </MudText>
+
+            <MudText Typo="Typo.body2" Class="state-description">
+                @L["EmptyDescription"]
+            </MudText>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddForm">
+                @L["AddProduct"]
+            </MudButton>
+
+        </MudPaper>
+    }
+    else if (CurrentState == ShoppingListState.Error)
+    {
+        <MudPaper Class="shopping-state-card error-state" Elevation="0">
+
+            <MudIcon Icon="@Icons.Material.Filled.SentimentDissatisfied"
+                     Class="state-icon error-icon"
+                     Size="Size.Large" />
+
+            <MudText Typo="Typo.h5" Class="error-title">
+                @L["ErrorTitle"]
+            </MudText>
+
+            <MudText Typo="Typo.body2" Class="state-description">
+                @L["ErrorDescription"]
+            </MudText>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="Retry">
+                @L["Retry"]
+            </MudButton>
+
+        </MudPaper>
+    }
+    else if (CurrentState == ShoppingListState.WithData)
+    {
+        @foreach (var category in Categories)
+        {
+            <MudPaper Class="category-block" Elevation="0">
+
+                <div class="category-header"
+                     @onclick="() => ToggleCategory(category)">
+
+                    <MudText Typo="Typo.h6">
+                        @GetCategoryName(category)
+                    </MudText>
+
+                    <MudIcon Icon="@(IsCategoryExpanded(category)
+                                      ? Icons.Material.Filled.ExpandLess
+                                      : Icons.Material.Filled.ExpandMore)" />
+                </div>
+
+                @if (IsCategoryExpanded(category))
+                {
+                    <MudDivider />
+
+                    @foreach (var item in Items.Where(x => x.Category == category))
+                    {
+                        <ShoppingListItem Item="item"
+                                          OnPurchasedChanged="HandlePurchasedChanged"
+                                          OnFridgeChanged="HandleFridgeChanged"
+                                          @key="item.Id" />
+                    }
+                }
+
+            </MudPaper>
+        }
+    }
+
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public ShoppingListState CurrentState { get; set; } = ShoppingListState.WithData;
+
+    private bool ShowAddForm = false;
+    private async Task ChangeLanguage(string language)
+    {
+        await JS.InvokeVoidAsync("fridgeChefLanguage.set", language);
+    }
+
+    private void OpenAddForm()
+    {
+        ShowAddForm = true;
+    }
+
+    private void CloseAddForm()
+    {
+        ShowAddForm = false;
+    }
+
+    private void AddProduct(ShoppingItemForm form)
+    {
+        var item = new ShoppingItem
+            {
+                Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1,
+                Name = form.Name.Trim(),
+                Quantity = form.Quantity!.Value,
+                Unit = form.Unit,
+                Category = form.Category
+            };
+
+        Items.Add(item);
+
+        if (!Categories.Contains(item.Category))
+        {
+            Categories.Add(item.Category);
+        }
+
+        ExpandedCategories.Add(item.Category);
+
+        CurrentState = ShoppingListState.WithData;
+        ShowAddForm = false;
+    }
+
+    private List<ShoppingItem> Items = new()
+    {
+        new ShoppingItem
+        {
+            Id = 1,
+            Name = "Помідори",
+            Quantity = 2,
+            Unit = "кг",
+            Category = "Овочі та фрукти"
+        },
+
+        new ShoppingItem
+        {
+            Id = 2,
+            Name = "Огірки",
+            Quantity = 1,
+            Unit = "кг",
+            Category = "Овочі та фрукти"
+        },
+
+        new ShoppingItem
+        {
+            Id = 3,
+            Name = "Яблука",
+            Quantity = 5,
+            Unit = "шт.",
+            Category = "Овочі та фрукти"
+        },
+
+        new ShoppingItem
+        {
+            Id = 4,
+            Name = "Куряче філе",
+            Quantity = 1,
+            Unit = "кг",
+            Category = "М'ясо та птиця"
+        },
+
+        new ShoppingItem
+        {
+            Id = 5,
+            Name = "Індичка",
+            Quantity = 0.5,
+            Unit = "кг",
+            Category = "М'ясо та птиця"
+        }
+    };
+
+    private List<string> Categories = new()
+    {
+        "Овочі та фрукти",
+        "М'ясо та птиця"
+    };
+
+    private HashSet<string> ExpandedCategories = new()
+    {
+        "Овочі та фрукти",
+        "М'ясо та птиця"
+    };
+
+    private string GetCategoryName(string category)
+    {
+        return category switch
+        {
+            "Овочі та фрукти" => L["FruitsVegetables"].Value,
+            "М'ясо та птиця" => L["MeatPoultry"].Value,
+            _ => category
+        };
+    }
+
+    private bool IsCategoryExpanded(string category)
+    {
+        return ExpandedCategories.Contains(category);
+    }
+
+    private void ToggleCategory(string category)
+    {
+        if (ExpandedCategories.Contains(category))
+        {
+            ExpandedCategories.Remove(category);
+        }
+        else
+        {
+            ExpandedCategories.Add(category);
+        }
+    }
+
+    private void HandlePurchasedChanged(ShoppingItem item)
+    {
+        var existingItem = Items.FirstOrDefault(x => x.Id == item.Id);
+
+        if (existingItem != null)
+        {
+            existingItem.IsPurchased = item.IsPurchased;
+        }
+    }
+
+    private void HandleFridgeChanged(ShoppingItem item)
+    {
+        var existingItem = Items.FirstOrDefault(x => x.Id == item.Id);
+
+        if (existingItem != null)
+        {
+            existingItem.IsInFridge = item.IsInFridge;
+        }
+    }
+
+    private void Retry()
+    {
+        CurrentState = ShoppingListState.Loading;
+    }
+}
