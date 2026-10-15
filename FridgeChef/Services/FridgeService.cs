@@ -1,0 +1,115 @@
+﻿using FridgeChef.Models;
+
+namespace FridgeChef.Services
+{
+    public class FridgeService
+    {
+        public bool IsLoading { get; set; } = false;
+        public string? ErrorMessage { get; set; }
+        public List<Ingredient> Ingredients { get; } = new()
+        {
+            new Ingredient
+            {
+                Id = 1,
+                Name = "Яйця",
+                AllowedUnits = new() { "шт" }
+            },
+
+            new Ingredient
+            {
+                Id = 2,
+                Name = "Молоко",
+                AllowedUnits = new() { "мл", "л" }
+            },
+
+            new Ingredient
+            {
+                Id = 3,
+                Name = "Ковбаса",
+                AllowedUnits = new() { "г", "кг" }
+            },
+
+            new Ingredient
+            {
+                Id = 4,
+                Name = "Сир",
+                AllowedUnits = new() { "г", "кг" }
+            },
+
+            new Ingredient
+            {
+                Id = 5,
+                Name = "Помідори",
+                AllowedUnits = new() { "шт", "г", "кг" }
+            },
+
+            new Ingredient
+            {
+                Id = 6,
+                Name = "Огірки",
+                AllowedUnits = new() { "шт", "г", "кг" }
+            },
+
+            new Ingredient
+            {
+                Id = 7,
+                Name = "Картопля",
+                AllowedUnits = new() { "шт", "г", "кг" }
+            },
+
+            new Ingredient
+            {
+                Id = 8,
+                Name = "Масло",
+                AllowedUnits = new() { "г" }
+            }
+        };
+
+        public List<FridgeItem> FridgeItems { get; } = new();
+
+
+        public void AddToFridge(Ingredient ingredient, double quantity, string unit)
+        {
+            if (quantity <= 0)
+            {
+                return;
+            }
+
+            if (!ingredient.AllowedUnits.Contains(unit))
+            {
+                return;
+            }
+            if (unit == "кг")
+            {
+                quantity *= 1000;
+                unit = "г";
+            }
+            else if (unit == "л")
+            {
+                quantity *= 1000;
+                unit = "мл";
+            }
+            var existingItem = FridgeItems.FirstOrDefault(item =>
+                item.Ingredient.Id == ingredient.Id &&
+                item.Unit == unit);
+
+            if (existingItem != null)
+            {
+                existingItem.Quantity += quantity;
+            }
+            else
+            {
+                FridgeItems.Add(new FridgeItem
+                {
+                    Id = FridgeItems.Count == 0
+                        ? 1
+                        : FridgeItems.Max(item => item.Id) + 1,
+                    Ingredient = ingredient,
+                    Quantity = quantity,
+                    Unit = unit
+                });
+            }
+        }
+
+    }
+}

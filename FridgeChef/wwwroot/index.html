@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="uk">
 
@@ -9,7 +10,11 @@
 
     <link rel="stylesheet" href="css/app.css" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link href="FridgeChef.styles.css" rel="stylesheet" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -29,23 +34,35 @@
     </div>
 
     <script>
+        window.fridgeCulture = {
+            get: function () {
+                return localStorage.getItem("fridgechef-language")
+                    || localStorage.getItem("fridgeCulture")
+                    || "uk-UA";
+            },
+
+            set: function (culture) {
+                localStorage.setItem("fridgechef-language", culture);
+                localStorage.setItem("fridgeCulture", culture);
+            }
+        };
+
         window.fridgeChefLanguage = {
             get: function () {
-                return localStorage.getItem("fridgechef-language") || "uk-UA";
+                return window.fridgeCulture.get();
             },
 
             set: function (language) {
-                localStorage.setItem("fridgechef-language", language);
+                window.fridgeCulture.set(language);
                 location.reload();
             }
         };
 
-        const savedLanguage = window.fridgeChefLanguage.get();
+        const savedLanguage = window.fridgeCulture.get();
 
         document.documentElement.lang =
             savedLanguage === "en-US" ? "en" : "uk";
     </script>
-
 
     <script src="_framework/blazor.webassembly.js"
             autostart="false"></script>
@@ -59,7 +76,5 @@
     </script>
 
 </body>
-
-
 
 </html>

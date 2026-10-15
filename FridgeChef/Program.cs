@@ -1,9 +1,10 @@
-
+using FridgeChef.Services;
 using FridgeChef;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using System.Globalization;
+using Microsoft.JSInterop;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -12,22 +13,30 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddMudServices();
 builder.Services.AddLocalization();
-
-builder.Services.AddScoped(sp => new HttpClient
-{
-    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
-});
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+builder.Services.AddScoped<FridgeService>();
 
 var host = builder.Build();
 
-var culture = CultureInfo.CurrentUICulture;
+var js = host.Services.GetRequiredService<IJSRuntime>();
 
-if (culture.Name != "uk-UA" && culture.Name != "en-US")
+var savedCulture = await js.InvokeAsync<string>("fridgeCulture.get");
+
+if (savedCulture != "uk-UA" && savedCulture != "en-US")
 {
-    culture = new CultureInfo("uk-UA");
+    savedCulture = "uk-UA";
 }
+
+var culture = new CultureInfo(savedCulture);
 
 CultureInfo.DefaultThreadCurrentCulture = culture;
 CultureInfo.DefaultThreadCurrentUICulture = culture;
+CultureInfo.CurrentCulture = culture;
+CultureInfo.CurrentUICulture = culture;
 
 await host.RunAsync();
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+
+

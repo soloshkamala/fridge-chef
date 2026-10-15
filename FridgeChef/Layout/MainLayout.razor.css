@@ -1,0 +1,189 @@
+﻿
+.site-header {
+    width: 100%;
+    background-color: #faf8f4;
+    border-bottom: 1px solid #f0ece5;
+}
+
+.navbar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+    min-height: 76px;
+    padding: 14px 36px;
+    box-sizing: border-box;
+}
+
+
+
+.logo {
+    justify-self: start;
+    font-family: 'Geist', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #262626;
+    white-space: nowrap;
+    cursor: default;
+}
+
+.logo-accent {
+    color: #f97316;
+}
+
+
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 25px;
+}
+
+    .nav-links ::deep a {
+        position: relative;
+        color: #555555;
+        text-decoration: none;
+        font-family: 'Geist', sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        transition: color 0.2s ease;
+    }
+
+        .nav-links ::deep a:hover {
+            color: #f97316;
+        }
+
+        .nav-links ::deep a.active {
+            color: #f97316;
+            font-weight: 600;
+        }
+
+
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 24px;
+}
+
+
+.language-switcher {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .language-switcher button {
+        border: none;
+        background: transparent;
+        padding: 6px 2px;
+        color: #888888;
+        font-family: 'Geist', sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+        .language-switcher button:hover {
+            color: #f97316;
+        }
+
+        .language-switcher button.selected {
+            color: #f97316;
+            font-weight: 700;
+        }
+
+.language-divider {
+    color: #cccccc;
+    font-size: 13px;
+}
+
+
+.logout-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 24px;
+    padding: 11px 25px;
+    background-color: #f97316;
+    color: #ffffff;
+    font-family: 'Geist', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+    .logout-button:hover {
+        background-color: #ea580c;
+        transform: translateY(-1px);
+    }
+
+    .logout-button:active {
+        transform: translateY(0);
+    }
+
+
+@media (max-width: 1100px) {
+    .navbar {
+        grid-template-columns: auto 1fr;
+        gap: 18px;
+        padding: 16px 24px;
+    }
+
+    .nav-links {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 16px 24px;
+    }
+
+    .nav-actions {
+        grid-column: 2;
+        grid-row: 1;
+    }
+}
+
+@media (max-width: 600px) {
+    .navbar {
+        padding: 14px 16px;
+        gap: 14px;
+    }
+
+    .logo {
+        font-size: 21px;
+    }
+
+    .nav-actions {
+        gap: 12px;
+    }
+
+    .logout-button {
+        padding: 9px 14px;
+        font-size: 12px;
+    }
+
+    .nav-links {
+        gap: 12px 18px;
+    }
+
+        .nav-links ::deep a {
+            font-size: 12px;
+        }
+
+    .language-switcher {
+        gap: 4px;
+    }
+
+        .language-switcher button {
+            font-size: 12px;
+        }
+}
