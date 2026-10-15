@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>2.0</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+	</resheader>
+	<data name="PageTitle" xml:space="preserve"><value>Список покупок</value></data>
+	<data name="PageSubtitle" xml:space="preserve"><value>Плануй покупки легко разом із FridgeChef!</value></data>
+	<data name="AddProduct" xml:space="preserve"><value>Додати продукт</value></data>
+	<data name="EmptyTitle" xml:space="preserve"><value>Список покупок порожній</value></data>
+	<data name="EmptyDescription" xml:space="preserve"><value>Додай продукти, які потрібно купити.</value></data>
+	<data name="ErrorTitle" xml:space="preserve"><value>Не вдалося завантажити список покупок</value></data>
+	<data name="ErrorDescription" xml:space="preserve"><value>Перевір підключення до інтернету та спробуй ще раз.</value></data>
+	<data name="Retry" xml:space="preserve"><value>Спробувати ще раз</value></data>
+	<data name="ProductName" xml:space="preserve"><value>Назва продукту</value></data>
+	<data name="Quantity" xml:space="preserve"><value>Кількість</value></data>
+	<data name="Unit" xml:space="preserve"><value>Одиниця вимірювання</value></data>
+	<data name="Category" xml:space="preserve"><value>Категорія</value></data>
+	<data name="Cancel" xml:space="preserve"><value>Скасувати</value></data>
+	<data name="Add" xml:space="preserve"><value>Додати</value></data>
+	<data name="InFridge" xml:space="preserve"><value>У холодильнику</value></data>
+	<data name="FruitsVegetables" xml:space="preserve"><value>Овочі та фрукти</value></data>
+	<data name="MeatPoultry" xml:space="preserve"><value>М'ясо та птиця</value></data>
+	<data name="UnitKg" xml:space="preserve">
+    <value>кг</value>
+</data>
+	<data name="UnitPieces" xml:space="preserve">
+    <value>шт.</value>
+</data>
+	<data name="UnitLiters" xml:space="preserve">
+    <value>л</value>
+</data>
+	
+</root>
