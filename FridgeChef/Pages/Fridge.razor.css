@@ -47,17 +47,20 @@
 
 .hero-image {
     width: 100%;
-    height: 350px;
-    border-radius: 28px;
+    max-width: 420px;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
     overflow: hidden;
-    background-color: #f5e9da;
-    box-shadow: 0 16px 45px rgba(60, 40, 20, 0.08);
+    background: transparent;
+    box-shadow: none;
+    margin: 0 auto;
 }
 
     .hero-image img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         display: block;
     }
 

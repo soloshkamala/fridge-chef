@@ -6,6 +6,7 @@
 @inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 @inject IJSRuntime JS
 
+<MudThemeProvider Theme="@fridgeTheme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -78,4 +79,12 @@
         await JS.InvokeVoidAsync("fridgeCulture.set", culture);
         await JS.InvokeVoidAsync("location.reload");
     }
+
+    private MudTheme fridgeTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#FF7A30"
+        }
+    };
 }

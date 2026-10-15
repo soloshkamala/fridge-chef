@@ -496,8 +496,8 @@ body {
 }
 
 
-.ingredient-dialog {
-    width: min(420px, calc(100vw - 32px));
+.mud-dialog.ingredient-dialog {
+    width: min(380px, calc(100vw - 32px));
     max-width: 100%;
     border-radius: 20px;
     overflow: hidden;
@@ -514,4 +514,30 @@ body {
 
     .ingredient-dialog .mud-dialog-actions {
         padding: 12px 28px 24px;
+    }
+
+    .ingredient-dialog .mud-dialog-title {
+        font-weight: 600;
+        color: #252525;
+    }
+
+    .ingredient-dialog .mud-input-outlined-border {
+        border-radius: 10px;
+    }
+
+    .ingredient-dialog .mud-button-filled {
+        box-shadow: none;
+        border-radius: 10px;
+        text-transform: none;
+        font-weight: 600;
+    }
+
+    .ingredient-dialog .mud-dialog-actions .mud-button-root {
+        text-transform: none;
+        color: #777;
+    }
+    .ingredient-dialog .mud-dialog-title .mud-typography {
+        font-size: 22px;
+        font-weight: 700;
+        color: #252525;
     }
