@@ -106,4 +106,25 @@ public void LoginPage_ShowsErrorState()
     );
 }
 
+[Fact]
+public void LoginPage_ShowsSuccessState()
+{
+    var authState =
+        Services.GetRequiredService<AuthStateService>();
+
+    authState.SetSuccess("student@example.com");
+
+    var page = Render<Login>();
+
+    Assert.Contains(
+        "Вхід виконано успішно",
+        page.Markup
+    );
+
+    Assert.Contains(
+        "student@example.com",
+        page.Markup
+    );
+}
+
 }
