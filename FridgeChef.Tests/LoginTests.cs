@@ -4,6 +4,7 @@ using Xunit;
 using MudBlazor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using FridgeChef.Pages;
+using FridgeChef.Services;
 
 namespace FridgeChef.Tests;
 
@@ -65,5 +66,26 @@ public void LoginForm_ShowsErrors_WhenFieldsAreEmpty()
     Assert.Contains("Введіть електронну пошту", page.Markup);
     Assert.Contains("Введіть пароль", page.Markup);
 }
+
+
+[Fact]
+public void LoginPage_ShowsLoadingState()
+{
+    // Створюємо сервіс стану авторизації
+    var authState = new AuthStateService();
+
+    // Реєструємо сервіс у тестах
+    Services.AddSingleton(authState);
+
+    // Встановлюємо стан завантаження
+    authState.SetLoading();
+
+    // Відображаємо сторінку
+    var page = Render<Login>();
+
+    // Перевіряємо повідомлення
+    Assert.Contains("Завантаження...", page.Markup);
+}
+
 
 }
