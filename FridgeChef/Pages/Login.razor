@@ -21,10 +21,20 @@
 
         <MudText>Завантаження...</MudText>
     }
-    else
+   
+else
+{
+    @if (!string.IsNullOrEmpty(AuthState.ErrorMessage))
     {
-        <LoginForm />
+        <MudAlert Severity="Severity.Error"
+                  Class="mt-4 mb-4">
+            @AuthState.ErrorMessage
+        </MudAlert>
     }
+
+    <LoginForm />
+}
+
 
 </MudContainer>
 
