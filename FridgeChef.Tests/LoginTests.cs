@@ -85,4 +85,25 @@ public class LoginTests : BunitContext, IAsyncLifetime
 
         Assert.Contains("Завантаження...", page.Markup);
     }
+    
+[Fact]
+public void LoginPage_ShowsErrorState()
+{
+    // Отримуємо сервіс авторизації
+    var authState =
+        Services.GetRequiredService<AuthStateService>();
+
+    // Встановлюємо повідомлення про помилку
+    authState.SetError("Неправильний Email або пароль");
+
+    // Відображаємо сторінку
+    var page = Render<Login>();
+
+    // Перевіряємо повідомлення
+    Assert.Contains(
+        "Неправильний Email або пароль",
+        page.Markup
+    );
+}
+
 }
