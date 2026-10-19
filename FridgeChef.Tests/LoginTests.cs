@@ -12,27 +12,26 @@ public class LoginTests : BunitContext, IAsyncLifetime
 {
     public LoginTests()
     {
-        // Підключаємо сервіси MudBlazor
         Services.AddMudServices();
 
-        // Реєструємо TimeProvider
         Services.AddSingleton<TimeProvider>(
             TimeProvider.System
         );
 
-        // Дозволяємо JS-виклики у тестах
+        Services.AddScoped<AuthStateService>();
+
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
-    public Task InitializeAsync()
+    Task IAsyncLifetime.InitializeAsync()
     {
         return Task.CompletedTask;
     }
 
-  public new async Task DisposeAsync()
-{
-    await base.DisposeAsync();
-}
+    async Task IAsyncLifetime.DisposeAsync()
+    {
+        await base.DisposeAsync();
+    }
 
     [Fact]
     public void LoginPage_ShowsWelcomeTitle()
@@ -51,41 +50,39 @@ public class LoginTests : BunitContext, IAsyncLifetime
         Assert.Contains("Пароль", page.Markup);
         Assert.Contains("Увійти", page.Markup);
     }
-    
-[Fact]
-public void LoginForm_ShowsErrors_WhenFieldsAreEmpty()
-{
-    // Створюємо сторінку
-    var page = Render<Login>();
 
-    // Натискаємо кнопку входу
-    var button = page.Find("button");
-    button.Click();
+    [Fact]
+    public void LoginForm_ShowsErrors_WhenFieldsAreEmpty()
+    {
+        var page = Render<Login>();
 
-    // Перевіряємо повідомлення про помилки
-    Assert.Contains("Введіть електронну пошту", page.Markup);
-    Assert.Contains("Введіть пароль", page.Markup);
-}
+        var button = page.Find("button[type='submit']");
+        button.Click();
 
+        page.WaitForAssertion(() =>
+        {
+            Assert.Contains(
+                "Введіть електронну пошту",
+                page.Markup
+            );
 
-[Fact]
-public void LoginPage_ShowsLoadingState()
-{
-    // Створюємо сервіс стану авторизації
-    var authState = new AuthStateService();
+            Assert.Contains(
+                "Введіть пароль",
+                page.Markup
+            );
+        });
+    }
 
-    // Реєструємо сервіс у тестах
-    Services.AddSingleton(authState);
+    [Fact]
+    public void LoginPage_ShowsLoadingState()
+    {
+        var authState =
+            Services.GetRequiredService<AuthStateService>();
 
-    // Встановлюємо стан завантаження
-    authState.SetLoading();
+        authState.SetLoading();
 
-    // Відображаємо сторінку
-    var page = Render<Login>();
+        var page = Render<Login>();
 
-    // Перевіряємо повідомлення
-    Assert.Contains("Завантаження...", page.Markup);
-}
-
-
+        Assert.Contains("Завантаження...", page.Markup);
+    }
 }

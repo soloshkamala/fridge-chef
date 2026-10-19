@@ -6,11 +6,9 @@ namespace FridgeChef.Models;
 public class LoginModel
 {
     [Required(ErrorMessage = "Введіть електронну пошту")]
-    [EmailAddress(ErrorMessage = "Некоректна електронна пошта")]
-    public string Email { get; set; } = "";
+    [EmailAddress(ErrorMessage = "Неправильний формат Email")]
+    public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Введіть пароль")]
-    public string Password { get; set; } = "";
-
-    public bool RememberMe { get; set; }
+    public string Password { get; set; } = string.Empty;
 }

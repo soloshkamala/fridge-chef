@@ -1,9 +1,46 @@
 
 @page "/login"
 @using FridgeChef.Components
+@using FridgeChef.Services
+@implements IDisposable
+@inject AuthStateService AuthState
 
 <PageTitle>FridgeChef - Вхід</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
-    <LoginForm />
+
+    <MudText Typo="Typo.h4">
+        Ласкаво просимо
+    </MudText>
+
+    @if (AuthState.IsLoading)
+    {
+        <MudProgressCircular
+            Color="Color.Primary"
+            Indeterminate="true" />
+
+        <MudText>Завантаження...</MudText>
+    }
+    else
+    {
+        <LoginForm />
+    }
+
 </MudContainer>
+
+@code {
+    protected override void OnInitialized()
+    {
+        AuthState.OnChange += RefreshPage;
+    }
+
+    private void RefreshPage()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnChange -= RefreshPage;
+    }
+}

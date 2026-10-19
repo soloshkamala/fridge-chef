@@ -1,59 +1,43 @@
 
 @using FridgeChef.Models
 @using Microsoft.AspNetCore.Components.Forms
-@using MudBlazor
 
-<MudPaper Class="pa-6" Elevation="2">
+<EditForm Model="@loginModel"
+          OnValidSubmit="HandleLogin">
 
-    <MudText Typo="Typo.h5" Class="mb-4">
-        Ласкаво просимо!
-    </MudText>
+    <DataAnnotationsValidator />
 
-    <MudText Typo="Typo.body2" Class="mb-4">
-        Увійдіть у свій обліковий запис
-    </MudText>
-
-    <EditForm Model="@loginModel"
-              OnValidSubmit="HandleLogin">
-
-        <DataAnnotationsValidator />
+    <MudStack Spacing="3" Class="mt-4">
 
         <MudTextField T="string"
                       Label="Email"
                       @bind-Value="loginModel.Email"
                       For="@(() => loginModel.Email)"
-                      Variant="Variant.Outlined"
-                      Class="mb-3" />
+                      Variant="Variant.Outlined" />
 
         <MudTextField T="string"
                       Label="Пароль"
-                      InputType="InputType.Password"
                       @bind-Value="loginModel.Password"
                       For="@(() => loginModel.Password)"
-                      Variant="Variant.Outlined"
-                      Class="mb-3" />
-
-        <MudCheckBox T="bool"
-                     Label="Запам'ятати мене"
-                     @bind-Value="loginModel.RememberMe" />
+                      InputType="InputType.Password"
+                      Variant="Variant.Outlined" />
 
         <MudButton ButtonType="ButtonType.Submit"
                    Variant="Variant.Filled"
                    Color="Color.Primary"
-                   FullWidth="true"
-                   Class="mt-4">
+                   FullWidth="true">
             Увійти
         </MudButton>
 
-    </EditForm>
+    </MudStack>
 
-</MudPaper>
+</EditForm>
 
 @code {
     private LoginModel loginModel = new();
 
     private void HandleLogin()
     {
-        // Логіку авторизації додамо пізніше
+        // Логіку авторизації додамо пізніше.
     }
 }
