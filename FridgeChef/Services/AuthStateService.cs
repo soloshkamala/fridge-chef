@@ -18,4 +18,14 @@ public class AuthStateService
         IsLoading = false;
         OnChange?.Invoke();
     }
+    
+public string? ErrorMessage { get; private set; }
+
+public void SetError(string message)
+{
+    ErrorMessage = message;
+    IsLoading = false;
+    OnChange?.Invoke();
+}
+
 }
