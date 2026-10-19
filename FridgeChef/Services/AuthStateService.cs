@@ -28,4 +28,15 @@ public void SetError(string message)
     OnChange?.Invoke();
 }
 
+public string? UserEmail { get; private set; }
+
+public void SetSuccess(string email)
+{
+    UserEmail = email;
+    ErrorMessage = null;
+    IsLoading = false;
+    OnChange?.Invoke();
+}
+
+
 }
