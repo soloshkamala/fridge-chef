@@ -16,7 +16,7 @@ namespace FridgeChef.Tests
             CultureInfo.CurrentUICulture = culture;
 
             // Arrange & Act — рендеримо сторінку
-            var cut = RenderComponent<PFC_macros>();
+            var cut = Render<PFCMacros>();
 
             // Assert — перевіряємо наявність заголовок та тексту на сторінці
             var markup = cut.Markup;
