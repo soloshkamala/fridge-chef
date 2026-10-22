@@ -1,0 +1,144 @@
+﻿@using FridgeChef.Models
+@using Microsoft.Extensions.Localization
+@using System.Globalization
+@inject IStringLocalizer<FridgeChef.ProfileResource> L
+
+<MudPaper Class="pa-5 rounded-lg profile-header"
+          Elevation="0"
+          data-testid="header">
+
+    <div class="d-flex flex-wrap justify-space-between align-start"
+         style="gap:16px;">
+
+        <div class="d-flex align-center" style="gap:14px;">
+
+            <MudAvatar Size="Size.Large"
+                       Color="Color.Default">
+
+                @if (string.IsNullOrEmpty(User.AvatarUrl))
+                {
+                    <MudIcon Icon="@Icons.Material.Outlined.Person" />
+                }
+                else
+                {
+                    <img src="@User.AvatarUrl"
+                         alt="@L["UserAvatar"]"
+                         style="width:100%;height:100%;object-fit:cover;" />
+                }
+
+            </MudAvatar>
+
+            <div>
+                <div class="d-flex align-center flex-wrap"
+                     style="gap:8px;">
+
+                    <MudText Typo="Typo.subtitle1"
+                             Class="fw-bold">
+                        @GetDisplayName()
+                    </MudText>
+
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="Color.Warning"
+                             Variant="Variant.Outlined">
+                        @L["UserBadge"]
+                    </MudChip>
+
+                </div>
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary">
+                    @User.Email
+                </MudText>
+            </div>
+        </div>
+
+        @if (User.JoinedAt is { } d)
+        {
+            <MudText Typo="Typo.caption"
+                     Color="Color.Secondary">
+                @L["RegisteredOn"] @d.ToString("d MMMM yyyy")
+            </MudText>
+        }
+
+    </div>
+
+    <div class="d-flex flex-wrap mt-5" style="gap:12px;">
+
+        <MudPaper Class="pa-3 rounded-lg"
+                  Elevation="0"
+                  Style="background-color:#faf7f3;min-width:170px;">
+
+            <div class="d-flex align-center" style="gap:12px;">
+
+                <MudIcon Icon="@Icons.Material.Outlined.BookmarkBorder"
+                         Color="Color.Warning" />
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Class="fw-bold"
+                             data-testid="saved-count">
+                        @User.SavedCount
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        @L["SavedRecipes"]
+                    </MudText>
+                </div>
+
+            </div>
+        </MudPaper>
+
+        <MudPaper Class="pa-3 rounded-lg"
+                  Elevation="0"
+                  Style="background-color:#faf7f3;min-width:170px;">
+
+            <div class="d-flex align-center" style="gap:12px;">
+
+                <MudIcon Icon="@Icons.Material.Outlined.FavoriteBorder"
+                         Color="Color.Warning" />
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Class="fw-bold"
+                             data-testid="fav-count">
+                        @User.FavoriteCatalogs
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        @L["FavoriteCatalogs"]
+                    </MudText>
+                </div>
+
+            </div>
+        </MudPaper>
+
+    </div>
+
+</MudPaper>
+
+<style>
+    .profile-header {
+        background-color: white;
+        border: 1px solid #eee8e2;
+        border-radius: 14px;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public UserProfile User { get; set; } = default!;
+
+    private string GetDisplayName()
+    {
+        if (User.Name == "Name Surname" &&
+            CultureInfo.CurrentUICulture.Name == "uk-UA")
+        {
+            return "Ім'я Прізвище";
+        }
+
+        return User.Name;
+    }
+}

@@ -1,0 +1,118 @@
+﻿@using FridgeChef.Models
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<FridgeChef.ProfileResource> L
+
+<MudCard Class="recipe-card" Elevation="0">
+
+    <div class="recipe-image">
+        <MudCardMedia Image="@Recipe.ImageUrl"
+                      Height="150" />
+
+        <div class="recipe-bookmark">
+            <MudIcon Icon="@Icons.Material.Outlined.Bookmark"
+                     Size="Size.Small" />
+        </div>
+    </div>
+
+    <MudCardContent Class="pa-3">
+
+        <MudText Typo="Typo.subtitle2"
+                 Class="recipe-title">
+            @GetLocalizedTitle()
+        </MudText>
+
+        <div class="d-flex align-center flex-wrap mt-2"
+             style="gap:8px;">
+
+            <MudChip T="string"
+                     Size="Size.Small"
+                     Variant="Variant.Filled"
+                     Class="recipe-time">
+                @Recipe.Minutes @L["MinutesShort"]
+            </MudChip>
+
+            <MudChip T="string"
+                     Size="Size.Small"
+                     Color="Color.Success"
+                     Variant="Variant.Filled">
+                @Recipe.Kcal @L["KcalShort"]
+            </MudChip>
+
+        </div>
+
+    </MudCardContent>
+
+</MudCard>
+
+<style>
+    .recipe-card {
+        border: 1px solid #eee8e2;
+        border-radius: 12px;
+        overflow: hidden;
+        background-color: white;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        height: 100%;
+    }
+
+        .recipe-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        }
+
+    .recipe-image {
+        position: relative;
+        overflow: hidden;
+    }
+
+        .recipe-image .mud-card-media {
+            background-size: cover;
+            background-position: center;
+        }
+
+    .recipe-bookmark {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: white;
+        color: #f97316;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .recipe-title {
+        font-weight: 600;
+        color: #303030;
+        line-height: 1.4;
+    }
+
+    .recipe-time {
+        background-color: #f3f3f3;
+        color: #555;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public RecipeSummary Recipe { get; set; } = default!;
+
+    private string GetLocalizedTitle()
+    {
+        var key = Recipe.Id switch
+        {
+            "1" => "RecipeChickenPasta",
+            "2" => "RecipeAvocadoToast",
+            "3" => "RecipeTomatoSoup",
+            "4" => "RecipeTunaSalad",
+            _ => null
+        };
+
+        return key is null
+            ? Recipe.Title
+            : L[key].Value;
+    }
+}
