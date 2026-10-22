@@ -1,4 +1,5 @@
 ﻿
+using System.Globalization;
 using Bunit;
 using FridgeChef.Pages;
 using FridgeChef.Services;
@@ -13,108 +14,171 @@ public class ProfileStateTests
     [Fact]
     public async Task Profile_ShouldShowLoadingState()
     {
-        await using var ctx = new BunitContext();
+        var oldCulture = CultureInfo.CurrentCulture;
+        var oldUICulture = CultureInfo.CurrentUICulture;
 
-        ctx.Services.AddMudServices();
-        ctx.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-        ctx.Services.AddScoped<ProfileService>();
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
 
-        var cut = ctx.Render<Profile>();
+            await using var ctx = new BunitContext();
 
-        Assert.NotEmpty(
-            cut.FindAll("[data-testid='loading']")
-        );
+            ctx.Services.AddMudServices();
+            ctx.Services.AddLocalization(options =>
+                options.ResourcesPath = "Resources");
+
+            ctx.Services.AddScoped<ProfileService>();
+
+            var cut = ctx.Render<Profile>();
+
+            Assert.NotEmpty(
+                cut.FindAll("[data-testid='loading']")
+            );
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = oldCulture;
+            CultureInfo.CurrentUICulture = oldUICulture;
+        }
     }
-
 
     [Fact]
     public async Task Profile_ShouldShowEmptyState()
     {
-        await using var ctx = new BunitContext();
+        var oldCulture = CultureInfo.CurrentCulture;
+        var oldUICulture = CultureInfo.CurrentUICulture;
 
-        ctx.JSInterop.Setup<string?>(
-            "localStorage.getItem",
-            "fridgechef-profile-settings"
-        ).SetResult(null);
-
-        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
-
-        ctx.Services.AddMudServices();
-        ctx.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-        ctx.Services.AddScoped<ProfileService>(sp =>
-            new ProfileService
-            {
-                SimulateEmpty = true
-            });
-
-        var cut = ctx.Render<Profile>();
-
-        cut.WaitForAssertion(() =>
+        try
         {
-            Assert.NotEmpty(
-                cut.FindAll("[data-testid='empty']")
-            );
-        }, TimeSpan.FromSeconds(5));
-    }
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
 
+            await using var ctx = new BunitContext();
+
+            ctx.JSInterop.Setup<string?>(
+                "localStorage.getItem",
+                "fridgechef-profile-settings"
+            ).SetResult(null);
+
+            ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+
+            ctx.Services.AddMudServices();
+            ctx.Services.AddLocalization(options =>
+                options.ResourcesPath = "Resources");
+
+            ctx.Services.AddScoped<ProfileService>(sp =>
+                new ProfileService
+                {
+                    SimulateEmpty = true
+                });
+
+            var cut = ctx.Render<Profile>();
+
+            cut.WaitForAssertion(() =>
+            {
+                Assert.NotEmpty(
+                    cut.FindAll("[data-testid='empty']")
+                );
+            }, TimeSpan.FromSeconds(5));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = oldCulture;
+            CultureInfo.CurrentUICulture = oldUICulture;
+        }
+    }
 
     [Fact]
     public async Task Profile_ShouldShowErrorState()
     {
-        await using var ctx = new BunitContext();
+        var oldCulture = CultureInfo.CurrentCulture;
+        var oldUICulture = CultureInfo.CurrentUICulture;
 
-        ctx.Services.AddMudServices();
-        ctx.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-        ctx.Services.AddScoped<ProfileService>(sp =>
-            new ProfileService
-            {
-                SimulateError = true
-            });
-
-        var cut = ctx.Render<Profile>();
-
-        cut.WaitForAssertion(() =>
+        try
         {
-            Assert.NotEmpty(
-                cut.FindAll("[data-testid='error']")
-            );
-        }, TimeSpan.FromSeconds(5));
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
 
-        var alert = cut.Find(".mud-alert");
+            await using var ctx = new BunitContext();
 
-        Assert.Contains(
-            "Failed to load profile data and saved recipes.",
-            alert.TextContent);
+            ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+
+            ctx.Services.AddMudServices();
+            ctx.Services.AddLocalization(options =>
+                options.ResourcesPath = "Resources");
+
+            ctx.Services.AddScoped<ProfileService>(sp =>
+                new ProfileService
+                {
+                    SimulateError = true
+                });
+
+            var cut = ctx.Render<Profile>();
+
+            cut.WaitForAssertion(() =>
+            {
+                Assert.NotEmpty(
+                    cut.FindAll("[data-testid='error']")
+                );
+
+                var alert = cut.Find(".mud-alert");
+
+                Assert.Contains(
+                    "Failed to load profile data and saved recipes.",
+                    alert.TextContent
+                );
+            }, TimeSpan.FromSeconds(5));
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = oldCulture;
+            CultureInfo.CurrentUICulture = oldUICulture;
+        }
     }
-
 
     [Fact]
     public async Task Profile_ShouldShowDataState()
     {
-        await using var ctx = new BunitContext();
+        var oldCulture = CultureInfo.CurrentCulture;
+        var oldUICulture = CultureInfo.CurrentUICulture;
 
-        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
-
-        ctx.Services.AddMudServices();
-        ctx.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-        ctx.Services.AddScoped<ProfileService>();
-
-        var cut = ctx.Render<Profile>();
-
-        cut.WaitForAssertion(() =>
+        try
         {
-            Assert.Contains("Name Surname", cut.Markup);
-            Assert.Contains("Chicken Pasta", cut.Markup);
-            Assert.Contains("Avocado Toast", cut.Markup);
-        }, TimeSpan.FromSeconds(5));
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
 
-        Assert.Empty(
-            cut.FindAll("[data-testid='loading']")
-        );
+            await using var ctx = new BunitContext();
 
-        Assert.Empty(
-            cut.FindAll("[data-testid='error']")
-        );
+            ctx.JSInterop.Mode = JSRuntimeMode.Loose;
+
+            ctx.Services.AddMudServices();
+            ctx.Services.AddLocalization(options =>
+                options.ResourcesPath = "Resources");
+
+            ctx.Services.AddScoped<ProfileService>();
+
+            var cut = ctx.Render<Profile>();
+
+            cut.WaitForAssertion(() =>
+            {
+                Assert.Contains("Name Surname", cut.Markup);
+                Assert.Contains("Chicken Pasta", cut.Markup);
+                Assert.Contains("Avocado Toast", cut.Markup);
+            }, TimeSpan.FromSeconds(5));
+
+            Assert.Empty(
+                cut.FindAll("[data-testid='loading']")
+            );
+
+            Assert.Empty(
+                cut.FindAll("[data-testid='error']")
+            );
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = oldCulture;
+            CultureInfo.CurrentUICulture = oldUICulture;
+        }
     }
-
 }
