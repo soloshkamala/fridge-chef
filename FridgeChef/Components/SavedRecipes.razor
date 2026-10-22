@@ -1,0 +1,62 @@
+﻿@using FridgeChef.Models
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<FridgeChef.ProfileResource> L
+
+<div class="saved-recipes">
+
+    @if (Recipes.Count == 0)
+    {
+        <MudPaper Class="pa-8 text-center" data-testid="empty">
+            <MudIcon Icon="@Icons.Material.Outlined.RestaurantMenu" />
+            <MudText Typo="Typo.subtitle2">
+                @L["NoSavedRecipes"]
+            </MudText>
+            <MudText Typo="Typo.caption">
+                @L["AddFavoriteDishes"]
+            </MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var r in Recipes)
+            {
+                <MudItem @key="r.Id" xs="12" sm="6" md="3">
+                    <div role="button"
+                         tabindex="0"
+                         style="cursor:pointer;"
+                         @onclick="() => SelectRecipe(r.Id)"
+                         @onkeydown="e => HandleRecipeKeyDown(e, r.Id)">
+                        <RecipeCard Recipe="r" />
+                    </div>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<RecipeSummary> Recipes { get; set; }
+        = Array.Empty<RecipeSummary>();
+
+    [Parameter]
+    public EventCallback<string> OnRecipeSelected { get; set; }
+
+    private Task SelectRecipe(string recipeId)
+    {
+        return OnRecipeSelected.InvokeAsync(recipeId);
+    }
+
+    private Task HandleRecipeKeyDown(
+        Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e,
+        string recipeId)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            return SelectRecipe(recipeId);
+        }
+
+        return Task.CompletedTask;
+    }
+}

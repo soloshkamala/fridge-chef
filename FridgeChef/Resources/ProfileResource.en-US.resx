@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>2.0</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+	</resheader>
+
+	<data name="ProfileTitle" xml:space="preserve">
+    <value>My Profile</value>
+  </data>
+	<data name="SavedRecipes" xml:space="preserve">
+    <value>Saved Recipes</value>
+  </data>
+	<data name="ProfileSettings" xml:space="preserve">
+    <value>Profile Settings</value>
+  </data>
+	<data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+	<data name="Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+	<data name="SaveChanges" xml:space="preserve">
+    <value>Save Changes</value>
+  </data>
+	<data name="Retry" xml:space="preserve">
+  <value>Retry</value>
+</data>
+	<data name="NoSavedRecipes" xml:space="preserve">
+  <value>You don't have any saved recipes yet</value>
+</data>
+	<data name="AddFavoriteDishes" xml:space="preserve">
+  <value>Add your favorite dishes from the catalog.</value>
+</data>
+	<data name="DietaryRestrictions" xml:space="preserve">
+  <value>Dietary restrictions</value>
+</data>
+	<data name="GlutenFree" xml:space="preserve">
+  <value>Gluten-free</value>
+</data>
+	<data name="LactoseFree" xml:space="preserve">
+  <value>Lactose-free</value>
+</data>
+	<data name="FavoriteIngredients" xml:space="preserve">
+  <value>Favorite ingredients</value>
+</data>
+	<data name="Logout" xml:space="preserve">
+  <value>Log out</value>
+</data>
+	<data name="RegisteredOn" xml:space="preserve">
+  <value>Joined</value>
+</data>
+	<data name="FavoriteCatalogs" xml:space="preserve">
+  <value>Favorite catalogs</value>
+</data>
+	<data name="UserAvatar" xml:space="preserve">
+  <value>User avatar</value>
+</data>
+	<data name="MinutesShort" xml:space="preserve">
+  <value>min</value>
+</data>
+<data name="KcalShort" xml:space="preserve">
+  <value>kcal</value>
+</data>
+
+	<data name="UserBadge" xml:space="preserve">
+  <value>User</value>
+</data>
+	<data name="RecipeChickenPasta" xml:space="preserve">
+  <value>Chicken Pasta</value>
+</data>
+	<data name="RecipeAvocadoToast" xml:space="preserve">
+  <value>Avocado Toast</value>
+</data>
+	<data name="RecipeTomatoSoup" xml:space="preserve">
+  <value>Tomato Soup</value>
+</data>
+	<data name="RecipeTunaSalad" xml:space="preserve">
+  <value>Tuna Salad</value>
+</data>
+	<data name="ProfileLoadError" xml:space="preserve">
+  <value>Failed to load profile data and saved recipes.</value>
+</data>
+
+</root>

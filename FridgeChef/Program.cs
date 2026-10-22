@@ -15,6 +15,7 @@ builder.Services.AddMudServices();
 builder.Services.AddLocalization();
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped<FridgeService>();
+builder.Services.AddScoped<ProfileService>();
 
 var host = builder.Build();
 
@@ -35,8 +36,3 @@ CultureInfo.CurrentCulture = culture;
 CultureInfo.CurrentUICulture = culture;
 
 await host.RunAsync();
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-
-
