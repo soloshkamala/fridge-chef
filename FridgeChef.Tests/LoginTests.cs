@@ -5,6 +5,7 @@ using MudBlazor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using FridgeChef.Pages;
 using FridgeChef.Services;
+using FridgeChef.Components;
 
 namespace FridgeChef.Tests;
 
@@ -13,11 +14,7 @@ public class LoginTests : BunitContext, IAsyncLifetime
     public LoginTests()
     {
         Services.AddMudServices();
-
-        Services.AddSingleton<TimeProvider>(
-            TimeProvider.System
-        );
-
+        Services.AddSingleton<TimeProvider>(TimeProvider.System);
         Services.AddScoped<AuthStateService>();
 
         JSInterop.Mode = JSRuntimeMode.Loose;
@@ -33,6 +30,7 @@ public class LoginTests : BunitContext, IAsyncLifetime
         await base.DisposeAsync();
     }
 
+    // Тест 1. Перевірка заголовка сторінки
     [Fact]
     public void LoginPage_ShowsWelcomeTitle()
     {
@@ -41,6 +39,7 @@ public class LoginTests : BunitContext, IAsyncLifetime
         Assert.Contains("Ласкаво просимо", page.Markup);
     }
 
+    // Тест 2. Перевірка форми авторизації
     [Fact]
     public void LoginPage_ShowsLoginForm()
     {
@@ -51,13 +50,13 @@ public class LoginTests : BunitContext, IAsyncLifetime
         Assert.Contains("Увійти", page.Markup);
     }
 
+    // Тест 3. Перевірка валідації порожніх полів
     [Fact]
     public void LoginForm_ShowsErrors_WhenFieldsAreEmpty()
     {
         var page = Render<Login>();
 
-        var button = page.Find("button[type='submit']");
-        button.Click();
+        page.Find("button[type='submit']").Click();
 
         page.WaitForAssertion(() =>
         {
@@ -73,6 +72,7 @@ public class LoginTests : BunitContext, IAsyncLifetime
         });
     }
 
+    // Тест 4. Перевірка стану завантаження
     [Fact]
     public void LoginPage_ShowsLoadingState()
     {
@@ -85,46 +85,71 @@ public class LoginTests : BunitContext, IAsyncLifetime
 
         Assert.Contains("Завантаження...", page.Markup);
     }
-    
-[Fact]
-public void LoginPage_ShowsErrorState()
-{
-    // Отримуємо сервіс авторизації
-    var authState =
-        Services.GetRequiredService<AuthStateService>();
 
-    // Встановлюємо повідомлення про помилку
-    authState.SetError("Неправильний Email або пароль");
+    // Тест 5. Перевірка повідомлення про помилку
+    [Fact]
+    public void LoginPage_ShowsErrorState()
+    {
+        var authState =
+            Services.GetRequiredService<AuthStateService>();
 
-    // Відображаємо сторінку
-    var page = Render<Login>();
+        authState.SetError("Неправильний Email або пароль");
 
-    // Перевіряємо повідомлення
-    Assert.Contains(
-        "Неправильний Email або пароль",
-        page.Markup
-    );
-}
+        var page = Render<Login>();
 
-[Fact]
-public void LoginPage_ShowsSuccessState()
-{
-    var authState =
-        Services.GetRequiredService<AuthStateService>();
+        Assert.Contains(
+            "Неправильний Email або пароль",
+            page.Markup
+        );
+    }
 
-    authState.SetSuccess("student@example.com");
+    // Тест 6. Перевірка успішного входу
+    [Fact]
+    public void LoginPage_ShowsSuccessState()
+    {
+        var authState =
+            Services.GetRequiredService<AuthStateService>();
 
-    var page = Render<Login>();
+        authState.SetSuccess("student@example.com");
 
-    Assert.Contains(
-        "Вхід виконано успішно",
-        page.Markup
-    );
+        var page = Render<Login>();
 
-    Assert.Contains(
-        "student@example.com",
-        page.Markup
-    );
-}
+        Assert.Contains(
+            "Вхід виконано успішно",
+            page.Markup
+        );
 
+        Assert.Contains(
+            "student@example.com",
+            page.Markup
+        );
+    }
+
+    // Тест 7. Перевірка виклику EventCallback
+    [Fact]
+    public void LoginForm_CallsCallback_WhenSubmitted()
+    {
+        bool callbackCalled = false;
+
+        var page = Render<LoginForm>(
+            parameters => parameters.Add(
+                p => p.OnLogin,
+                () => { callbackCalled = true; }
+            )
+        );
+
+        // Вводимо Email
+        page.FindAll("input")[0]
+            .Change("student@example.com");
+
+        // Повторно знаходимо поля після оновлення
+        page.FindAll("input")[1]
+            .Change("password123");
+
+        // Надсилаємо форму
+        page.Find("form").Submit();
+
+        // Перевіряємо, чи викликався EventCallback
+        Assert.True(callbackCalled);
+    }
 }
