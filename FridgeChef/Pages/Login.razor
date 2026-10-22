@@ -4,6 +4,8 @@
 @using FridgeChef.Services
 @implements IDisposable
 @inject AuthStateService AuthState
+@inject AuthService AuthService
+@using FridgeChef.Models
 
 <PageTitle>FridgeChef - Вхід</PageTitle>
 
@@ -62,9 +64,25 @@
         AuthState.OnChange -= RefreshPage;
     }
     
-private void HandleLogin()
+
+private void HandleLogin(LoginModel model)
 {
     AuthState.SetLoading();
+
+    bool success = AuthService.Login(
+        model.Email,
+        model.Password
+    );
+
+    if (success)
+    {
+        AuthState.SetSuccess(model.Email);
+    }
+    else
+    {
+        AuthState.SetError("Неправильний Email або пароль");
+    }
 }
+
 
 }

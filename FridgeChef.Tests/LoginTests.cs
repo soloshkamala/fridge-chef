@@ -6,18 +6,20 @@ using Microsoft.Extensions.DependencyInjection;
 using FridgeChef.Pages;
 using FridgeChef.Services;
 using FridgeChef.Components;
-using FridgeChef.Components;
 using FridgeChef.Models;
 
 namespace FridgeChef.Tests;
 
 public class LoginTests : BunitContext, IAsyncLifetime
 {
+    // Налаштування середовища для тестування
     public LoginTests()
     {
         Services.AddMudServices();
         Services.AddSingleton<TimeProvider>(TimeProvider.System);
+
         Services.AddScoped<AuthStateService>();
+        Services.AddScoped<AuthService>();
 
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
@@ -41,7 +43,7 @@ public class LoginTests : BunitContext, IAsyncLifetime
         Assert.Contains("Ласкаво просимо", page.Markup);
     }
 
-    // Тест 2. Перевірка форми авторизації
+    // Тест 2. Перевірка наявності форми
     [Fact]
     public void LoginPage_ShowsLoginForm()
     {
@@ -88,7 +90,7 @@ public class LoginTests : BunitContext, IAsyncLifetime
         Assert.Contains("Завантаження...", page.Markup);
     }
 
-    // Тест 5. Перевірка повідомлення про помилку
+    // Тест 5. Перевірка відображення помилки
     [Fact]
     public void LoginPage_ShowsErrorState()
     {
@@ -105,7 +107,7 @@ public class LoginTests : BunitContext, IAsyncLifetime
         );
     }
 
-    // Тест 6. Перевірка успішного входу
+    // Тест 6. Перевірка відображення успішного входу
     [Fact]
     public void LoginPage_ShowsSuccessState()
     {
@@ -136,71 +138,109 @@ public class LoginTests : BunitContext, IAsyncLifetime
         var page = Render<LoginForm>(
             parameters => parameters.Add(
                 p => p.OnLogin,
-                (LoginModel model) => { callbackCalled = true; }
+                (LoginModel model) =>
+                {
+                    callbackCalled = true;
+                }
             )
         );
 
-        // Вводимо Email
         page.FindAll("input")[0]
             .Change("student@example.com");
 
-        // Повторно знаходимо поля після оновлення
         page.FindAll("input")[1]
             .Change("password123");
 
-        // Надсилаємо форму
         page.Find("form").Submit();
 
-        // Перевіряємо, чи викликався EventCallback
         Assert.True(callbackCalled);
     }
-    
-[Fact]
-public void LoginPage_ShowsLoadingAfterValidSubmit()
-{
-    var page = Render<Login>();
 
-    page.FindAll("input")[0]
-        .Change("student@example.com");
-
-    page.FindAll("input")[1]
-        .Change("password123");
-
-    page.Find("form").Submit();
-
-    page.WaitForAssertion(() =>
+    // Тест 8. Перевірка передавання Email і пароля
+    [Fact]
+    public void LoginForm_PassesEmailAndPassword()
     {
-        Assert.Contains("Завантаження...", page.Markup);
-    });
-}
+        LoginModel? receivedModel = null;
 
+        var page = Render<LoginForm>(
+            parameters => parameters.Add(
+                p => p.OnLogin,
+                (LoginModel model) =>
+                {
+                    receivedModel = model;
+                }
+            )
+        );
 
-[Fact]
-public void LoginForm_PassesEmailAndPassword()
-{
-    LoginModel? receivedModel = null;
+        page.FindAll("input")[0]
+            .Change("student@example.com");
 
-    var page = Render<LoginForm>(
-        parameters => parameters.Add(
-            p => p.OnLogin,
-            (LoginModel model) =>
-            {
-                receivedModel = model;
-            }
-        )
-    );
+        page.FindAll("input")[1]
+            .Change("password123");
 
-    page.FindAll("input")[0]
-        .Change("student@example.com");
+        page.Find("form").Submit();
 
-    page.FindAll("input")[1]
-        .Change("password123");
+        Assert.NotNull(receivedModel);
 
-    page.Find("form").Submit();
+        Assert.Equal(
+            "student@example.com",
+            receivedModel.Email
+        );
 
-    Assert.NotNull(receivedModel);
-    Assert.Equal("student@example.com", receivedModel.Email);
-    Assert.Equal("password123", receivedModel.Password);
-}
+        Assert.Equal(
+            "password123",
+            receivedModel.Password
+        );
+    }
 
+    // Тест 9. Успішний вхід із правильними даними
+    [Fact]
+    public void LoginPage_ShowsSuccessAfterValidSubmit()
+    {
+        var page = Render<Login>();
+
+        page.FindAll("input")[0]
+            .Change("student@example.com");
+
+        page.FindAll("input")[1]
+            .Change("password123");
+
+        page.Find("form").Submit();
+
+        page.WaitForAssertion(() =>
+        {
+            Assert.Contains(
+                "Вхід виконано успішно",
+                page.Markup
+            );
+
+            Assert.Contains(
+                "student@example.com",
+                page.Markup
+            );
+        });
+    }
+
+    // Тест 10. Помилка входу з неправильним паролем
+    [Fact]
+    public void LoginPage_ShowsErrorAfterInvalidSubmit()
+    {
+        var page = Render<Login>();
+
+        page.FindAll("input")[0]
+            .Change("student@example.com");
+
+        page.FindAll("input")[1]
+            .Change("wrongpassword");
+
+        page.Find("form").Submit();
+
+        page.WaitForAssertion(() =>
+        {
+            Assert.Contains(
+                "Неправильний Email або пароль",
+                page.Markup
+            );
+        });
+    }
 }
