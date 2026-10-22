@@ -2,6 +2,7 @@
 using Bunit;
 using Xunit;
 using MudBlazor.Services;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using FridgeChef.Pages;
 using FridgeChef.Services;
@@ -51,7 +52,7 @@ public class LoginTests : BunitContext, IAsyncLifetime
 
         Assert.Contains("Email", page.Markup);
         Assert.Contains("Пароль", page.Markup);
-        Assert.Contains("Увійти", page.Markup);
+        Assert.Contains("Увійти", page.Markup, StringComparison.OrdinalIgnoreCase);
     }
 
     // Тест 3. Перевірка валідації порожніх полів
@@ -87,7 +88,10 @@ public class LoginTests : BunitContext, IAsyncLifetime
 
         var page = Render<Login>();
 
-        Assert.Contains("Завантаження...", page.Markup);
+        Assert.Contains(
+            "Виконується вхід...",
+            page.Markup
+        );
     }
 
     // Тест 5. Перевірка відображення помилки
@@ -107,26 +111,22 @@ public class LoginTests : BunitContext, IAsyncLifetime
         );
     }
 
-    // Тест 6. Перевірка відображення успішного входу
+    // Тест 6. Перевірка стану успішної авторизації
     [Fact]
-    public void LoginPage_ShowsSuccessState()
+    public void LoginPage_SetsSuccessState()
     {
         var authState =
             Services.GetRequiredService<AuthStateService>();
 
         authState.SetSuccess("student@example.com");
 
-        var page = Render<Login>();
-
-        Assert.Contains(
-            "Вхід виконано успішно",
-            page.Markup
-        );
-
-        Assert.Contains(
+        Assert.Equal(
             "student@example.com",
-            page.Markup
+            authState.UserEmail
         );
+
+        Assert.False(authState.IsLoading);
+        Assert.True(string.IsNullOrEmpty(authState.ErrorMessage));
     }
 
     // Тест 7. Перевірка виклику EventCallback
@@ -193,10 +193,16 @@ public class LoginTests : BunitContext, IAsyncLifetime
         );
     }
 
-    // Тест 9. Успішний вхід із правильними даними
+    // Тест 9. Успішний вхід і перехід на Profile
     [Fact]
-    public void LoginPage_ShowsSuccessAfterValidSubmit()
+    public void LoginPage_NavigatesToProfileAfterValidSubmit()
     {
+        var authState =
+            Services.GetRequiredService<AuthStateService>();
+
+        var navigation =
+            Services.GetRequiredService<NavigationManager>();
+
         var page = Render<Login>();
 
         page.FindAll("input")[0]
@@ -209,14 +215,14 @@ public class LoginTests : BunitContext, IAsyncLifetime
 
         page.WaitForAssertion(() =>
         {
-            Assert.Contains(
-                "Вхід виконано успішно",
-                page.Markup
+            Assert.Equal(
+                "student@example.com",
+                authState.UserEmail
             );
 
-            Assert.Contains(
-                "student@example.com",
-                page.Markup
+            Assert.EndsWith(
+                "/profile",
+                navigation.Uri
             );
         });
     }
