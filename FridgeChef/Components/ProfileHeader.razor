@@ -1,47 +1,130 @@
-﻿@using Microsoft.Extensions.Localization
+﻿@using FridgeChef.Models
+@using Microsoft.Extensions.Localization
 @inject IStringLocalizer<FridgeChef.ProfileResource> L
-@using FridgeChef.Models
 
-<MudPaper Class="pa-4" data-testid="header">
+<MudPaper Class="pa-5 rounded-lg profile-header"
+          Elevation="0"
+          data-testid="header">
 
+    <div class="d-flex flex-wrap justify-space-between align-start"
+         style="gap:16px;">
 
-    <MudAvatar>
-        @if (string.IsNullOrEmpty(User.AvatarUrl))
+        <div class="d-flex align-center" style="gap:14px;">
+
+            <MudAvatar Size="Size.Large"
+                       Color="Color.Default">
+
+                @if (string.IsNullOrEmpty(User.AvatarUrl))
+                {
+                    <MudIcon Icon="@Icons.Material.Outlined.Person" />
+                }
+                else
+                {
+                    <img src="@User.AvatarUrl"
+                         alt="@L["UserAvatar"]"
+                         style="width:100%;height:100%;object-fit:cover;" />
+                }
+
+            </MudAvatar>
+
+            <div>
+                <div class="d-flex align-center flex-wrap"
+                     style="gap:8px;">
+
+                    <MudText Typo="Typo.subtitle1"
+                             Class="fw-bold">
+                        @User.Name
+                    </MudText>
+
+                    <MudChip T="string"
+                             Size="Size.Small"
+                             Color="Color.Warning"
+                             Variant="Variant.Outlined">
+                        @User.Badge
+                    </MudChip>
+
+                </div>
+
+                <MudText Typo="Typo.body2"
+                         Color="Color.Secondary">
+                    @User.Email
+                </MudText>
+            </div>
+        </div>
+
+        @if (User.JoinedAt is { } d)
         {
-            <MudIcon Icon="@Icons.Material.Outlined.Person" />
+            <MudText Typo="Typo.caption"
+                     Color="Color.Secondary">
+                @L["RegisteredOn"] @d.ToString("d MMMM yyyy")
+            </MudText>
         }
-        else
-        {
-            <img src="@User.AvatarUrl"
-                 alt="@L["UserAvatar"]"
-                 style="width:100%; height:100%; object-fit:cover;" />
-        }
-    </MudAvatar>
 
+    </div>
 
-    <MudText Typo="Typo.h6">@User.Name</MudText>
+    <div class="d-flex flex-wrap mt-5" style="gap:12px;">
 
-    <MudChip T="string" Size="Size.Small">
-        @User.Badge
-    </MudChip>
+        <MudPaper Class="pa-3 rounded-lg"
+                  Elevation="0"
+                  Style="background-color:#faf7f3;min-width:170px;">
 
-    <MudText Typo="Typo.caption">@User.Email</MudText>
+            <div class="d-flex align-center" style="gap:12px;">
 
-    @if (User.JoinedAt is { } d)
-    {
-        <MudText Typo="Typo.caption">
-            @L["RegisteredOn"] @d.ToString("d MMMM yyyy")
-        </MudText>
-    }
+                <MudIcon Icon="@Icons.Material.Outlined.BookmarkBorder"
+                         Color="Color.Warning" />
 
-    <MudText Typo="Typo.caption" data-testid="saved-count">
-        @User.SavedCount @L["SavedRecipes"]
-    </MudText>
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Class="fw-bold"
+                             data-testid="saved-count">
+                        @User.SavedCount
+                    </MudText>
 
-    <MudText Typo="Typo.caption" data-testid="fav-count">
-        @User.FavoriteCatalogs @L["FavoriteCatalogs"]
-    </MudText>
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        @L["SavedRecipes"]
+                    </MudText>
+                </div>
+
+            </div>
+        </MudPaper>
+
+        <MudPaper Class="pa-3 rounded-lg"
+                  Elevation="0"
+                  Style="background-color:#faf7f3;min-width:170px;">
+
+            <div class="d-flex align-center" style="gap:12px;">
+
+                <MudIcon Icon="@Icons.Material.Outlined.FavoriteBorder"
+                         Color="Color.Warning" />
+
+                <div>
+                    <MudText Typo="Typo.subtitle2"
+                             Class="fw-bold"
+                             data-testid="fav-count">
+                        @User.FavoriteCatalogs
+                    </MudText>
+
+                    <MudText Typo="Typo.caption"
+                             Color="Color.Secondary">
+                        @L["FavoriteCatalogs"]
+                    </MudText>
+                </div>
+
+            </div>
+        </MudPaper>
+
+    </div>
+
 </MudPaper>
+
+<style>
+    .profile-header {
+        background-color: white;
+        border: 1px solid #eee8e2;
+        border-radius: 14px;
+    }
+</style>
 
 @code {
     [Parameter, EditorRequired]
