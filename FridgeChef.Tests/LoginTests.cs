@@ -152,4 +152,24 @@ public class LoginTests : BunitContext, IAsyncLifetime
         // Перевіряємо, чи викликався EventCallback
         Assert.True(callbackCalled);
     }
+    
+[Fact]
+public void LoginPage_ShowsLoadingAfterValidSubmit()
+{
+    var page = Render<Login>();
+
+    page.FindAll("input")[0]
+        .Change("student@example.com");
+
+    page.FindAll("input")[1]
+        .Change("password123");
+
+    page.Find("form").Submit();
+
+    page.WaitForAssertion(() =>
+    {
+        Assert.Contains("Завантаження...", page.Markup);
+    });
+}
+
 }

@@ -40,7 +40,8 @@
             </MudAlert>
         }
 
-        <LoginForm />
+        <LoginForm OnLogin="HandleLogin" />
+
     }
 
 </MudContainer>
@@ -60,4 +61,10 @@
     {
         AuthState.OnChange -= RefreshPage;
     }
+    
+private void HandleLogin()
+{
+    AuthState.SetLoading();
+}
+
 }
