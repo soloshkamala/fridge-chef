@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using FridgeChef.Pages;
 using FridgeChef.Services;
 using FridgeChef.Components;
+using FridgeChef.Components;
+using FridgeChef.Models;
 
 namespace FridgeChef.Tests;
 
@@ -134,7 +136,7 @@ public class LoginTests : BunitContext, IAsyncLifetime
         var page = Render<LoginForm>(
             parameters => parameters.Add(
                 p => p.OnLogin,
-                () => { callbackCalled = true; }
+                (LoginModel model) => { callbackCalled = true; }
             )
         );
 
@@ -170,6 +172,35 @@ public void LoginPage_ShowsLoadingAfterValidSubmit()
     {
         Assert.Contains("Завантаження...", page.Markup);
     });
+}
+
+
+[Fact]
+public void LoginForm_PassesEmailAndPassword()
+{
+    LoginModel? receivedModel = null;
+
+    var page = Render<LoginForm>(
+        parameters => parameters.Add(
+            p => p.OnLogin,
+            (LoginModel model) =>
+            {
+                receivedModel = model;
+            }
+        )
+    );
+
+    page.FindAll("input")[0]
+        .Change("student@example.com");
+
+    page.FindAll("input")[1]
+        .Change("password123");
+
+    page.Find("form").Submit();
+
+    Assert.NotNull(receivedModel);
+    Assert.Equal("student@example.com", receivedModel.Email);
+    Assert.Equal("password123", receivedModel.Password);
 }
 
 }

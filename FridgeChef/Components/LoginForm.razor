@@ -35,13 +35,14 @@
 @code {
     private LoginModel loginModel = new();
 
-    [Parameter]
-    public EventCallback OnLogin { get; set; }
-
+[Parameter]
+public EventCallback<LoginModel> OnLogin { get; set; }
   
+
 private async Task HandleLogin()
 {
-    await OnLogin.InvokeAsync();
+    await OnLogin.InvokeAsync(loginModel);
 }
+
 
 }
