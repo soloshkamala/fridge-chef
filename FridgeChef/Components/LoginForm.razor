@@ -2,8 +2,7 @@
 @using FridgeChef.Models
 @using Microsoft.AspNetCore.Components.Forms
 
-<EditForm Model="@loginModel"
-          OnValidSubmit="HandleLogin">
+<EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
 
     <DataAnnotationsValidator />
 
@@ -36,8 +35,13 @@
 @code {
     private LoginModel loginModel = new();
 
-    private void HandleLogin()
-    {
-        // Логіку авторизації додамо пізніше.
-    }
+    [Parameter]
+    public EventCallback OnLogin { get; set; }
+
+  
+private async Task HandleLogin()
+{
+    await OnLogin.InvokeAsync();
+}
+
 }
