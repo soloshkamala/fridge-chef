@@ -70,4 +70,24 @@
 <data name="KcalShort" xml:space="preserve">
   <value>kcal</value>
 </data>
+
+	<data name="UserBadge" xml:space="preserve">
+  <value>User</value>
+</data>
+	<data name="RecipeChickenPasta" xml:space="preserve">
+  <value>Chicken Pasta</value>
+</data>
+	<data name="RecipeAvocadoToast" xml:space="preserve">
+  <value>Avocado Toast</value>
+</data>
+	<data name="RecipeTomatoSoup" xml:space="preserve">
+  <value>Tomato Soup</value>
+</data>
+	<data name="RecipeTunaSalad" xml:space="preserve">
+  <value>Tuna Salad</value>
+</data>
+	<data name="ProfileLoadError" xml:space="preserve">
+  <value>Failed to load profile data and saved recipes.</value>
+</data>
+
 </root>

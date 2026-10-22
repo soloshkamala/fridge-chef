@@ -18,7 +18,7 @@
 
         <MudText Typo="Typo.subtitle2"
                  Class="recipe-title">
-            @Recipe.Title
+            @GetLocalizedTitle()
         </MudText>
 
         <div class="d-flex align-center flex-wrap mt-2"
@@ -54,20 +54,20 @@
         height: 100%;
     }
 
-    .recipe-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-    }
+        .recipe-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        }
 
     .recipe-image {
         position: relative;
         overflow: hidden;
     }
 
-    .recipe-image .mud-card-media {
-        background-size: cover;
-        background-position: center;
-    }
+        .recipe-image .mud-card-media {
+            background-size: cover;
+            background-position: center;
+        }
 
     .recipe-bookmark {
         position: absolute;
@@ -99,4 +99,20 @@
 @code {
     [Parameter, EditorRequired]
     public RecipeSummary Recipe { get; set; } = default!;
+
+    private string GetLocalizedTitle()
+    {
+        var key = Recipe.Id switch
+        {
+            "1" => "RecipeChickenPasta",
+            "2" => "RecipeAvocadoToast",
+            "3" => "RecipeTomatoSoup",
+            "4" => "RecipeTunaSalad",
+            _ => null
+        };
+
+        return key is null
+            ? Recipe.Title
+            : L[key].Value;
+    }
 }

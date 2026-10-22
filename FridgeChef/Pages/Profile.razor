@@ -71,9 +71,11 @@
                   Elevation="0"
                   data-testid="error">
 
+
             <MudAlert Severity="Severity.Error" Class="mb-4">
-                @Store.ErrorMessage
+                @L["ProfileLoadError"]
             </MudAlert>
+
 
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
@@ -307,6 +309,8 @@
         await LoadProfileAsync();
     }
 
+
+
     private async Task LoadProfileAsync()
     {
         await Store.LoadAsync();
@@ -314,10 +318,30 @@
         if (Store.User is not null &&
             Store.State != ProfileViewState.Error)
         {
-            _form.Name = Store.User.Name;
-            _form.Email = Store.User.Email;
+            var savedSettings = await Store.LoadSettingsAsync(JS);
+
+            if (savedSettings is not null)
+            {
+                _form = savedSettings;
+
+                Store.SaveProfile(
+                    _form.Name ?? "",
+                    _form.Email ?? ""
+                );
+            }
+            else
+            {
+                _form.Name = Store.User.Name == "Name Surname" &&
+                             System.Globalization.CultureInfo.CurrentUICulture.Name == "uk-UA"
+                    ? "Ім'я Прізвище"
+                    : Store.User.Name;
+
+                _form.Email = Store.User.Email;
+            }
         }
     }
+
+
 
     private Task ReloadAsync()
     {
@@ -360,11 +384,13 @@
         _selectedRecipeId = recipeId;
     }
 
-    private Task Save()
+
+    private async Task Save()
     {
-        Store.SaveProfile(_form.Name, _form.Email);
-        return Task.CompletedTask;
+        Store.SaveProfile(_form.Name!, _form.Email!);
+        await Store.SaveSettingsAsync(JS, _form);
     }
+
 
     private async Task ChangeLanguage(string culture)
     {

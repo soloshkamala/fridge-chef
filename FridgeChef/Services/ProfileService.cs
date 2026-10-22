@@ -1,5 +1,7 @@
 ﻿
 using FridgeChef.Models;
+using Microsoft.JSInterop;
+using System.Text.Json;
 
 namespace FridgeChef.Services
 {
@@ -27,7 +29,6 @@ namespace FridgeChef.Services
             ErrorMessage = null;
             SavedRecipes.Clear();
 
-            
             await Task.Delay(1500);
 
             if (SimulateError)
@@ -97,6 +98,33 @@ namespace FridgeChef.Services
                 Name = name,
                 Email = email
             };
+        }
+
+        public async Task SaveSettingsAsync(
+            IJSRuntime js,
+            ProfileForm form)
+        {
+            var json = JsonSerializer.Serialize(form);
+
+            await js.InvokeVoidAsync(
+                "localStorage.setItem",
+                "fridgechef-profile-settings",
+                json
+            );
+        }
+
+        public async Task<ProfileForm?> LoadSettingsAsync(
+            IJSRuntime js)
+        {
+            var json = await js.InvokeAsync<string?>(
+                "localStorage.getItem",
+                "fridgechef-profile-settings"
+            );
+
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
+
+            return JsonSerializer.Deserialize<ProfileForm>(json);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿@using FridgeChef.Models
 @using Microsoft.Extensions.Localization
+@using System.Globalization
 @inject IStringLocalizer<FridgeChef.ProfileResource> L
 
 <MudPaper Class="pa-5 rounded-lg profile-header"
@@ -33,14 +34,14 @@
 
                     <MudText Typo="Typo.subtitle1"
                              Class="fw-bold">
-                        @User.Name
+                        @GetDisplayName()
                     </MudText>
 
                     <MudChip T="string"
                              Size="Size.Small"
                              Color="Color.Warning"
                              Variant="Variant.Outlined">
-                        @User.Badge
+                        @L["UserBadge"]
                     </MudChip>
 
                 </div>
@@ -129,4 +130,15 @@
 @code {
     [Parameter, EditorRequired]
     public UserProfile User { get; set; } = default!;
+
+    private string GetDisplayName()
+    {
+        if (User.Name == "Name Surname" &&
+            CultureInfo.CurrentUICulture.Name == "uk-UA")
+        {
+            return "Ім'я Прізвище";
+        }
+
+        return User.Name;
+    }
 }

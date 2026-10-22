@@ -70,4 +70,24 @@
 	<data name="KcalShort" xml:space="preserve">
   <value>ккал</value>
 </data>
+
+	<data name="UserBadge" xml:space="preserve">
+  <value>Користувач</value>
+</data>
+	<data name="RecipeChickenPasta" xml:space="preserve">
+  <value>Паста з куркою</value>
+</data>
+	<data name="RecipeAvocadoToast" xml:space="preserve">
+  <value>Авокадо тост</value>
+</data>
+	<data name="RecipeTomatoSoup" xml:space="preserve">
+  <value>Томатний суп</value>
+</data>
+	<data name="RecipeTunaSalad" xml:space="preserve">
+  <value>Салат з тунцем</value>
+</data>
+	<data name="ProfileLoadError" xml:space="preserve">
+  <value>Не вдалося завантажити дані профілю та збережені рецепти.</value>
+</data>
+
 </root>
