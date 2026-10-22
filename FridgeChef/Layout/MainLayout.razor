@@ -1,7 +1,90 @@
 ﻿@inherits LayoutComponentBase
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@using Microsoft.JSInterop
 
+@inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
+@inject IJSRuntime JS
+
+<MudThemeProvider Theme="@fridgeTheme" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-@Body
+<header class="site-header">
+    <nav class="navbar">
+
+        <span class="logo">FridgeChef</span>
+
+        <div class="nav-links">
+            <NavLink href="/" Match="NavLinkMatch.All">
+                @Localizer["NavHome"]
+            </NavLink>
+
+            <NavLink href="/fridge" Match="NavLinkMatch.All">
+                @Localizer["NavFridge"]
+            </NavLink>
+
+            <NavLink href="/recipes">
+                @Localizer["NavRecipes"]
+            </NavLink>
+
+            <NavLink href="/shopping-list">
+                @Localizer["NavShoppingList"]
+            </NavLink>
+
+            <NavLink href="/calculator">
+                @Localizer["NavCalculator"]
+            </NavLink>
+        </div>
+
+        <div class="nav-actions">
+            <div class="language-switcher">
+                <button type="button"
+                        class="@(CurrentLanguage == "uk-UA" ? "selected" : "")"
+                        @onclick='() => ChangeLanguage("uk-UA")'>
+                    UA
+                </button>
+
+                <span class="language-divider">|</span>
+
+                <button type="button"
+                        class="@(CurrentLanguage == "en-US" ? "selected" : "")"
+                        @onclick='() => ChangeLanguage("en-US")'>
+                    EN
+                </button>
+            </div>
+
+            <button type="button" class="logout-button">
+                @Localizer["NavLogout"]
+            </button>
+        </div>
+
+    </nav>
+</header>
+
+<main>
+    @Body
+</main>
+
+@code {
+    private string CurrentLanguage =>
+        CultureInfo.CurrentUICulture.Name;
+
+    private async Task ChangeLanguage(string culture)
+    {
+        if (CurrentLanguage == culture)
+            return;
+
+        await JS.InvokeVoidAsync("fridgeCulture.set", culture);
+        await JS.InvokeVoidAsync("location.reload");
+    }
+
+    private MudTheme fridgeTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#FF7A30"
+        }
+    };
+}
