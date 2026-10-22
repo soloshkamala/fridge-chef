@@ -1,0 +1,184 @@
+
+.login-page {
+    min-height: calc(100vh - 90px);
+    background-color: #fafafa;
+    padding: 65px 5% 35px;
+    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.login-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 65px;
+    align-items: start;
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+/* Ліва колонка */
+
+.login-left {
+    min-width: 0;
+    padding-top: 35px;
+}
+
+.login-left h1 {
+    font-size: clamp(32px, 3.2vw, 48px);
+    font-weight: 800;
+    line-height: 1.13;
+    letter-spacing: -1px;
+    color: #202020;
+    margin: 0 0 34px;
+
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    background: transparent;
+}
+
+.login-description {
+    max-width: 600px;
+    color: #555;
+    font-size: 16px;
+    line-height: 1.65;
+    margin: 0 0 28px;
+}
+
+.login-illustration {
+    display: block;
+    width: 100%;
+    max-width: 650px;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Права колонка */
+
+.login-right {
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 580px;
+    padding: 36px 40px 42px;
+    background: #fff;
+    border: 1px solid #d7d7d7;
+    border-radius: 24px;
+    box-sizing: border-box;
+}
+
+.login-tabs {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 34px;
+}
+
+.login-tabs span {
+    flex: 1;
+    text-align: center;
+    padding: 12px 8px 15px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #222;
+}
+
+.login-tabs .active-tab {
+    border-bottom: 3px solid #f65d20;
+    margin-bottom: -2px;
+}
+
+.login-card h2 {
+    margin: 0 0 12px;
+    font-size: 27px;
+    font-weight: 800;
+    color: #222;
+}
+
+.login-subtitle {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #888;
+    margin: 0 0 26px;
+}
+
+.login-error {
+    background: #fff0f0;
+    color: #b42318;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+/* Нижня частина */
+
+.login-footer {
+    width: 100%;
+    max-width: 1440px;
+    margin: 55px auto 0;
+}
+
+.login-footer strong {
+    font-size: 19px;
+    font-weight: 800;
+    color: #222;
+}
+
+.login-footer p {
+    margin-top: 18px;
+    font-size: 13px;
+    color: #999;
+}
+
+/* Адаптація під менші екрани */
+
+@media (max-width: 1000px) {
+    .login-content {
+        gap: 35px;
+    }
+
+    .login-card {
+        padding: 28px;
+    }
+
+    .login-left h1 {
+        font-size: 34px;
+    }
+}
+
+@media (max-width: 760px) {
+    .login-page {
+        padding: 30px 20px;
+    }
+
+    .login-content {
+        grid-template-columns: 1fr;
+        gap: 35px;
+    }
+
+    .login-left {
+        padding-top: 0;
+    }
+
+    .login-left h1 {
+        font-size: 32px;
+    }
+
+    .login-illustration {
+        max-width: 520px;
+        margin: 0 auto;
+    }
+
+    .login-card {
+        max-width: 580px;
+    }
+
+    .login-footer {
+        margin-top: 45px;
+    }
+}
