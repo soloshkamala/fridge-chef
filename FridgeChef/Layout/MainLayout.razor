@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿
+@inherits LayoutComponentBase
 @using System.Globalization
 @using Microsoft.Extensions.Localization
 @using Microsoft.JSInterop
@@ -33,7 +34,7 @@
                 @Localizer["NavShoppingList"]
             </NavLink>
 
-            <NavLink href="/calculator">
+            <NavLink href="/kbzhv" Match="NavLinkMatch.All">
                 @Localizer["NavCalculator"]
             </NavLink>
         </div>
@@ -55,9 +56,9 @@
                 </button>
             </div>
 
-            <button type="button" class="logout-button">
-                @Localizer["NavLogout"]
-            </button>
+            <NavLink href="/login" class="logout-button">
+                Log In
+            </NavLink>
         </div>
 
     </nav>

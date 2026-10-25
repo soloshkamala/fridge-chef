@@ -1,0 +1,48 @@
+
+@using FridgeChef.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+
+    <DataAnnotationsValidator />
+
+    <MudStack Spacing="3" Class="mt-4">
+
+        <MudTextField T="string"
+                      Label="Email"
+                      @bind-Value="loginModel.Email"
+                      For="@(() => loginModel.Email)"
+                      Variant="Variant.Outlined" />
+
+        <MudTextField T="string"
+                      Label="Пароль"
+                      @bind-Value="loginModel.Password"
+                      For="@(() => loginModel.Password)"
+                      InputType="InputType.Password"
+                      Variant="Variant.Outlined" />
+
+        <MudButton ButtonType="ButtonType.Submit"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   FullWidth="true">
+            Увійти
+        </MudButton>
+
+    </MudStack>
+
+</EditForm>
+
+@code {
+    private LoginModel loginModel = new();
+
+[Parameter]
+public EventCallback<LoginModel> OnLogin { get; set; }
+  
+
+private async Task HandleLogin()
+{
+    await OnLogin.InvokeAsync(loginModel);
+}
+
+
+}
