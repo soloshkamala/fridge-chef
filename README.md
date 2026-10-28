@@ -55,3 +55,15 @@
 1. Клонуйте репозиторій:
    ```bash
    git clone [https://github.com/soloshkamala/fridge-chef.git](https://github.com/soloshkamala/fridge-chef.git)
+   ```
+
+## API каталогу курсів
+
+API реалізовано в `FridgeChef.Api`; дані курсів зберігаються в пам'яті процесу й очищаються після перезапуску сервера. Для локального запуску стартуйте API та Blazor-клієнт у двох терміналах:
+
+```bash
+dotnet run --project FridgeChef.Api --launch-profile https
+dotnet run --project FridgeChef --launch-profile https
+```
+
+Клієнт бере адресу API з `FridgeChef/wwwroot/appsettings.json` (`Api:BaseAddress`), а сервер дозволяє CORS лише для походження з `ClientOrigin` у `FridgeChef.Api/appsettings.json`. В Development OpenAPI-документ доступний за адресою `/openapi/v1.json`. Маршрути каталогу: `GET/POST /api/courses`, `GET/PUT/DELETE /api/courses/{id}`.
