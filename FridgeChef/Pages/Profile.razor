@@ -1,0 +1,406 @@
+﻿@page "/profile"
+@using FridgeChef.Models
+@using FridgeChef.Services
+@using FridgeChef.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Localization
+@using Microsoft.JSInterop
+
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject ProfileService Store
+@inject IStringLocalizer<FridgeChef.ProfileResource> L
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="pa-4 profile-page">
+
+    
+    <div class="d-flex justify-space-between align-center mb-4">
+        <MudText Typo="Typo.h4">
+            @L["ProfileTitle"]
+        </MudText>
+
+        <MudButtonGroup Variant="Variant.Outlined"
+                        Color="Color.Primary">
+            <MudButton OnClick="@(() => ChangeLanguage("uk-UA"))">
+                UA
+            </MudButton>
+
+            <MudButton OnClick="@(() => ChangeLanguage("en-US"))">
+                EN
+            </MudButton>
+        </MudButtonGroup>
+    </div>
+
+    
+    @if (Store.State == ProfileViewState.Loading)
+    {
+        <div data-testid="loading">
+            <MudPaper Class="pa-4 mb-4 profile-panel" Elevation="0">
+                <MudSkeleton SkeletonType="SkeletonType.Circle"
+                             Width="56px"
+                             Height="56px" />
+
+                <MudSkeleton SkeletonType="SkeletonType.Text"
+                             Width="180px"
+                             Class="mt-3" />
+
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle"
+                             Height="65px"
+                             Class="mt-3" />
+            </MudPaper>
+
+            <MudGrid>
+                @for (int i = 0; i < 4; i++)
+                {
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle"
+                                     Height="180px" />
+                    </MudItem>
+                }
+            </MudGrid>
+
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle"
+                         Height="230px"
+                         Class="mt-4" />
+        </div>
+    }
+    else if (Store.State == ProfileViewState.Error)
+    {
+        
+        <MudPaper Class="pa-6 profile-panel"
+                  Elevation="0"
+                  data-testid="error">
+
+
+            <MudAlert Severity="Severity.Error" Class="mb-4">
+                @L["ProfileLoadError"]
+            </MudAlert>
+
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="ReloadAsync">
+                @L["Retry"]
+            </MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        
+        @if (Store.User is not null)
+        {
+            <ProfileHeader User="Store.User" />
+        }
+
+       
+        <MudText Typo="Typo.h6" Class="mt-6 mb-3">
+            @L["SavedRecipes"]
+        </MudText>
+
+        @if (Store.SavedRecipes.Count == 0)
+        {
+            <MudPaper Class="pa-8 text-center profile-panel"
+                      Elevation="0"
+                      data-testid="empty">
+
+                <MudIcon Icon="@Icons.Material.Outlined.RestaurantMenu"
+                         Size="Size.Large"
+                         Color="Color.Warning" />
+
+                <MudText Typo="Typo.subtitle1" Class="mt-3">
+                    @L["NoSavedRecipes"]
+                </MudText>
+
+                <MudText Typo="Typo.caption"
+                         Color="Color.Secondary">
+                    @L["AddFavoriteDishes"]
+                </MudText>
+            </MudPaper>
+        }
+        else
+        {
+            <SavedRecipes Recipes="Store.SavedRecipes"
+                          OnRecipeSelected="HandleRecipeSelected" />
+        }
+
+        
+        <MudPaper Class="pa-5 mt-6 profile-panel"
+                  Elevation="0">
+
+            <MudText Typo="Typo.h6" Class="mb-4">
+                @L["ProfileSettings"]
+            </MudText>
+
+            <EditForm Model="_form" OnValidSubmit="Save">
+                <DataAnnotationsValidator />
+
+                <MudGrid Spacing="3">
+
+                    
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      id="profile-name"
+                                      @bind-Value="_form.Name"
+                                      For="@(() => _form.Name)"
+                                      Label="@L["Name"].Value"
+                                      Variant="Variant.Outlined"
+                                      Immediate="true"
+                                      FullWidth="true" />
+                    </MudItem>
+
+                    
+                    <MudItem xs="12" md="6">
+                        <MudTextField T="string"
+                                      id="profile-email"
+                                      @bind-Value="_form.Email"
+                                      For="@(() => _form.Email)"
+                                      Label="Email"
+                                      Variant="Variant.Outlined"
+                                      Immediate="true"
+                                      FullWidth="true" />
+                    </MudItem>
+
+                    
+                    <MudItem xs="12" md="6">
+                        <div class="profile-field">
+                            <label class="profile-field-label">
+                                @L["DietaryRestrictions"]
+                            </label>
+
+                            <div class="profile-checkboxes">
+                                <label>
+                                    <input type="checkbox"
+                                           checked="@HasDiet("Без глютену")"
+                                           @onchange="OnGlutenChanged" />
+                                    @L["GlutenFree"]
+                                </label>
+
+                                <label>
+                                    <input type="checkbox"
+                                           checked="@HasDiet("Без лактози")"
+                                           @onchange="OnLactoseChanged" />
+                                    @L["LactoseFree"]
+                                </label>
+                            </div>
+                        </div>
+                    </MudItem>
+
+                    
+                    <MudItem xs="12" md="6">
+                        <div class="profile-field">
+                            <label for="favorite-ingredients"
+                                   class="profile-field-label">
+                                @L["FavoriteIngredients"]
+                            </label>
+
+                            <InputText id="favorite-ingredients"
+                                       class="profile-input"
+                                       @bind-Value="_form.FavoriteIngredients" />
+                        </div>
+                    </MudItem>
+
+                </MudGrid>
+
+                
+                <div class="d-flex align-center flex-wrap mt-5"
+                     style="gap:12px;">
+
+                    <MudButton ButtonType="ButtonType.Submit"
+                               Variant="Variant.Filled"
+                               Class="profile-save-button">
+                        @L["SaveChanges"]
+                    </MudButton>
+
+                    <MudButton ButtonType="ButtonType.Button"
+                               Variant="Variant.Text"
+                               Color="Color.Default"
+                               Disabled="true">
+                        @L["Logout"]
+                    </MudButton>
+                </div>
+
+            </EditForm>
+        </MudPaper>
+    }
+</MudContainer>
+
+<style>
+    .profile-page {
+        padding-bottom: 40px;
+    }
+
+    .profile-panel {
+        background-color: #ffffff;
+        border: 1px solid #eee8e2;
+        border-radius: 14px;
+    }
+
+    .profile-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        height: 100%;
+    }
+
+    .profile-field-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #555555;
+    }
+
+    .profile-checkboxes {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px 14px;
+        background-color: #faf8f5;
+        border: 1px solid #e9e3dc;
+        border-radius: 8px;
+        min-height: 55px;
+    }
+
+        .profile-checkboxes label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .profile-checkboxes input {
+            accent-color: #f97316;
+        }
+
+    .profile-input {
+        width: 100%;
+        min-height: 55px;
+        padding: 12px;
+        border: 1px solid #e9e3dc;
+        border-radius: 8px;
+        background-color: #faf8f5;
+        font-size: 14px;
+    }
+
+        .profile-input:focus {
+            outline: 2px solid #fb923c;
+            outline-offset: 1px;
+        }
+
+    .profile-save-button.mud-button-root {
+        background-color: #f97316;
+        color: white;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+        text-transform: none;
+    }
+
+        .profile-save-button.mud-button-root:hover {
+            background-color: #ea580c;
+        }
+</style>
+
+@code {
+    private ProfileForm _form = new();
+    private string? _selectedRecipeId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProfileAsync();
+    }
+
+
+
+    private async Task LoadProfileAsync()
+    {
+        await Store.LoadAsync();
+
+        if (Store.User is not null &&
+            Store.State != ProfileViewState.Error)
+        {
+            var savedSettings = await Store.LoadSettingsAsync(JS);
+
+            if (savedSettings is not null)
+            {
+                _form = savedSettings;
+
+                Store.SaveProfile(
+                    _form.Name ?? "",
+                    _form.Email ?? ""
+                );
+            }
+            else
+            {
+                _form.Name = Store.User.Name == "Name Surname" &&
+                             System.Globalization.CultureInfo.CurrentUICulture.Name == "uk-UA"
+                    ? "Ім'я Прізвище"
+                    : Store.User.Name;
+
+                _form.Email = Store.User.Email;
+            }
+        }
+    }
+
+
+
+    private Task ReloadAsync()
+    {
+        return LoadProfileAsync();
+    }
+
+    private bool HasDiet(string diet)
+    {
+        return _form.Diets.Contains(diet);
+    }
+
+    private void ChangeDiet(string diet, bool selected)
+    {
+        var diets = _form.Diets.ToHashSet();
+
+        if (selected)
+        {
+            diets.Add(diet);
+        }
+        else
+        {
+            diets.Remove(diet);
+        }
+
+        _form.Diets = diets;
+    }
+
+    private void OnGlutenChanged(ChangeEventArgs e)
+    {
+        ChangeDiet("Без глютену", e.Value is true);
+    }
+
+    private void OnLactoseChanged(ChangeEventArgs e)
+    {
+        ChangeDiet("Без лактози", e.Value is true);
+    }
+
+    private void HandleRecipeSelected(string recipeId)
+    {
+        _selectedRecipeId = recipeId;
+    }
+
+
+    private async Task Save()
+    {
+        Store.SaveProfile(_form.Name!, _form.Email!);
+        await Store.SaveSettingsAsync(JS, _form);
+    }
+
+
+    private async Task ChangeLanguage(string culture)
+    {
+        await JS.InvokeVoidAsync(
+            "localStorage.setItem",
+            "profile-language",
+            culture);
+
+        Navigation.NavigateTo(
+            Navigation.Uri,
+            forceLoad: true);
+    }
+}

@@ -1,0 +1,283 @@
+@page "/kbzhv"
+
+<PageTitle>Калькулятор КБЖВ | FridgeChef</PageTitle>
+
+<div class="macros-page">
+    <main class="macros-layout">
+        <section class="intro">
+            <h1>Контролюй<br />своє харчування<br />з <span>FridgeChef!</span></h1>
+            <p class="intro-description">
+                Розрахуй свою добову норму КБЖВ та отримуй збалансовані рекомендації для щоденних страв.
+            </p>
+
+            <div class="features">
+                <div class="feature">
+                    <span class="feature-icon" aria-hidden="true">♙</span>
+                    <div>
+                        <strong>Персональна норма</strong>
+                        <p>Розрахунок добової потреби в калоріях з урахуванням твоїх параметрів.</p>
+                    </div>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon" aria-hidden="true">⌁</span>
+                    <div>
+                        <strong>Баланс КБЖВ</strong>
+                        <p>Орієнтовна кількість білків, жирів та вуглеводів відповідно до твоєї цілі.</p>
+                    </div>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon" aria-hidden="true">♡</span>
+                    <div>
+                        <strong>Підтримка цілей</strong>
+                        <p>Плануй харчування для підтримки ваги, схуднення чи набору маси.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="promo">
+                <div class="food-illustration" aria-hidden="true">🥗</div>
+                <div>
+                    <p>Здорове харчування — це просто</p>
+                    <span>— команда FridgeChef 🌿</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="calculator-area" aria-live="polite">
+            @switch (CurrentState)
+            {
+                case CalculatorState.Empty:
+                    <div class="calculator-card">
+                        <h2>Калькулятор КБЖВ</h2>
+                        <p class="card-description">Введи свої дані, щоб розрахувати добову норму</p>
+
+                        <div class="form-fields">
+                            <div class="field">
+                                <label for="gender">Стать</label>
+                                <select id="gender" @bind="Gender">
+                                    <option value="">Обери стать...</option>
+                                    <option value="Жінка">Жінка</option>
+                                    <option value="Чоловік">Чоловік</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label for="age">Вік</label>
+                                <div class="input-with-unit">
+                                    <input id="age" type="number" min="14" max="100" @bind="Age" placeholder="Наприклад: 25" />
+                                    <span>років</span>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="field">
+                                    <label for="height">Зріст</label>
+                                    <div class="input-with-unit">
+                                        <input id="height" type="number" min="100" max="250" @bind="Height" placeholder="Наприклад: 168" />
+                                        <span>см</span>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label for="weight">Вага</label>
+                                    <div class="input-with-unit">
+                                        <input id="weight" type="number" min="30" max="300" @bind="Weight" placeholder="Наприклад: 68" />
+                                        <span>кг</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="field">
+                                    <label for="activity">Рівень активності</label>
+                                    <select id="activity" @bind="Activity">
+                                        <option value="">Обери...</option>
+                                        <option value="Низька">Низька</option>
+                                        <option value="Середня">Помірна</option>
+                                        <option value="Висока">Висока</option>
+                                        <option value="Дуже висока">Дуже висока</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label for="goal">Мета</label>
+                                    <select id="goal" @bind="Goal">
+                                        <option value="">Обери...</option>
+                                        <option value="Підтримка ваги">Підтримка ваги</option>
+                                        <option value="Схуднення">Схуднення</option>
+                                        <option value="Набір маси">Набір маси</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button class="primary-button" type="button" @onclick="CalculateAsync">
+                                Розрахувати норму
+                            </button>
+                        </div>
+                    </div>
+                    break;
+
+                case CalculatorState.Loading:
+                    <div class="calculator-card loading-card">
+                        <h2>Калькулятор КБЖВ</h2>
+                        <p class="loading-message"><span class="loading-dot"></span> Аналізуємо твої параметри...</p>
+                        <div class="skeleton-list" aria-label="Завантаження результату">
+                            <div class="skeleton skeleton-short"></div>
+                            <div class="skeleton"></div>
+                            <div class="skeleton skeleton-short"></div>
+                            <div class="skeleton"></div>
+                            <div class="skeleton"></div>
+                        </div>
+                    </div>
+                    break;
+
+                case CalculatorState.Error:
+                    <div class="error-card" role="alert">
+                        <div class="error-icon" aria-hidden="true">!</div>
+                        <h2>Не вдалося розрахувати норму</h2>
+                        <p>@ErrorMessage</p>
+                        <button class="primary-button" type="button" @onclick="ReturnToForm">
+                            Повернутися до форми
+                        </button>
+                    </div>
+                    break;
+
+                case CalculatorState.Ready:
+                    <div class="calculator-card result-card">
+                        <div class="card-heading">
+                            <h2>Калькулятор КБЖВ</h2>
+                            <button class="text-button" type="button" @onclick="EditDetails">Редагувати</button>
+                        </div>
+
+                        <div class="result-overview">
+                            <div class="calorie-ring" role="img" aria-label="@($"{DailyCalories} кілокалорій на день")">
+                                <div class="ring-content">
+                                    <strong>@DailyCalories</strong>
+                                    <span>ккал / день</span>
+                                </div>
+                            </div>
+
+                            <div class="macro-list">
+                                @MacroRow("Білки", Protein, 4, "#41ad5a")
+                                @MacroRow("Жири", Fat, 9, "#f36b2b")
+                                @MacroRow("Вуглеводи", Carbs, 4, "#f4b52b")
+                            </div>
+                        </div>
+
+                        <div class="details">
+                            <h3>Твої параметри</h3>
+                            <div class="details-grid">
+                                <div><span>Стать</span><strong>@Gender</strong></div>
+                                <div><span>Вага</span><strong>@Weight кг</strong></div>
+                                <div><span>Вік</span><strong>@Age років</strong></div>
+                                <div><span>Активність</span><strong>@ActivityLabel</strong></div>
+                                <div><span>Зріст</span><strong>@Height см</strong></div>
+                                <div><span>Мета</span><strong>@Goal</strong></div>
+                            </div>
+                        </div>
+
+                        <p class="disclaimer">Це орієнтовна оцінка, а не медична рекомендація.</p>
+                        <button class="primary-button" type="button" @onclick="EditDetails">Оновити дані</button>
+                    </div>
+                    break;
+            }
+        </section>
+    </main>
+</div>
+
+@code {
+    private CalculatorState CurrentState { get; set; } = CalculatorState.Empty;
+    private string Gender { get; set; } = string.Empty;
+    private int? Age { get; set; }
+    private int? Height { get; set; }
+    private int? Weight { get; set; }
+    private string Activity { get; set; } = string.Empty;
+    private string Goal { get; set; } = string.Empty;
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    private int DailyCalories { get; set; }
+    private int Protein { get; set; }
+    private int Fat { get; set; }
+    private int Carbs { get; set; }
+
+    private string ActivityLabel => Activity switch
+    {
+        "Низька" => "Низька",
+        "Середня" => "Помірна",
+        "Висока" => "Висока",
+        "Дуже висока" => "Дуже висока",
+        _ => Activity
+    };
+
+    private enum CalculatorState
+    {
+        Empty,
+        Loading,
+        Error,
+        Ready
+    }
+
+    private RenderFragment MacroRow(string label, int grams, int caloriesPerGram, string color) => @<div class="macro-row">
+        <div class="macro-row-heading">
+            <span class="macro-name"><i style="background-color: @color"></i>@label</span>
+            <span>@grams г / @(grams * caloriesPerGram) ккал</span>
+        </div>
+        <div class="macro-progress">
+            <span style="width: @MacroPercentage(grams * caloriesPerGram)%; background-color: @color"></span>
+        </div>
+    </div>;
+
+    private int MacroPercentage(int calories) =>
+        DailyCalories <= 0 ? 0 : Math.Clamp((int)Math.Round(calories * 100d / DailyCalories), 0, 100);
+
+    private async Task CalculateAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Gender) ||
+            !Age.HasValue || Age.Value is < 14 or > 100 ||
+            !Height.HasValue || Height.Value is < 100 or > 250 ||
+            !Weight.HasValue || Weight.Value is < 30 or > 300 ||
+            string.IsNullOrWhiteSpace(Activity) ||
+            string.IsNullOrWhiteSpace(Goal))
+        {
+            ErrorMessage = "Заповни всі поля. Перевір, що вік — 14–100 років, зріст — 100–250 см, вага — 30–300 кг.";
+            CurrentState = CalculatorState.Error;
+            return;
+        }
+
+        CurrentState = CalculatorState.Loading;
+        await Task.Delay(500);
+
+        var weight = Weight.Value;
+        var age = Age.Value;
+        var height = Height.Value;
+        var bmr = 10d * weight + 6.25d * height - 5d * age + (Gender == "Жінка" ? -161 : 5);
+
+        var activityMultiplier = Activity switch
+        {
+            "Низька" => 1.2,
+            "Середня" => 1.375,
+            "Висока" => 1.55,
+            "Дуже висока" => 1.725,
+            _ => 1.2
+        };
+
+        var goalMultiplier = Goal switch
+        {
+            "Схуднення" => 0.85,
+            "Набір маси" => 1.1,
+            _ => 1.0
+        };
+
+        DailyCalories = (int)Math.Round(bmr * activityMultiplier * goalMultiplier);
+        Protein = (int)Math.Round(weight * 1.8);
+        Fat = (int)Math.Round(weight * 0.9);
+        Carbs = Math.Max(0, (int)Math.Round((DailyCalories - Protein * 4d - Fat * 9d) / 4d));
+        CurrentState = CalculatorState.Ready;
+    }
+
+    private void ReturnToForm()
+    {
+        ErrorMessage = string.Empty;
+        CurrentState = CalculatorState.Empty;
+    }
+
+    private void EditDetails() => CurrentState = CalculatorState.Empty;
+}

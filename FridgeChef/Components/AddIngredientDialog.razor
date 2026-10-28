@@ -1,0 +1,104 @@
+﻿@using FridgeChef.Models
+@using Microsoft.Extensions.Localization
+@using System.Globalization
+
+@inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
+
+<MudDialog Class="ingredient-dialog" Options="@(new DialogOptions { BackdropClick = false })">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            @Localizer[$"Ingredient{Ingredient.Id}"]
+        </MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <EditForm Model="@model" OnValidSubmit="Add">
+            <DataAnnotationsValidator />
+
+            <MudNumericField T="double"
+                             @bind-Value="model.Quantity"
+                             For="@(() => model.Quantity)"
+                             Culture="@CultureInfo.CurrentCulture"
+                             Label="@Localizer["QuantityLabel"]"
+                             Variant="Variant.Outlined"
+                             Class="mb-4" />
+
+            <MudSelect T="string"
+                       @bind-Value="model.Unit"
+                       For="@(() => model.Unit)"
+                       ToStringFunc="GetUnitTranslation"
+                       Label="@Localizer["UnitLabel"]"
+                       Variant="Variant.Outlined">
+
+                @foreach (var allowedUnit in Ingredient.AllowedUnits)
+                {
+                    <MudSelectItem T="string" Value="@allowedUnit">
+                        @GetUnitTranslation(allowedUnit)
+                    </MudSelectItem>
+                }
+
+            </MudSelect>
+
+            <MudButton Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       ButtonType="ButtonType.Submit"
+                       Class="mt-3">
+                @Localizer["AddButton"]
+            </MudButton>
+        </EditForm>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">
+            @Localizer["CancelButton"]
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public Ingredient Ingredient { get; set; } = new();
+
+    private AddIngredientModel model = new();
+
+    protected override void OnParametersSet()
+    {
+        if (Ingredient.AllowedUnits.Count > 0)
+        {
+            model.Unit = Ingredient.AllowedUnits[0];
+        }
+    }
+
+    private void Add()
+    {
+        var result = new FridgeItem
+        {
+            Ingredient = Ingredient,
+            Quantity = model.Quantity,
+            Unit = model.Unit ?? ""
+        };
+
+        MudDialog.Close(DialogResult.Ok(result));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private string GetUnitTranslation(string unit)
+    {
+        return unit switch
+        {
+            "шт" => Localizer["UnitPieces"].Value,
+            "мл" => Localizer["UnitMilliliters"].Value,
+            "л" => Localizer["UnitLiters"].Value,
+            "г" => Localizer["UnitGrams"].Value,
+            "кг" => Localizer["UnitKilograms"].Value,
+            _ => unit
+        };
+    }
+}
