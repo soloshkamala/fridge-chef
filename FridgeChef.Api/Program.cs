@@ -1,61 +1,56 @@
+
+using FridgeChef.Api.Features.Courses;
 using FridgeChef.Api.Features.FridgeItems;
+using FridgeChef.Api.Features.ShoppingItems;
+using FridgeChef.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<FridgeItemsStore>();
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("ClientOnly", policy =>
-    {
-        policy.WithOrigins("http://localhost:5050")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
+builder.Services.AddSingleton<CourseStore>();
+builder.Services.AddSingleton<ShoppingItemStore>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddCors(options =>
+{
+    var clientOrigin = builder.Configuration["ClientOrigin"]
+        ?? throw new InvalidOperationException(
+            "The ClientOrigin configuration value is required.");
+
+    options.AddPolicy("Client", policy =>
+        policy.WithOrigins(
+                clientOrigin,
+                "http://localhost:5050",
+                "https://localhost:7164")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
+
 var app = builder.Build();
+
+app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseHttpsRedirection();
+app.UseCors("Client");
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(options =>
-    {
-        options.RouteTemplate = "openapi/{documentName}.json";
-    });
+        options.RouteTemplate = "openapi/{documentName}.json");
 
     app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/openapi/v1.json", "FridgeChef API v1");
-    });
+        options.SwaggerEndpoint(
+            "/openapi/v1.json",
+            "FridgeChef API v1"));
 }
 
-app.UseHttpsRedirection();
-app.Use(async (context, next) =>
-{
-    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
-    try
-    {
-        await next();
-    }
-    finally
-    {
-        stopwatch.Stop();
-
-        app.Logger.LogInformation(
-            "{Method} {Path} responded {StatusCode} in {ElapsedMilliseconds} ms",
-            context.Request.Method,
-            context.Request.Path,
-            context.Response.StatusCode,
-            stopwatch.ElapsedMilliseconds);
-    }
-});
-app.UseCors("ClientOnly");
-
 app.MapFridgeItemsEndpoints();
+app.MapCourses();
+
+app.MapGroup("/api/shopping-items")
+    .MapShoppingItemEndpoints()
+    .WithTags("Shopping Items");
 
 app.Run();
 

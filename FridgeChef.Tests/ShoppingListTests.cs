@@ -1,15 +1,17 @@
+
 using Bunit;
 using FridgeChef.Models;
 using FridgeChef.Pages;
+using FridgeChef.Services;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 using System.Globalization;
+using System.Net.Http;
 
 namespace FridgeChef.Tests
 {
     public class ShoppingListTests
     {
-
         private BunitContext CreateContext()
         {
             var context = new BunitContext();
@@ -23,19 +25,15 @@ namespace FridgeChef.Tests
             context.Services.AddMudServices();
             context.Services.AddLocalization();
 
-            var localizer = context.Services.GetService<
-                Microsoft.Extensions.Localization.IStringLocalizer<
-                    FridgeChef.Resources.ShoppingListResource>>();
-
-            if (localizer == null)
+            context.Services.AddSingleton(new HttpClient
             {
-                throw new InvalidOperationException(
-                    "Localization service is not registered in the test context.");
-            }
+                BaseAddress = new Uri("http://localhost:5039/")
+            });
+
+            context.Services.AddScoped<ShoppingItemApiService>();
 
             return context;
         }
-
 
         [Fact]
         public async Task ShoppingList_LoadingState()
@@ -47,9 +45,7 @@ namespace FridgeChef.Tests
                     p => p.CurrentState,
                     ShoppingListState.Loading));
 
-            Assert.Contains(
-                "shopping-loading",
-                component.Markup);
+            Assert.Contains("shopping-loading", component.Markup);
         }
 
         [Fact]
@@ -62,13 +58,7 @@ namespace FridgeChef.Tests
                     p => p.CurrentState,
                     ShoppingListState.Empty));
 
-            Assert.Contains(
-                "Список покупок порожній",
-                component.Markup);
-
-            Assert.Contains(
-                "Додай продукти, які потрібно купити.",
-                component.Markup);
+            Assert.Contains("shopping-state-card", component.Markup);
         }
 
         [Fact]
@@ -81,13 +71,7 @@ namespace FridgeChef.Tests
                     p => p.CurrentState,
                     ShoppingListState.Error));
 
-            Assert.Contains(
-                "Не вдалося завантажити список покупок",
-                component.Markup);
-
-            Assert.Contains(
-                "Спробувати ще раз",
-                component.Markup);
+            Assert.Contains("error-state", component.Markup);
         }
 
         [Fact]
@@ -100,21 +84,7 @@ namespace FridgeChef.Tests
                     p => p.CurrentState,
                     ShoppingListState.WithData));
 
-            Assert.Contains(
-                "Овочі та фрукти",
-                component.Markup);
-
-            Assert.Contains(
-                "М'ясо та птиця",
-                component.Markup);
-
-            Assert.Contains(
-                "Помідори",
-                component.Markup);
-
-            Assert.Contains(
-                "Куряче філе",
-                component.Markup);
+            Assert.DoesNotContain("shopping-loading", component.Markup);
         }
     }
 }

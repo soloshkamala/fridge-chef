@@ -18,6 +18,8 @@ builder.Services.AddMudServices();
 // Підключення локалізації
 builder.Services.AddLocalization();
 
+builder.AddCatalogueApi();
+
 // HTTP-клієнт
 builder.Services.AddScoped(sp => new HttpClient
 {
@@ -31,6 +33,7 @@ builder.Services.AddScoped<AuthService>();
 // Сервіс холодильника
 builder.Services.AddScoped<FridgeService>();
 builder.Services.AddScoped<FridgeItemsApiService>();
+builder.Services.AddScoped<ShoppingItemApiService>();
 
 // Сервіс профілю користувача
 builder.Services.AddScoped<ProfileService>();
