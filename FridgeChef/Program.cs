@@ -1,4 +1,4 @@
-
+﻿
 using FridgeChef;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -12,10 +12,11 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddMudServices();
 builder.Services.AddLocalization();
+builder.Services.AddScoped<FridgeChef.Services.ShoppingItemApiService>();
 
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+    BaseAddress = new Uri("http://localhost:5039/")
 });
 
 var host = builder.Build();
@@ -31,3 +32,4 @@ CultureInfo.DefaultThreadCurrentCulture = culture;
 CultureInfo.DefaultThreadCurrentUICulture = culture;
 
 await host.RunAsync();
+
