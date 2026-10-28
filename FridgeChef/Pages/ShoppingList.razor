@@ -2,10 +2,12 @@
 @using FridgeChef.Models
 @using FridgeChef.Components
 @using FridgeChef.Resources
+@using FridgeChef.Services
 @using Microsoft.Extensions.Localization
 @using Microsoft.JSInterop
 @inject IStringLocalizer<ShoppingListResource> L
 @inject IJSRuntime JS
+@inject ShoppingItemApiService ShoppingApi
 
 <PageTitle>@L["PageTitle"]</PageTitle>
 
@@ -14,36 +16,27 @@
     <div class="shopping-header">
         <div>
             <MudText Typo="Typo.h4">@L["PageTitle"]</MudText>
-
-            <MudText Typo="Typo.body2">
-                @L["PageSubtitle"]
-            </MudText>
+            <MudText Typo="Typo.body2">@L["PageSubtitle"]</MudText>
         </div>
 
         <div class="shopping-header-actions">
-
             <div class="language-switcher">
                 <MudButton Variant="Variant.Text"
                            OnClick="@(() => ChangeLanguage("uk-UA"))">
                     UA
                 </MudButton>
-
                 <MudButton Variant="Variant.Text"
                            OnClick="@(() => ChangeLanguage("en-US"))">
                     EN
                 </MudButton>
             </div>
 
-            @if (CurrentState == ShoppingListState.WithData)
-            {
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="OpenAddForm">
-                    @L["AddProduct"]
-                </MudButton>
-            }
-
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddForm">
+                @L["AddProduct"]
+            </MudButton>
         </div>
     </div>
 
@@ -56,9 +49,7 @@
     @if (CurrentState == ShoppingListState.Loading)
     {
         <div class="shopping-loading">
-
             <div class="loading-buttons">
-                <MudSkeleton Width="140px" Height="45px" />
                 <MudSkeleton Width="140px" Height="45px" />
                 <MudSkeleton Width="140px" Height="45px" />
                 <MudSkeleton Width="140px" Height="45px" />
@@ -68,36 +59,21 @@
 
             <MudPaper Class="category-block loading-category" Elevation="0">
                 <MudSkeleton Width="150px" Height="25px" />
-
                 <MudDivider Class="my-3" />
-
                 <MudSkeleton Width="95%" Height="20px" />
                 <MudSkeleton Width="85%" Height="20px" />
                 <MudSkeleton Width="90%" Height="20px" />
             </MudPaper>
-
-            <MudPaper Class="category-block loading-category" Elevation="0">
-                <MudSkeleton Width="130px" Height="25px" />
-
-                <MudDivider Class="my-3" />
-
-                <MudSkeleton Width="90%" Height="20px" />
-                <MudSkeleton Width="80%" Height="20px" />
-            </MudPaper>
-
         </div>
     }
     else if (CurrentState == ShoppingListState.Empty)
     {
         <MudPaper Class="shopping-state-card" Elevation="0">
-
             <MudIcon Icon="@Icons.Material.Filled.ShoppingCart"
                      Class="state-icon"
                      Size="Size.Large" />
 
-            <MudText Typo="Typo.h5">
-                @L["EmptyTitle"]
-            </MudText>
+            <MudText Typo="Typo.h5">@L["EmptyTitle"]</MudText>
 
             <MudText Typo="Typo.body2" Class="state-description">
                 @L["EmptyDescription"]
@@ -109,13 +85,11 @@
                        OnClick="OpenAddForm">
                 @L["AddProduct"]
             </MudButton>
-
         </MudPaper>
     }
     else if (CurrentState == ShoppingListState.Error)
     {
         <MudPaper Class="shopping-state-card error-state" Elevation="0">
-
             <MudIcon Icon="@Icons.Material.Filled.SentimentDissatisfied"
                      Class="state-icon error-icon"
                      Size="Size.Large" />
@@ -134,25 +108,23 @@
                        OnClick="Retry">
                 @L["Retry"]
             </MudButton>
-
         </MudPaper>
     }
     else if (CurrentState == ShoppingListState.WithData)
     {
         @foreach (var category in Categories)
         {
-            <MudPaper Class="category-block" Elevation="0">
-
+            <MudPaper Class="category-block" Elevation="0" @key="category">
                 <div class="category-header"
-                     @onclick="() => ToggleCategory(category)">
+                     @onclick="@(() => ToggleCategory(category))">
 
                     <MudText Typo="Typo.h6">
                         @GetCategoryName(category)
                     </MudText>
 
                     <MudIcon Icon="@(IsCategoryExpanded(category)
-                                      ? Icons.Material.Filled.ExpandLess
-                                      : Icons.Material.Filled.ExpandMore)" />
+                        ? Icons.Material.Filled.ExpandLess
+                        : Icons.Material.Filled.ExpandMore)" />
                 </div>
 
                 @if (IsCategoryExpanded(category))
@@ -161,25 +133,43 @@
 
                     @foreach (var item in Items.Where(x => x.Category == category))
                     {
-                        <ShoppingListItem Item="item"
-                                          OnPurchasedChanged="HandlePurchasedChanged"
-                                          OnFridgeChanged="HandleFridgeChanged"
-                                          @key="item.Id" />
+                        <div @key="item.Id">
+                            <ShoppingListItem Item="item"
+                                              OnPurchasedChanged="HandlePurchasedChanged"
+                                              OnFridgeChanged="HandleFridgeChanged" />
+
+                            <MudButton Color="Color.Error"
+                                       Variant="Variant.Text"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(() => DeleteProduct(item.Id))">
+                                Видалити
+                            </MudButton>
+                        </div>
                     }
                 }
-
             </MudPaper>
         }
     }
-
 </MudContainer>
 
 @code {
-
     [Parameter]
-    public ShoppingListState CurrentState { get; set; } = ShoppingListState.WithData;
+    public ShoppingListState? CurrentState { get; set; }
 
-    private bool ShowAddForm = false;
+    private bool ShowAddForm;
+    private List<ShoppingItem> Items = new();
+    private List<string> Categories = new();
+    private HashSet<string> ExpandedCategories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (CurrentState is null)
+        {
+            await LoadItems();
+        }
+    }
+
     private async Task ChangeLanguage(string language)
     {
         await JS.InvokeVoidAsync("fridgeChefLanguage.set", language);
@@ -195,89 +185,107 @@
         ShowAddForm = false;
     }
 
-    private void AddProduct(ShoppingItemForm form)
+    private async Task LoadItems()
     {
-        var item = new ShoppingItem
-            {
-                Id = Items.Count == 0 ? 1 : Items.Max(x => x.Id) + 1,
-                Name = form.Name.Trim(),
-                Quantity = form.Quantity!.Value,
-                Unit = form.Unit,
-                Category = form.Category
-            };
+        CurrentState = ShoppingListState.Loading;
 
-        Items.Add(item);
-
-        if (!Categories.Contains(item.Category))
+        try
         {
-            Categories.Add(item.Category);
+            Items = await ShoppingApi.GetAllAsync();
+
+            Categories = Items
+                .Select(item => item.Category)
+                .Distinct()
+                .ToList();
+
+            ExpandedCategories = new HashSet<string>(Categories);
+
+            CurrentState = Items.Count == 0
+                ? ShoppingListState.Empty
+                : ShoppingListState.WithData;
         }
-
-        ExpandedCategories.Add(item.Category);
-
-        CurrentState = ShoppingListState.WithData;
-        ShowAddForm = false;
+        catch
+        {
+            CurrentState = ShoppingListState.Error;
+        }
     }
 
-    private List<ShoppingItem> Items = new()
+    private async Task AddProduct(ShoppingItemForm form)
     {
-        new ShoppingItem
+        try
         {
-            Id = 1,
-            Name = "Помідори",
-            Quantity = 2,
-            Unit = "кг",
-            Category = "Овочі та фрукти"
-        },
+            var item = new ShoppingItem
+                {
+                    Name = form.Name.Trim(),
+                    Quantity = form.Quantity!.Value,
+                    Unit = form.Unit,
+                    Category = form.Category
+                };
 
-        new ShoppingItem
-        {
-            Id = 2,
-            Name = "Огірки",
-            Quantity = 1,
-            Unit = "кг",
-            Category = "Овочі та фрукти"
-        },
+            var createdItem = await ShoppingApi.AddAsync(item);
+            Items.Add(createdItem);
 
-        new ShoppingItem
-        {
-            Id = 3,
-            Name = "Яблука",
-            Quantity = 5,
-            Unit = "шт.",
-            Category = "Овочі та фрукти"
-        },
+            if (!Categories.Contains(createdItem.Category))
+            {
+                Categories.Add(createdItem.Category);
+            }
 
-        new ShoppingItem
-        {
-            Id = 4,
-            Name = "Куряче філе",
-            Quantity = 1,
-            Unit = "кг",
-            Category = "М'ясо та птиця"
-        },
-
-        new ShoppingItem
-        {
-            Id = 5,
-            Name = "Індичка",
-            Quantity = 0.5,
-            Unit = "кг",
-            Category = "М'ясо та птиця"
+            ExpandedCategories.Add(createdItem.Category);
+            CurrentState = ShoppingListState.WithData;
+            ShowAddForm = false;
         }
-    };
+        catch
+        {
+            CurrentState = ShoppingListState.Error;
+        }
+    }
 
-    private List<string> Categories = new()
+    private async Task HandlePurchasedChanged(ShoppingItem item)
     {
-        "Овочі та фрукти",
-        "М'ясо та птиця"
-    };
+        await SaveItemStatus(item);
+    }
 
-    private HashSet<string> ExpandedCategories = new()
+    private async Task HandleFridgeChanged(ShoppingItem item)
     {
-        "Овочі та фрукти",
-        "М'ясо та птиця"
-    };
+        await SaveItemStatus(item);
+    }
+
+    private async Task SaveItemStatus(ShoppingItem item)
+    {
+        try
+        {
+            await ShoppingApi.UpdateAsync(item);
+        }
+        catch
+        {
+            await LoadItems();
+        }
+    }
+
+    private async Task DeleteProduct(int id)
+    {
+        try
+        {
+            await ShoppingApi.DeleteAsync(id);
+            Items.RemoveAll(item => item.Id == id);
+
+            Categories = Items
+                .Select(item => item.Category)
+                .Distinct()
+                .ToList();
+
+            ExpandedCategories.RemoveWhere(
+                category => !Categories.Contains(category));
+
+            CurrentState = Items.Count == 0
+                ? ShoppingListState.Empty
+                : ShoppingListState.WithData;
+        }
+        catch
+        {
+            CurrentState = ShoppingListState.Error;
+        }
+    }
 
     private string GetCategoryName(string category)
     {
@@ -296,38 +304,14 @@
 
     private void ToggleCategory(string category)
     {
-        if (ExpandedCategories.Contains(category))
+        if (!ExpandedCategories.Add(category))
         {
             ExpandedCategories.Remove(category);
         }
-        else
-        {
-            ExpandedCategories.Add(category);
-        }
     }
 
-    private void HandlePurchasedChanged(ShoppingItem item)
+    private async Task Retry()
     {
-        var existingItem = Items.FirstOrDefault(x => x.Id == item.Id);
-
-        if (existingItem != null)
-        {
-            existingItem.IsPurchased = item.IsPurchased;
-        }
-    }
-
-    private void HandleFridgeChanged(ShoppingItem item)
-    {
-        var existingItem = Items.FirstOrDefault(x => x.Id == item.Id);
-
-        if (existingItem != null)
-        {
-            existingItem.IsInFridge = item.IsInFridge;
-        }
-    }
-
-    private void Retry()
-    {
-        CurrentState = ShoppingListState.Loading;
+        await LoadItems();
     }
 }

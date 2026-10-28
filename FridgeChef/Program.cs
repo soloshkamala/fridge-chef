@@ -1,58 +1,35 @@
-
-using System.Globalization;
+﻿
 using FridgeChef;
-using FridgeChef.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.JSInterop;
 using MudBlazor.Services;
+using System.Globalization;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Підключення MudBlazor
 builder.Services.AddMudServices();
-
-// Підключення локалізації
 builder.Services.AddLocalization();
+builder.Services.AddScoped<FridgeChef.Services.ShoppingItemApiService>();
 
-// HTTP-клієнт
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+    BaseAddress = new Uri("http://localhost:5039/")
 });
 
-// Сервіси авторизації
-builder.Services.AddScoped<AuthStateService>();
-builder.Services.AddScoped<AuthService>();
-
-// Сервіс холодильника
-builder.Services.AddScoped<FridgeService>();
-
-// Сервіс профілю користувача
-builder.Services.AddScoped<ProfileService>();
-
-// Створення застосунку
 var host = builder.Build();
 
-// Отримання збереженої мови
-var js = host.Services.GetRequiredService<IJSRuntime>();
+var culture = CultureInfo.CurrentUICulture;
 
-var savedCulture = await js.InvokeAsync<string>("fridgeCulture.get");
-
-if (savedCulture != "uk-UA" && savedCulture != "en-US")
+if (culture.Name != "uk-UA" && culture.Name != "en-US")
 {
-    savedCulture = "uk-UA";
+    culture = new CultureInfo("uk-UA");
 }
-
-var culture = new CultureInfo(savedCulture);
 
 CultureInfo.DefaultThreadCurrentCulture = culture;
 CultureInfo.DefaultThreadCurrentUICulture = culture;
-CultureInfo.CurrentCulture = culture;
-CultureInfo.CurrentUICulture = culture;
 
-// Запуск застосунку
 await host.RunAsync();
+
