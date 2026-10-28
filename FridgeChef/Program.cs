@@ -1,9 +1,11 @@
-﻿
+
+using System.Globalization;
 using FridgeChef;
+using FridgeChef.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.JSInterop;
 using MudBlazor.Services;
-using System.Globalization;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -12,24 +14,30 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddMudServices();
 builder.Services.AddLocalization();
-builder.Services.AddScoped<FridgeChef.Services.ShoppingItemApiService>();
 
-builder.Services.AddScoped(sp => new HttpClient
-{
-    BaseAddress = new Uri("http://localhost:5039/")
-});
+builder.AddCatalogueApi();
+
+builder.Services.AddScoped<ShoppingItemApiService>();
+builder.Services.AddScoped<AuthStateService>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<FridgeService>();
+builder.Services.AddScoped<ProfileService>();
 
 var host = builder.Build();
 
-var culture = CultureInfo.CurrentUICulture;
+var js = host.Services.GetRequiredService<IJSRuntime>();
+var savedCulture = await js.InvokeAsync<string>("fridgeCulture.get");
 
-if (culture.Name != "uk-UA" && culture.Name != "en-US")
+if (savedCulture != "uk-UA" && savedCulture != "en-US")
 {
-    culture = new CultureInfo("uk-UA");
+    savedCulture = "uk-UA";
 }
+
+var culture = new CultureInfo(savedCulture);
 
 CultureInfo.DefaultThreadCurrentCulture = culture;
 CultureInfo.DefaultThreadCurrentUICulture = culture;
+CultureInfo.CurrentCulture = culture;
+CultureInfo.CurrentUICulture = culture;
 
 await host.RunAsync();
-

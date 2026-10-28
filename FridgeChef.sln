@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FridgeChef.Tests", "FridgeC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FridgeChef.Api", "FridgeChef.Api\FridgeChef.Api.csproj", "{0BA3833C-8180-4359-81CC-BB13994569D4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server.Tests", "Server.Tests\Server.Tests.csproj", "{A1D14E1B-AC11-4D05-B6D8-8A74E56329B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{0BA3833C-8180-4359-81CC-BB13994569D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0BA3833C-8180-4359-81CC-BB13994569D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0BA3833C-8180-4359-81CC-BB13994569D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1D14E1B-AC11-4D05-B6D8-8A74E56329B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1D14E1B-AC11-4D05-B6D8-8A74E56329B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1D14E1B-AC11-4D05-B6D8-8A74E56329B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1D14E1B-AC11-4D05-B6D8-8A74E56329B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
