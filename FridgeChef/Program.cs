@@ -30,6 +30,7 @@ builder.Services.AddScoped<AuthService>();
 
 // Сервіс холодильника
 builder.Services.AddScoped<FridgeService>();
+builder.Services.AddScoped<FridgeItemsApiService>();
 
 // Сервіс профілю користувача
 builder.Services.AddScoped<ProfileService>();

@@ -5,7 +5,7 @@
 
 <MudPaper Class="pa-4">
     <div>
-        <strong>@Localizer[$"Ingredient{Item.Ingredient.Id}"]</strong>
+        <strong>@Item.Ingredient.Name</strong>
         <div>@Item.Quantity @GetUnitTranslation(Item.Unit)</div>
     </div>
 </MudPaper>

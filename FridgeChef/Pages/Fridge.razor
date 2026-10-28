@@ -7,6 +7,7 @@
 
 @inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 @inject FridgeService FridgeService
+@inject FridgeItemsApiService ApiService
 @inject IDialogService DialogService
 
 <PageTitle>@Localizer["PageTitle"]</PageTitle>
@@ -129,6 +130,27 @@
 </div>
 
 @code {
+    protected override async Task OnInitializedAsync()
+    {
+        FridgeService.IsLoading = true;
+        FridgeService.ErrorMessage = null;
+
+        try
+        {
+            var items = await ApiService.GetItemsAsync();
+
+            FridgeService.FridgeItems.Clear();
+            FridgeService.FridgeItems.AddRange(items);
+        }
+        catch
+        {
+            FridgeService.ErrorMessage = Localizer["LoadingError"].Value;
+        }
+        finally
+        {
+            FridgeService.IsLoading = false;
+        }
+    }
     private string searchText = "";
 
     private bool isDialogOpen = false;
@@ -157,16 +179,19 @@
 
             var result = await dialog.Result;
 
-            if (result != null &&
-                !result.Canceled &&
-                result.Data is FridgeItem item)
+            if (result != null && !result.Canceled && result.Data is FridgeItem item)
             {
-                FridgeService.AddToFridge(
-                    item.Ingredient,
-                    item.Quantity,
-                    item.Unit);
+                try
+                {
+                    var savedItem = await ApiService.AddItemAsync(item);
 
-                searchText = "";
+                    FridgeService.FridgeItems.Add(savedItem);
+                    searchText = "";
+                }
+                catch
+                {
+                    FridgeService.ErrorMessage = "Не вдалося додати продукт на сервер.";
+                }
             }
         }
         finally
