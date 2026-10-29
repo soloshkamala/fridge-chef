@@ -1,10 +1,12 @@
 
 using FridgeChef.Api.Features.Courses;
+using FridgeChef.Api.Features.FridgeItems;
 using FridgeChef.Api.Features.ShoppingItems;
 using FridgeChef.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddSingleton<FridgeItemsStore>();
 builder.Services.AddSingleton<CourseStore>();
 builder.Services.AddSingleton<ShoppingItemStore>();
 
@@ -43,6 +45,7 @@ if (app.Environment.IsDevelopment())
             "FridgeChef API v1"));
 }
 
+app.MapFridgeItemsEndpoints();
 app.MapCourses();
 
 app.MapGroup("/api/shopping-items")
