@@ -2,6 +2,7 @@
 using FridgeChef.Api.Features.Courses;
 using FridgeChef.Api.Features.FridgeItems;
 using FridgeChef.Api.Features.ShoppingItems;
+using FridgeChef.Api.Features.Profiles;
 using FridgeChef.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<FridgeItemsStore>();
 builder.Services.AddSingleton<CourseStore>();
 builder.Services.AddSingleton<ShoppingItemStore>();
+builder.Services.AddSingleton<ProfileStore>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -51,6 +53,10 @@ app.MapCourses();
 app.MapGroup("/api/shopping-items")
     .MapShoppingItemEndpoints()
     .WithTags("Shopping Items");
+
+app.MapGroup("/api/profiles")
+    .MapProfileEndpoints()
+    .WithTags("Profiles");
 
 app.Run();
 
