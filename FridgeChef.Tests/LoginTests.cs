@@ -1,4 +1,9 @@
 
+using System;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using Bunit;
 using Xunit;
 using MudBlazor.Services;
@@ -13,7 +18,7 @@ namespace FridgeChef.Tests;
 
 public class LoginTests : BunitContext, IAsyncLifetime
 {
-    // Налаштування середовища для тестування
+    // Налаштування тестового середовища
     public LoginTests()
     {
         Services.AddMudServices();
@@ -52,10 +57,15 @@ public class LoginTests : BunitContext, IAsyncLifetime
 
         Assert.Contains("Email", page.Markup);
         Assert.Contains("Пароль", page.Markup);
-        Assert.Contains("Увійти", page.Markup, StringComparison.OrdinalIgnoreCase);
+
+        Assert.Contains(
+            "Увійти",
+            page.Markup,
+            StringComparison.OrdinalIgnoreCase
+        );
     }
 
-    // Тест 3. Перевірка валідації порожніх полів
+    // Тест 3. Валідація порожніх полів
     [Fact]
     public void LoginForm_ShowsErrors_WhenFieldsAreEmpty()
     {
@@ -94,7 +104,7 @@ public class LoginTests : BunitContext, IAsyncLifetime
         );
     }
 
-    // Тест 5. Перевірка відображення помилки
+    // Тест 5. Відображення повідомлення про помилку
     [Fact]
     public void LoginPage_ShowsErrorState()
     {
@@ -111,7 +121,7 @@ public class LoginTests : BunitContext, IAsyncLifetime
         );
     }
 
-    // Тест 6. Перевірка стану успішної авторизації
+    // Тест 6. Успішний стан авторизації
     [Fact]
     public void LoginPage_SetsSuccessState()
     {
@@ -156,7 +166,7 @@ public class LoginTests : BunitContext, IAsyncLifetime
         Assert.True(callbackCalled);
     }
 
-    // Тест 8. Перевірка передавання Email і пароля
+    // Тест 8. Передавання Email і пароля
     [Fact]
     public void LoginForm_PassesEmailAndPassword()
     {
@@ -197,6 +207,9 @@ public class LoginTests : BunitContext, IAsyncLifetime
     [Fact]
     public void LoginPage_NavigatesToProfileAfterValidSubmit()
     {
+        // Імітуємо успішну відповідь сервера
+        MockLoginResponse(HttpStatusCode.OK);
+
         var authState =
             Services.GetRequiredService<AuthStateService>();
 
@@ -231,6 +244,9 @@ public class LoginTests : BunitContext, IAsyncLifetime
     [Fact]
     public void LoginPage_ShowsErrorAfterInvalidSubmit()
     {
+        // Імітуємо відмову сервера
+        MockLoginResponse(HttpStatusCode.Unauthorized);
+
         var page = Render<Login>();
 
         page.FindAll("input")[0]
@@ -248,5 +264,39 @@ public class LoginTests : BunitContext, IAsyncLifetime
                 page.Markup
             );
         });
+    }
+
+    // Допоміжний метод для імітації відповіді API
+    private void MockLoginResponse(HttpStatusCode statusCode)
+    {
+        var client = new HttpClient(
+            new FakeHttpMessageHandler(statusCode))
+        {
+            BaseAddress = new Uri("http://localhost:5039/")
+        };
+
+        Services.AddScoped<AuthService>(
+            _ => new AuthService(client)
+        );
+    }
+
+    // Імітація HTTP-сервера для тестів
+    private sealed class FakeHttpMessageHandler : HttpMessageHandler
+    {
+        private readonly HttpStatusCode _statusCode;
+
+        public FakeHttpMessageHandler(HttpStatusCode statusCode)
+        {
+            _statusCode = statusCode;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult(
+                new HttpResponseMessage(_statusCode)
+            );
+        }
     }
 }
