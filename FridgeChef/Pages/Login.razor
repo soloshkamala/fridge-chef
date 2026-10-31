@@ -10,10 +10,9 @@
 @inject NavigationManager Navigation
 
 <div class="login-page">
-
     <div class="login-content">
 
-        <!-- Ліва частина сторінки -->
+        <!-- Ліва частина -->
         <section class="login-left">
 
             <h1>
@@ -33,7 +32,7 @@
 
         </section>
 
-        <!-- Права частина сторінки -->
+        <!-- Права частина -->
         <section class="login-right">
 
             <div class="login-card">
@@ -69,17 +68,21 @@
             </div>
 
         </section>
-
     </div>
 
     <footer class="login-footer">
         <strong>FridgeChef</strong>
-        <p>© 2026 FridgeChef. Смачні рецепти ближче, ніж здається.</p>
+        <p>
+            © 2026 FridgeChef.
+            Смачні рецепти ближче, ніж здається.
+        </p>
     </footer>
-
 </div>
 
 @code {
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
     private async Task HandleLogin(LoginModel model)
     {
         AuthState.SetLoading();
@@ -88,12 +91,27 @@
 
         if (AuthService.Login(model.Email, model.Password))
         {
-            AuthState.SetSuccess(model.Email);
-            Navigation.NavigateTo("/profile");
+    await AuthState.SaveLoginAsync(model.Email);
+    Navigation.NavigateTo(GetSafeReturnUrl());
         }
         else
         {
             AuthState.SetError("Неправильний Email або пароль");
         }
+    }
+
+    private string GetSafeReturnUrl()
+    {
+        if (!string.IsNullOrWhiteSpace(ReturnUrl)
+            && ReturnUrl.StartsWith("/")
+            && !ReturnUrl.StartsWith("//")
+            && !ReturnUrl.StartsWith("/\\")
+            && !ReturnUrl.Contains('\\')
+            && !ReturnUrl.Any(char.IsControl))
+        {
+            return ReturnUrl;
+        }
+
+        return "/profile";
     }
 }

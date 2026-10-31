@@ -1,12 +1,75 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿
+@using FridgeChef.Services
+@using FridgeChef.Components
+@implements IDisposable
+
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        @if (!AuthState.IsInitialized)
+        {
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p>Завантаження...</p>
+            </LayoutView>
+        }
+        else if (CanAccessPage())
+        {
+            <RouteView RouteData="@routeData"
+                       DefaultLayout="@typeof(MainLayout)" />
+
+            <FocusOnNavigate RouteData="@routeData"
+                             Selector="h1" />
+        }
+        else
+        {
+            <LayoutView Layout="@typeof(MainLayout)">
+                <RedirectToLogin />
+            </LayoutView>
+        }
     </Found>
+
     <NotFound>
         <PageTitle>Not found</PageTitle>
         <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
+            <p role="alert">
+                Sorry, there's nothing at this address.
+            </p>
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        AuthState.OnChange += HandleAuthStateChanged;
+
+        await AuthState.InitializeAsync();
+    }
+
+    private void HandleAuthStateChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private bool CanAccessPage()
+    {
+        var path = new Uri(Navigation.Uri)
+            .AbsolutePath
+            .TrimEnd('/')
+            .ToLowerInvariant();
+
+        bool requiresLogin =
+            path == "/fridge" ||
+            path == "/shopping-list" ||
+            path == "/kbzhv";
+
+        return !requiresLogin || AuthState.IsAuthenticated;
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnChange -= HandleAuthStateChanged;
+    }
+}
