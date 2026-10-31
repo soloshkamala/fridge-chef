@@ -1,4 +1,4 @@
-
+﻿
 using System.Globalization;
 using FridgeChef;
 using FridgeChef.Services;
@@ -9,42 +9,88 @@ using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
+// =====================================
+// ROOT COMPONENTS
+// =====================================
+
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Підключення MudBlazor
+// =====================================
+// MUDBLAZOR
+// =====================================
+
 builder.Services.AddMudServices();
 
-// Підключення локалізації
+// =====================================
+// LOCALIZATION
+// =====================================
+
 builder.Services.AddLocalization();
+
+// =====================================
+// CATALOGUE API
+// =====================================
 
 builder.AddCatalogueApi();
 
-// HTTP-клієнт
+// =====================================
+// DEFAULT HTTP CLIENT
+// =====================================
+
+// HTTP-клієнт для інших сервісів застосунку
 builder.Services.AddScoped(sp => new HttpClient
 {
     BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
 });
 
-// Сервіси авторизації
-builder.Services.AddScoped<AuthStateService>();
-builder.Services.AddScoped<AuthService>();
+// =====================================
+// AUTHENTICATION
+// =====================================
 
-// Сервіс холодильника
+// Стан авторизації
+builder.Services.AddScoped<AuthStateService>();
+
+// Окремий HTTP-клієнт для авторизації через API
+builder.Services.AddScoped<AuthService>(sp =>
+{
+    var http = new HttpClient
+    {
+        BaseAddress = new Uri("http://localhost:5039/")
+    };
+
+    return new AuthService(http);
+});
+
+// =====================================
+// FRIDGE SERVICES
+// =====================================
+
 builder.Services.AddScoped<FridgeService>();
 builder.Services.AddScoped<FridgeItemsApiService>();
 builder.Services.AddScoped<ShoppingItemApiService>();
 
-// Сервіс профілю користувача
+// =====================================
+// PROFILE SERVICE
+// =====================================
+
 builder.Services.AddScoped<ProfileService>();
 
-// Створення застосунку
+// =====================================
+// BUILD APPLICATION
+// =====================================
+
 var host = builder.Build();
 
-// Отримання збереженої мови
+// =====================================
+// LOAD SAVED LANGUAGE
+// =====================================
+
 var js = host.Services.GetRequiredService<IJSRuntime>();
 
-var savedCulture = await js.InvokeAsync<string>("fridgeCulture.get");
+var savedCulture = await js.InvokeAsync<string>(
+    "fridgeCulture.get"
+);
 
 if (savedCulture != "uk-UA" && savedCulture != "en-US")
 {
@@ -58,5 +104,8 @@ CultureInfo.DefaultThreadCurrentUICulture = culture;
 CultureInfo.CurrentCulture = culture;
 CultureInfo.CurrentUICulture = culture;
 
-// Запуск застосунку
+// =====================================
+// RUN APPLICATION
+// =====================================
+
 await host.RunAsync();

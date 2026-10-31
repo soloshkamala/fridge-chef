@@ -84,21 +84,26 @@
     public string? ReturnUrl { get; set; }
 
     private async Task HandleLogin(LoginModel model)
+{
+    AuthState.SetLoading();
+
+    try
     {
-        AuthState.SetLoading();
-
-        await Task.Yield();
-
-        if (AuthService.Login(model.Email, model.Password))
+        if (await AuthService.LoginAsync(model.Email, model.Password))
         {
-    await AuthState.SaveLoginAsync(model.Email);
-    Navigation.NavigateTo(GetSafeReturnUrl());
+            await AuthState.SaveLoginAsync(model.Email);
+            Navigation.NavigateTo(GetSafeReturnUrl());
         }
         else
         {
             AuthState.SetError("Неправильний Email або пароль");
         }
     }
+    catch (HttpRequestException)
+    {
+        AuthState.SetError("Не вдалося підключитися до сервера");
+    }
+}
 
     private string GetSafeReturnUrl()
     {
