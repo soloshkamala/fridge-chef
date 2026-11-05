@@ -1,78 +1,126 @@
-﻿using Bunit;
+﻿
+using Bunit;
 using FridgeChef.Models;
 using FridgeChef.Pages;
 using FridgeChef.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System.ComponentModel.DataAnnotations;
-
+using System.Net;
+using System.Net.Http;
+using System.Text;
 
 namespace FridgeChef.Tests
 {
     public class FridgeStateTests : MudTestContext
     {
+        private readonly FakeHttpHandler handler;
+
+        public FridgeStateTests()
+        {
+            handler = new FakeHttpHandler();
+
+            var client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri("http://localhost:5039/")
+            };
+
+            Services.AddSingleton(client);
+            Services.AddScoped<FridgeService>();
+            Services.AddScoped<FridgeItemsApiService>();
+        }
+
         [Fact]
         public void Empty_fridge_shows_empty_state()
         {
-            Services.AddScoped<FridgeService>();
+            handler.ResponseJson = "[]";
 
             var page = Render<Fridge>();
 
-            Assert.Contains("Ваш холодильник порожній", page.Markup);
+            page.WaitForAssertion(() =>
+                Assert.Contains(
+                    "Ваш холодильник порожній",
+                    page.Markup));
         }
 
         [Fact]
         public void Loading_fridge_shows_loading_state()
         {
-            Services.AddScoped<FridgeService>();
-
-            var service = Services.GetRequiredService<FridgeService>();
-            service.IsLoading = true;
+            // HTTP-запит залишається незавершеним.
+            handler.KeepPending = true;
 
             var page = Render<Fridge>();
 
-            Assert.Contains("Завантаження...", page.Markup);
+            page.WaitForAssertion(() =>
+                Assert.Contains(
+                    "Завантаження...",
+                    page.Markup));
         }
 
-        [Fact]
-        public void Error_fridge_shows_error_state()
-        {
-            Services.AddScoped<FridgeService>();
+[Fact]
+public void Error_fridge_shows_error_state()
+{
+    // Імітуємо помилку сервера
+    handler.StatusCode = HttpStatusCode.InternalServerError;
 
-            var service = Services.GetRequiredService<FridgeService>();
-            service.ErrorMessage = "Не вдалося завантажити продукти";
+    var page = Render<Fridge>();
 
-            var page = Render<Fridge>();
+    var service = Services.GetRequiredService<FridgeService>();
 
-            Assert.Contains("Не вдалося завантажити продукти", page.Markup);
-        }
+    page.WaitForAssertion(() =>
+    {
+        Assert.False(service.IsLoading);
+
+        Assert.False(
+            string.IsNullOrWhiteSpace(service.ErrorMessage)
+        );
+
+        Assert.Contains(
+            service.ErrorMessage!,
+            page.Markup
+        );
+    });
+}
 
         [Fact]
         public void Data_fridge_shows_products_and_recipes_section()
         {
-            Services.AddScoped<FridgeService>();
-
-            var service = Services.GetRequiredService<FridgeService>();
-            var ingredient = service.Ingredients.First(x => x.Name == "Молоко");
-
-            service.AddToFridge(ingredient, 1, "л");
+            // Сервер повертає один продукт.
+            handler.ResponseJson = """
+            [
+                {
+                    "id": 1,
+                    "name": "Молоко",
+                    "quantity": 1,
+                    "unit": "л"
+                }
+            ]
+            """;
 
             var page = Render<Fridge>();
 
-            Assert.Contains("Молоко", page.Markup);
-            Assert.Contains("Підібрані рецепти", page.Markup);
+            page.WaitForAssertion(() =>
+            {
+                Assert.Contains("Молоко", page.Markup);
+                Assert.Contains(
+                    "Підібрані рецепти",
+                    page.Markup);
+            });
         }
 
         [Fact]
         public void Search_shows_message_when_no_products_found()
         {
-            Services.AddScoped<FridgeService>();
+            handler.ResponseJson = "[]";
 
             var page = Render<Fridge>();
 
             var search = page.Find("input");
             search.Input("Ананас");
 
-            Assert.Contains("Продуктів не знайдено", page.Markup);
+            page.WaitForAssertion(() =>
+                Assert.Contains(
+                    "Продуктів не знайдено",
+                    page.Markup));
         }
 
         [Fact]
@@ -114,11 +162,50 @@ namespace FridgeChef.Tests
             var context = new ValidationContext(model);
 
             var isValid = Validator.TryValidateObject(
-                model, context, results, true);
+                model,
+                context,
+                results,
+                true);
 
             Assert.False(isValid);
-            Assert.Contains(results, r =>
-                r.ErrorMessage == "Кількість повинна бути більшою за нуль");
+
+            Assert.Contains(results, result =>
+                result.ErrorMessage ==
+                "Кількість повинна бути більшою за нуль");
+        }
+
+        private sealed class FakeHttpHandler : HttpMessageHandler
+        {
+            public string ResponseJson { get; set; } = "[]";
+
+            public HttpStatusCode StatusCode { get; set; } =
+                HttpStatusCode.OK;
+
+            public bool KeepPending { get; set; }
+
+            private readonly TaskCompletionSource<HttpResponseMessage>
+                pendingResponse = new(
+                    TaskCreationOptions.RunContinuationsAsynchronously);
+
+            protected override Task<HttpResponseMessage> SendAsync(
+                HttpRequestMessage request,
+                CancellationToken cancellationToken)
+            {
+                if (KeepPending)
+                {
+                    return pendingResponse.Task;
+                }
+
+                var response = new HttpResponseMessage(StatusCode)
+                {
+                    Content = new StringContent(
+                        ResponseJson,
+                        Encoding.UTF8,
+                        "application/json")
+                };
+
+                return Task.FromResult(response);
+            }
         }
     }
 }

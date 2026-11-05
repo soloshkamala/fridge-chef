@@ -1,0 +1,17 @@
+
+@using FridgeChef.Services
+@inject NavigationManager Navigation
+
+<p>Redirecting to login...</p>
+
+@code {
+    protected override void OnInitialized()
+    {
+        var currentPath = new Uri(Navigation.Uri).PathAndQuery;
+
+        var returnUrl = Uri.EscapeDataString(currentPath);
+
+        Navigation.NavigateTo(
+            $"/login?returnUrl={returnUrl}");
+    }
+}
