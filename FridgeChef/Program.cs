@@ -68,7 +68,10 @@ builder.Services.AddScoped<AuthService>(sp =>
 
 builder.Services.AddScoped<FridgeService>();
 builder.Services.AddScoped<FridgeItemsApiService>();
+builder.Services.AddScoped<RecipesApiService>();
 builder.Services.AddScoped<ShoppingItemApiService>();
+
+builder.Services.AddScoped<RecipesApiService>();
 
 // =====================================
 // PROFILE SERVICE

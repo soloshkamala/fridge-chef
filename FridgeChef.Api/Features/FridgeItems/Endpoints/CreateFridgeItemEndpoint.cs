@@ -19,13 +19,40 @@ public static class CreateFridgeItemEndpoint
                     title: "Invalid product data");
             }
 
-            if (store.Items.Any(x =>
-                x.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase) &&
-                x.Unit.Equals(request.Unit, StringComparison.OrdinalIgnoreCase)))
+            var existingItem = store.Items.FirstOrDefault(x =>
+                x.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (existingItem != null)
             {
-                return TypedResults.Problem(
-                    statusCode: 409,
-                    title: "Product already exists");
+                if (existingItem.Unit.Equals(request.Unit, StringComparison.OrdinalIgnoreCase))
+                {
+                    existingItem.Quantity += request.Quantity;
+                }
+                else if (existingItem.Unit == "л" && request.Unit == "мл")
+                {
+                    existingItem.Quantity += request.Quantity / 1000;
+                }
+                else if (existingItem.Unit == "мл" && request.Unit == "л")
+                {
+                    existingItem.Quantity += request.Quantity * 1000;
+                }
+                else if (existingItem.Unit == "кг" && request.Unit == "г")
+                {
+                    existingItem.Quantity += request.Quantity / 1000;
+                }
+                else if (existingItem.Unit == "г" && request.Unit == "кг")
+                {
+                    existingItem.Quantity += request.Quantity * 1000;
+                }
+                else
+                {
+                    return TypedResults.Problem(
+                        statusCode: 400,
+                        title: "Incompatible units");
+                }
+
+                return TypedResults.Created(
+                    $"/api/fridge-items/{existingItem.Id}", existingItem);
             }
 
             var item = new FridgeItemResponse
@@ -39,7 +66,7 @@ public static class CreateFridgeItemEndpoint
             store.Items.Add(item);
 
             return TypedResults.Created(
-            $"/api/fridge-items/{item.Id}", item);
+                $"/api/fridge-items/{item.Id}", item);
         })
         .ProducesProblem(400)
         .ProducesProblem(409);

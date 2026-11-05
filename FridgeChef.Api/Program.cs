@@ -1,15 +1,20 @@
 
+using FridgeChef.Api.Features.Auth;
 using FridgeChef.Api.Features.Courses;
 using FridgeChef.Api.Features.FridgeItems;
-using FridgeChef.Api.Features.ShoppingItems;
 using FridgeChef.Api.Features.Profiles;
+using FridgeChef.Api.Features.Recipes;
+using FridgeChef.Api.Features.ShoppingItems;
 using FridgeChef.Api.Features.Users;
-using FridgeChef.Api.Features.Auth;
 using FridgeChef.Api.Middleware;
-
 using Microsoft.AspNetCore.Authentication.Cookies;
+using FridgeChef.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<FridgeChefDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // =====================================
 // DATA STORES
@@ -19,6 +24,7 @@ builder.Services.AddSingleton<FridgeItemsStore>();
 builder.Services.AddSingleton<CourseStore>();
 builder.Services.AddSingleton<ShoppingItemStore>();
 builder.Services.AddSingleton<ProfileStore>();
+builder.Services.AddSingleton<RecipesStore>();
 
 // Користувачі
 builder.Services.AddSingleton<UserStore>();
@@ -101,6 +107,8 @@ app.UseCors("Client");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapRecipesEndpoints();
 
 // =====================================
 // SWAGGER
