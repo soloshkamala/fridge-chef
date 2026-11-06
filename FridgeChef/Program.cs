@@ -1,5 +1,4 @@
-﻿
-using System.Globalization;
+﻿using System.Globalization;
 using FridgeChef;
 using FridgeChef.Services;
 using Microsoft.AspNetCore.Components.Web;
@@ -29,6 +28,12 @@ builder.Services.AddMudServices();
 builder.Services.AddLocalization();
 
 // =====================================
+// API ADDRESS
+// =====================================
+
+const string apiAddress = "https://localhost:7173/";
+
+// =====================================
 // CATALOGUE API
 // =====================================
 
@@ -38,45 +43,35 @@ builder.AddCatalogueApi();
 // DEFAULT HTTP CLIENT
 // =====================================
 
-// HTTP-клієнт для інших сервісів застосунку
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+    BaseAddress = new Uri(apiAddress)
 });
 
 // =====================================
 // AUTHENTICATION
 // =====================================
 
-// Стан авторизації
 builder.Services.AddScoped<AuthStateService>();
 
-// Окремий HTTP-клієнт для авторизації через API
 builder.Services.AddScoped<AuthService>(sp =>
 {
     var http = new HttpClient
     {
-        BaseAddress = new Uri("http://localhost:5039/")
+        BaseAddress = new Uri(apiAddress)
     };
 
     return new AuthService(http);
 });
 
 // =====================================
-// FRIDGE SERVICES
+// APPLICATION SERVICES
 // =====================================
 
 builder.Services.AddScoped<FridgeService>();
 builder.Services.AddScoped<FridgeItemsApiService>();
 builder.Services.AddScoped<RecipesApiService>();
 builder.Services.AddScoped<ShoppingItemApiService>();
-
-builder.Services.AddScoped<RecipesApiService>();
-
-// =====================================
-// PROFILE SERVICE
-// =====================================
-
 builder.Services.AddScoped<ProfileService>();
 
 // =====================================
