@@ -21,6 +21,26 @@ namespace FridgeChef.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("FridgeChef.Api.Data.Entities.Diet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Diets");
+                });
+
             modelBuilder.Entity("FridgeChef.Api.Data.Entities.FridgeItem", b =>
                 {
                     b.Property<int>("Id")
@@ -284,6 +304,36 @@ namespace FridgeChef.Api.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("FridgeChef.Api.Data.Entities.UserDiet", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DietId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UserId", "DietId");
+
+                    b.HasIndex("DietId");
+
+                    b.ToTable("UserDiets");
+                });
+
+            modelBuilder.Entity("FridgeChef.Api.Data.Entities.UserFavoriteProduct", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UserId", "ProductId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("UserFavoriteProducts");
+                });
+
             modelBuilder.Entity("FridgeChef.Api.Data.Entities.UserProfile", b =>
                 {
                     b.Property<int>("Id")
@@ -402,6 +452,44 @@ namespace FridgeChef.Api.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Unit");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FridgeChef.Api.Data.Entities.UserDiet", b =>
+                {
+                    b.HasOne("FridgeChef.Api.Data.Entities.Diet", "Diet")
+                        .WithMany()
+                        .HasForeignKey("DietId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FridgeChef.Api.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Diet");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FridgeChef.Api.Data.Entities.UserFavoriteProduct", b =>
+                {
+                    b.HasOne("FridgeChef.Api.Data.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FridgeChef.Api.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
 
                     b.Navigation("User");
                 });
