@@ -27,7 +27,8 @@ public static class UpdateProfile
                     return TypedResults.ValidationProblem(
                         new Dictionary<string, string[]>
                         {
-                            ["Profile"] = ["Вкажіть коректні ім'я та email."]
+                            ["Profile"] =
+                                ["Вкажіть коректні ім'я та email."]
                         });
                 }
 
@@ -37,7 +38,8 @@ public static class UpdateProfile
                     return TypedResults.ValidationProblem(
                         new Dictionary<string, string[]>
                         {
-                            ["Diets"] = ["Назви дієт не можуть бути порожніми."]
+                            ["Diets"] =
+                                ["Назви дієт не можуть бути порожніми."]
                         });
                 }
 
@@ -52,7 +54,6 @@ public static class UpdateProfile
 
                 var email = request.Email.Trim();
 
-                
                 if (!string.Equals(
                     profile.User.Email,
                     email,
@@ -90,26 +91,19 @@ public static class UpdateProfile
                 profile.User.LastName =
                     nameParts.Length > 1 ? nameParts[1] : "";
 
-                
-            
-
-                
                 var existingUserDiets = await db.UserDiets
                     .Where(ud => ud.UserId == profile.UserId)
                     .ToListAsync();
 
-                
                 var existingFavoriteProducts =
                     await db.UserFavoriteProducts
                         .Where(ufp => ufp.UserId == profile.UserId)
                         .ToListAsync();
 
-                
                 db.UserDiets.RemoveRange(existingUserDiets);
                 db.UserFavoriteProducts.RemoveRange(
                     existingFavoriteProducts);
 
-                
                 await db.SaveChangesAsync();
 
                 var savedDietNames = new List<string>();
@@ -150,9 +144,25 @@ public static class UpdateProfile
 
                     if (product is null)
                     {
+                        var category = await db.Categories
+                            .FirstOrDefaultAsync(c =>
+                                c.Name == "Інгредієнти");
+
+                        if (category is null)
+                        {
+                            category = new Category
+                            {
+                                Name = "Інгредієнти"
+                            };
+
+                            db.Categories.Add(category);
+                            await db.SaveChangesAsync();
+                        }
+
                         product = new Product
                         {
-                            Name = productName
+                            Name = productName,
+                            CategoryId = category.Id
                         };
 
                         db.Products.Add(product);

@@ -7,11 +7,16 @@ using FridgeChef.Api.Features.Recipes;
 using FridgeChef.Api.Features.ShoppingItems;
 using FridgeChef.Api.Features.Users;
 using FridgeChef.Api.Middleware;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using FridgeChef.Api.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// =====================================
+// DATABASE
+// =====================================
+
 builder.Services.AddDbContext<FridgeChefDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -22,11 +27,9 @@ builder.Services.AddDbContext<FridgeChefDbContext>(options =>
 
 builder.Services.AddSingleton<FridgeItemsStore>();
 builder.Services.AddSingleton<CourseStore>();
-builder.Services.AddSingleton<ShoppingItemStore>();
 builder.Services.AddSingleton<ProfileStore>();
 builder.Services.AddSingleton<RecipesStore>();
 
-// Користувачі
 builder.Services.AddSingleton<UserStore>();
 builder.Services.AddSingleton<UserPasswordService>();
 
@@ -67,22 +70,27 @@ builder.Services
     {
         options.Cookie.Name = "FridgeChef.Auth";
         options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.Lax;
+
+        // Дозвіл передачі cookie між клієнтом та API
+        options.Cookie.SameSite = SameSiteMode.None;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
         options.SlidingExpiration = true;
 
-        // Для API повертаємо HTTP-статус,
-        // а не перенаправляємо на сторінку входу.
         options.Events.OnRedirectToLogin = context =>
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            context.Response.StatusCode =
+                StatusCodes.Status401Unauthorized;
+
             return Task.CompletedTask;
         };
 
         options.Events.OnRedirectToAccessDenied = context =>
         {
-            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.Response.StatusCode =
+                StatusCodes.Status403Forbidden;
+
             return Task.CompletedTask;
         };
     });
@@ -107,6 +115,10 @@ app.UseCors("Client");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// =====================================
+// RECIPES
+// =====================================
 
 app.MapRecipesEndpoints();
 
@@ -138,7 +150,7 @@ app.MapFridgeItemsEndpoints();
 app.MapCourses();
 
 // =====================================
-// SHOPPING ITEMS
+// SHOPPING ITEMS - POSTGRESQL
 // =====================================
 
 app.MapGroup("/api/shopping-items")

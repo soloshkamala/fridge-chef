@@ -1,5 +1,6 @@
 ﻿
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Components.WebAssembly.Http;
 using FridgeChef.Models;
 
 namespace FridgeChef.Services;
@@ -13,10 +14,32 @@ public class ShoppingItemApiService
         _http = http;
     }
 
+    private async Task<HttpResponseMessage> SendRequestAsync(
+        HttpMethod method,
+        string url,
+        HttpContent? content = null)
+    {
+        using var request = new HttpRequestMessage(method, url);
+
+        request.Content = content;
+
+        request.SetBrowserRequestCredentials(
+            BrowserRequestCredentials.Include);
+
+        return await _http.SendAsync(request);
+    }
+
     public async Task<List<ShoppingItem>> GetAllAsync()
     {
-        return await _http.GetFromJsonAsync<List<ShoppingItem>>(
-            "api/shopping-items") ?? new List<ShoppingItem>();
+        using var response = await SendRequestAsync(
+            HttpMethod.Get,
+            "api/shopping-items");
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content
+            .ReadFromJsonAsync<List<ShoppingItem>>()
+            ?? new List<ShoppingItem>();
     }
 
     public async Task<ShoppingItem> AddAsync(ShoppingItem item)
@@ -29,12 +52,17 @@ public class ShoppingItemApiService
             item.Category
         };
 
-        var response = await _http.PostAsJsonAsync(
-            "api/shopping-items", request);
+        using var content = JsonContent.Create(request);
+
+        using var response = await SendRequestAsync(
+            HttpMethod.Post,
+            "api/shopping-items",
+            content);
 
         response.EnsureSuccessStatusCode();
 
-        return (await response.Content.ReadFromJsonAsync<ShoppingItem>())!;
+        return (await response.Content
+            .ReadFromJsonAsync<ShoppingItem>())!;
     }
 
     public async Task UpdateAsync(ShoppingItem item)
@@ -49,18 +77,22 @@ public class ShoppingItemApiService
             item.IsInFridge
         };
 
-        var response = await _http.PutAsJsonAsync(
-            $"api/shopping-items/{item.Id}", request);
+        using var content = JsonContent.Create(request);
+
+        using var response = await SendRequestAsync(
+            HttpMethod.Put,
+            $"api/shopping-items/{item.Id}",
+            content);
 
         response.EnsureSuccessStatusCode();
     }
 
     public async Task DeleteAsync(int id)
     {
-        var response = await _http.DeleteAsync(
+        using var response = await SendRequestAsync(
+            HttpMethod.Delete,
             $"api/shopping-items/{id}");
 
         response.EnsureSuccessStatusCode();
     }
 }
-
