@@ -1,5 +1,3 @@
-﻿namespace FridgeChef;
+﻿namespace FridgeChef.Resources;
 
-public class ProfileResource
-{
-}
+public class ProfileResource { }
