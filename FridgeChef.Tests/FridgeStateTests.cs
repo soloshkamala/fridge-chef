@@ -27,6 +27,7 @@ namespace FridgeChef.Tests
             Services.AddSingleton(client);
             Services.AddScoped<FridgeService>();
             Services.AddScoped<FridgeItemsApiService>();
+            Services.AddScoped<RecipesApiService>();
         }
 
         [Fact]
