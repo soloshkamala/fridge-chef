@@ -9,26 +9,15 @@
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject ProfileService Store
-@inject IStringLocalizer<FridgeChef.ProfileResource> L
+@inject IStringLocalizer<FridgeChef.Resources.ProfileResource> L
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4 profile-page">
 
     
     <div class="d-flex justify-space-between align-center mb-4">
-        <MudText Typo="Typo.h4">
+        <MudText Typo="Typo.h4" Style="font-weight: 700;">
             @L["ProfileTitle"]
         </MudText>
-
-        <MudButtonGroup Variant="Variant.Outlined"
-                        Color="Color.Primary">
-            <MudButton OnClick="@(() => ChangeLanguage("uk-UA"))">
-                UA
-            </MudButton>
-
-            <MudButton OnClick="@(() => ChangeLanguage("en-US"))">
-                EN
-            </MudButton>
-        </MudButtonGroup>
     </div>
 
     
@@ -92,8 +81,8 @@
             <ProfileHeader User="Store.User" />
         }
 
-       
-        <MudText Typo="Typo.h6" Class="mt-6 mb-3">
+
+        <MudText Typo="Typo.h6" Class="mt-6 mb-3" Style="font-weight: 700;">
             @L["SavedRecipes"]
         </MudText>
 
@@ -127,7 +116,7 @@
         <MudPaper Class="pa-5 mt-6 profile-panel"
                   Elevation="0">
 
-            <MudText Typo="Typo.h6" Class="mb-4">
+            <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 700;">
                 @L["ProfileSettings"]
             </MudText>
 
