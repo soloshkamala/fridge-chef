@@ -177,14 +177,14 @@
             var request = new HttpRequestMessage(
                 HttpMethod.Post,
                 "https://localhost:7173/api/users")
+            {
+                Content = JsonContent.Create(new
                 {
-                    Content = JsonContent.Create(new
-                    {
-                        email = _registerModel.Email.Trim(),
-                        password = _registerModel.Password,
-                        displayName = _registerModel.DisplayName.Trim()
-                    })
-                };
+                    email = _registerModel.Email.Trim(),
+                    password = _registerModel.Password,
+                    displayName = _registerModel.DisplayName.Trim()
+                })
+            };
 
             request.SetBrowserRequestCredentials(
                 BrowserRequestCredentials.Include);

@@ -25,10 +25,8 @@ builder.Services.AddDbContext<FridgeChefDbContext>(options =>
 // DATA STORES
 // =====================================
 
-builder.Services.AddSingleton<FridgeItemsStore>();
 builder.Services.AddSingleton<CourseStore>();
 builder.Services.AddSingleton<ProfileStore>();
-builder.Services.AddSingleton<RecipesStore>();
 
 builder.Services.AddSingleton<UserStore>();
 builder.Services.AddSingleton<UserPasswordService>();

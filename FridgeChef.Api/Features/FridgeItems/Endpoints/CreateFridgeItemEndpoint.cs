@@ -1,5 +1,9 @@
-﻿using FridgeChef.Api.Features.FridgeItems.Models;
+﻿using FridgeChef.Api.Data;
+using FridgeChef.Api.Data.Entities;
+using FridgeChef.Api.Features.FridgeItems.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FridgeChef.Api.Features.FridgeItems.Endpoints;
 
@@ -7,8 +11,8 @@ public static class CreateFridgeItemEndpoint
 {
     public static void Map(RouteGroupBuilder group)
     {
-        group.MapPost("/", Results<Created<FridgeItemResponse>, ProblemHttpResult>
-            (SaveFridgeItemRequest request, FridgeItemsStore store) =>
+        group.MapPost("/", async Task<Results<Created<FridgeItemResponse>, ProblemHttpResult>>
+            (SaveFridgeItemRequest request, FridgeChefDbContext dbContext, ClaimsPrincipal user) =>
         {
             if (string.IsNullOrWhiteSpace(request.Name) ||
                 string.IsNullOrWhiteSpace(request.Unit) ||
@@ -19,28 +23,64 @@ public static class CreateFridgeItemEndpoint
                     title: "Invalid product data");
             }
 
-            var existingItem = store.Items.FirstOrDefault(x =>
-                x.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase));
+            var userIdValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!int.TryParse(userIdValue, out var userId))
+            {
+                return TypedResults.Problem(
+                    statusCode: 401,
+                    title: "User is not authenticated");
+            }
+
+            var productName = request.Name.Trim();
+            var unitName = request.Unit.Trim();
+
+            var product = await dbContext.Products
+                .FirstOrDefaultAsync(x => x.Name.ToLower() == productName.ToLower());
+
+            if (product == null)
+            {
+                return TypedResults.Problem(
+                    statusCode: 400,
+                    title: "Product not found in catalog");
+            }
+
+            var unit = await dbContext.Units
+                .FirstOrDefaultAsync(x => x.ShortName == unitName);
+
+            if (unit == null)
+            {
+                return TypedResults.Problem(
+                    statusCode: 400,
+                    title: "Unit not found");
+            }
+
+            var existingItem = await dbContext.FridgeItems
+                .Include(x => x.Product)
+                .Include(x => x.Unit)
+                .FirstOrDefaultAsync(x =>
+                    x.UserId == userId &&
+                    x.ProductId == product.Id);
 
             if (existingItem != null)
             {
-                if (existingItem.Unit.Equals(request.Unit, StringComparison.OrdinalIgnoreCase))
+                if (existingItem.Unit.ShortName == unitName)
                 {
                     existingItem.Quantity += request.Quantity;
                 }
-                else if (existingItem.Unit == "л" && request.Unit == "мл")
+                else if (existingItem.Unit.ShortName == "л" && unitName == "мл")
                 {
                     existingItem.Quantity += request.Quantity / 1000;
                 }
-                else if (existingItem.Unit == "мл" && request.Unit == "л")
+                else if (existingItem.Unit.ShortName == "мл" && unitName == "л")
                 {
                     existingItem.Quantity += request.Quantity * 1000;
                 }
-                else if (existingItem.Unit == "кг" && request.Unit == "г")
+                else if (existingItem.Unit.ShortName == "кг" && unitName == "г")
                 {
                     existingItem.Quantity += request.Quantity / 1000;
                 }
-                else if (existingItem.Unit == "г" && request.Unit == "кг")
+                else if (existingItem.Unit.ShortName == "г" && unitName == "кг")
                 {
                     existingItem.Quantity += request.Quantity * 1000;
                 }
@@ -51,24 +91,43 @@ public static class CreateFridgeItemEndpoint
                         title: "Incompatible units");
                 }
 
+                await dbContext.SaveChangesAsync();
+
+                var response = new FridgeItemResponse
+                {
+                    Id = existingItem.Id,
+                    Name = existingItem.Product.Name,
+                    Quantity = existingItem.Quantity,
+                    Unit = existingItem.Unit.ShortName
+                };
+
                 return TypedResults.Created(
-                    $"/api/fridge-items/{existingItem.Id}", existingItem);
+                    $"/api/fridge-items/{existingItem.Id}", response);
             }
 
-            var item = new FridgeItemResponse
+            var item = new FridgeItem
             {
-                Id = store.NextId++,
-                Name = request.Name,
-                Quantity = request.Quantity,
-                Unit = request.Unit
+                UserId = userId,
+                ProductId = product.Id,
+                UnitId = unit.Id,
+                Quantity = request.Quantity
             };
 
-            store.Items.Add(item);
+            dbContext.FridgeItems.Add(item);
+            await dbContext.SaveChangesAsync();
+
+            var newResponse = new FridgeItemResponse
+            {
+                Id = item.Id,
+                Name = product.Name,
+                Quantity = item.Quantity,
+                Unit = unit.ShortName
+            };
 
             return TypedResults.Created(
-                $"/api/fridge-items/{item.Id}", item);
+                $"/api/fridge-items/{item.Id}", newResponse);
         })
         .ProducesProblem(400)
-        .ProducesProblem(409);
+        .ProducesProblem(401);
     }
 }

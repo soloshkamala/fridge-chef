@@ -40,6 +40,43 @@ namespace FridgeChef.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 2,
+                            Name = "Молочні продукти"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "М'ясо та ковбаси"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Овочі"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Фрукти"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Name = "Яйця"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Name = "Бакалія"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Name = "Напої"
+                        });
                 });
 
             modelBuilder.Entity("FridgeChef.Api.Data.Entities.Diet", b =>
@@ -153,6 +190,176 @@ namespace FridgeChef.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Products");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CategoryId = 2,
+                            Name = "Молоко"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CategoryId = 2,
+                            Name = "Сир"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CategoryId = 2,
+                            Name = "Масло"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CategoryId = 2,
+                            Name = "Сметана"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            CategoryId = 2,
+                            Name = "Йогурт"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            CategoryId = 2,
+                            Name = "Кефір"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            CategoryId = 3,
+                            Name = "Ковбаса"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            CategoryId = 3,
+                            Name = "Куряче філе"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            CategoryId = 3,
+                            Name = "Яловичина"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            CategoryId = 3,
+                            Name = "Фарш"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            CategoryId = 4,
+                            Name = "Помідори"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            CategoryId = 4,
+                            Name = "Огірки"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            CategoryId = 4,
+                            Name = "Картопля"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            CategoryId = 4,
+                            Name = "Морква"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            CategoryId = 4,
+                            Name = "Цибуля"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            CategoryId = 4,
+                            Name = "Перець"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            CategoryId = 5,
+                            Name = "Яблука"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            CategoryId = 5,
+                            Name = "Банани"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            CategoryId = 5,
+                            Name = "Апельсини"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            CategoryId = 5,
+                            Name = "Лимони"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            CategoryId = 6,
+                            Name = "Яйця"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            CategoryId = 7,
+                            Name = "Рис"
+                        },
+                        new
+                        {
+                            Id = 23,
+                            CategoryId = 7,
+                            Name = "Гречка"
+                        },
+                        new
+                        {
+                            Id = 24,
+                            CategoryId = 7,
+                            Name = "Макарони"
+                        },
+                        new
+                        {
+                            Id = 25,
+                            CategoryId = 7,
+                            Name = "Борошно"
+                        },
+                        new
+                        {
+                            Id = 26,
+                            CategoryId = 7,
+                            Name = "Цукор"
+                        },
+                        new
+                        {
+                            Id = 27,
+                            CategoryId = 8,
+                            Name = "Вода"
+                        },
+                        new
+                        {
+                            Id = 28,
+                            CategoryId = 8,
+                            Name = "Сік"
+                        });
                 });
 
             modelBuilder.Entity("FridgeChef.Api.Data.Entities.Recipe", b =>
@@ -180,15 +387,84 @@ namespace FridgeChef.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Instructions")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("Servings")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
 
                     b.ToTable("Recipes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Calories = 450,
+                            CategoryId = 4,
+                            CookingTime = 35,
+                            Description = "Паста з курячим філе у ніжному сирному соусі.",
+                            ImageUrl = "",
+                            Instructions = "1. Закип'ятіть воду, посоліть та відваріть макарони відповідно до інструкції на упаковці.\n2. Наріжте куряче філе невеликими шматочками.\n3. Розігрійте пательню з невеликою кількістю олії та обсмажте курку до повної готовності.\n4. Додайте молоко та натертий сир. Перемішуйте на невеликому вогні, поки сир не розплавиться.\n5. Додайте готові макарони до соусу та добре перемішайте.\n6. Прогрійте все разом ще хвилину та подавайте.",
+                            Name = "Паста з куркою",
+                            Servings = 2
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Calories = 180,
+                            CategoryId = 2,
+                            CookingTime = 40,
+                            Description = "Ароматний овочевий суп із помідорами, морквою та цибулею.",
+                            ImageUrl = "",
+                            Instructions = "1. Помийте помідори, моркву та цибулю.\n2. Наріжте цибулю невеликими шматочками, а моркву натріть на тертці.\n3. Обсмажте цибулю та моркву в каструлі з невеликою кількістю олії протягом кількох хвилин.\n4. Додайте нарізані помідори та тушкуйте овочі приблизно 5–7 хвилин.\n5. Влийте воду, доведіть до кипіння та варіть на невеликому вогні приблизно 15 хвилин.\n6. За бажанням подрібніть суп блендером. Додайте сіль і спеції за смаком.",
+                            Name = "Томатний суп",
+                            Servings = 2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Calories = 320,
+                            CategoryId = 1,
+                            CookingTime = 15,
+                            Description = "Ніжний омлет із яйцями, молоком та розплавленим сиром.",
+                            ImageUrl = "",
+                            Instructions = "1. Розбийте яйця в глибоку миску.\n2. Додайте молоко, сіль і перець. Збийте виделкою до однорідності.\n3. Натріть сир на тертці.\n4. Розігрійте пательню з невеликою кількістю масла або олії.\n5. Вилийте яєчну суміш на пательню та готуйте на невеликому вогні.\n6. Коли омлет почне застигати, додайте сир.\n7. Накрийте кришкою та готуйте до повної готовності яєць.",
+                            Name = "Омлет із сиром",
+                            Servings = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Calories = 120,
+                            CategoryId = 3,
+                            CookingTime = 10,
+                            Description = "Легкий свіжий салат із сезонних овочів.",
+                            ImageUrl = "",
+                            Instructions = "1. Ретельно помийте помідори та огірки.\n2. Наріжте помідори невеликими часточками.\n3. Наріжте огірки кружальцями або півкружальцями.\n4. Перекладіть овочі в салатницю та обережно перемішайте.\n5. Додайте сіль, перець та заправку за смаком.\n6. Перемішайте салат ще раз і подавайте.",
+                            Name = "Салат із помідорами та огірками",
+                            Servings = 2
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Calories = 390,
+                            CategoryId = 4,
+                            CookingTime = 40,
+                            Description = "Поживна гречка з обсмаженим курячим філе та цибулею.",
+                            ImageUrl = "",
+                            Instructions = "1. Промийте гречку під проточною водою.\n2. Перекладіть її в каструлю, залийте водою та варіть до готовності відповідно до інструкції на упаковці.\n3. Наріжте куряче філе невеликими шматочками.\n4. Очистьте та наріжте цибулю.\n5. Розігрійте пательню з невеликою кількістю олії та обсмажте цибулю.\n6. Додайте куряче філе, посоліть та готуйте до повної готовності.\n7. Подавайте курку з готовою гречкою.",
+                            Name = "Гречка з куркою",
+                            Servings = 2
+                        });
                 });
 
             modelBuilder.Entity("FridgeChef.Api.Data.Entities.RecipeCategory", b =>
@@ -209,6 +485,28 @@ namespace FridgeChef.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("RecipeCategories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Сніданки"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Супи"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Салати"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Основні страви"
+                        });
                 });
 
             modelBuilder.Entity("FridgeChef.Api.Data.Entities.RecipeIngredient", b =>
@@ -240,6 +538,128 @@ namespace FridgeChef.Api.Migrations
                     b.HasIndex("UnitId");
 
                     b.ToTable("RecipeIngredients");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ProductId = 24,
+                            Quantity = 200m,
+                            RecipeId = 1,
+                            UnitId = 4
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ProductId = 8,
+                            Quantity = 250m,
+                            RecipeId = 1,
+                            UnitId = 4
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ProductId = 2,
+                            Quantity = 50m,
+                            RecipeId = 1,
+                            UnitId = 4
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ProductId = 11,
+                            Quantity = 400m,
+                            RecipeId = 2,
+                            UnitId = 4
+                        },
+                        new
+                        {
+                            Id = 5,
+                            ProductId = 14,
+                            Quantity = 100m,
+                            RecipeId = 2,
+                            UnitId = 4
+                        },
+                        new
+                        {
+                            Id = 6,
+                            ProductId = 15,
+                            Quantity = 50m,
+                            RecipeId = 2,
+                            UnitId = 4
+                        },
+                        new
+                        {
+                            Id = 7,
+                            ProductId = 27,
+                            Quantity = 500m,
+                            RecipeId = 2,
+                            UnitId = 2
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ProductId = 21,
+                            Quantity = 3m,
+                            RecipeId = 3,
+                            UnitId = 1
+                        },
+                        new
+                        {
+                            Id = 9,
+                            ProductId = 2,
+                            Quantity = 50m,
+                            RecipeId = 3,
+                            UnitId = 4
+                        },
+                        new
+                        {
+                            Id = 10,
+                            ProductId = 1,
+                            Quantity = 50m,
+                            RecipeId = 3,
+                            UnitId = 2
+                        },
+                        new
+                        {
+                            Id = 11,
+                            ProductId = 11,
+                            Quantity = 200m,
+                            RecipeId = 4,
+                            UnitId = 4
+                        },
+                        new
+                        {
+                            Id = 12,
+                            ProductId = 12,
+                            Quantity = 200m,
+                            RecipeId = 4,
+                            UnitId = 4
+                        },
+                        new
+                        {
+                            Id = 13,
+                            ProductId = 23,
+                            Quantity = 200m,
+                            RecipeId = 5,
+                            UnitId = 4
+                        },
+                        new
+                        {
+                            Id = 14,
+                            ProductId = 8,
+                            Quantity = 250m,
+                            RecipeId = 5,
+                            UnitId = 4
+                        },
+                        new
+                        {
+                            Id = 15,
+                            ProductId = 15,
+                            Quantity = 50m,
+                            RecipeId = 5,
+                            UnitId = 4
+                        });
                 });
 
             modelBuilder.Entity("FridgeChef.Api.Data.Entities.ShoppingItem", b =>
@@ -307,6 +727,38 @@ namespace FridgeChef.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Units");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Штуки",
+                            ShortName = "шт"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Мілілітри",
+                            ShortName = "мл"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Літри",
+                            ShortName = "л"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Грами",
+                            ShortName = "г"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Кілограми",
+                            ShortName = "кг"
+                        });
                 });
 
             modelBuilder.Entity("FridgeChef.Api.Data.Entities.User", b =>

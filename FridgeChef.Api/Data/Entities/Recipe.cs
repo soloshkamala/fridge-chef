@@ -1,5 +1,4 @@
-﻿
-namespace FridgeChef.Api.Data.Entities;
+﻿namespace FridgeChef.Api.Data.Entities;
 
 public class Recipe
 {
@@ -17,8 +16,11 @@ public class Recipe
 
     public int Calories { get; set; }
 
+    public int Servings { get; set; }
+
+    public string Instructions { get; set; } = "";
+
     public RecipeCategory Category { get; set; } = null!;
 
-    public ICollection<RecipeIngredient> Ingredients { get; set; }
-        = new List<RecipeIngredient>();
+    public ICollection<RecipeIngredient> Ingredients { get; set; } = new List<RecipeIngredient>();
 }
