@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using Microsoft.Authentication.WebAssembly.Msal;
+using System.Globalization;
 using FridgeChef;
 using FridgeChef.Services;
 using Microsoft.AspNetCore.Components.Web;
@@ -52,6 +53,13 @@ builder.Services.AddScoped(sp => new HttpClient
 // AUTHENTICATION
 // =====================================
 
+builder.Services.AddMsalAuthentication(options =>
+{
+    builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
+
+    options.ProviderOptions.DefaultAccessTokenScopes.Add(
+        "api://f9f39e83-370c-4ed6-bfac-f93c39c97542/access_as_user");
+});
 builder.Services.AddScoped<AuthStateService>();
 
 builder.Services.AddScoped<AuthService>(sp =>

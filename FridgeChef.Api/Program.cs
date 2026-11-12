@@ -27,6 +27,7 @@ builder.Services.AddDbContext<FridgeChefDbContext>(options =>
 
 builder.Services.AddSingleton<CourseStore>();
 builder.Services.AddSingleton<ProfileStore>();
+builder.Services.AddSingleton<ShoppingItemStore>();
 
 // Users
 builder.Services.AddSingleton<UserStore>();
@@ -70,7 +71,7 @@ builder.Services
         options.Cookie.Name = "FridgeChef.Auth";
         options.Cookie.HttpOnly = true;
 
-        // Дозвіл передачі cookie між клієнтом та API
+        // Р”РѕР·РІС–Р» РїРµСЂРµРґР°С‡С– cookie РјС–Р¶ РєР»С–С”РЅС‚РѕРј С‚Р° API
         options.Cookie.SameSite = SameSiteMode.None;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 
