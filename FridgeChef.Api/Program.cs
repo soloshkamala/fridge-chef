@@ -28,6 +28,7 @@ builder.Services.AddDbContext<FridgeChefDbContext>(options =>
 builder.Services.AddSingleton<CourseStore>();
 builder.Services.AddSingleton<ProfileStore>();
 
+// Users
 builder.Services.AddSingleton<UserStore>();
 builder.Services.AddSingleton<UserPasswordService>();
 
@@ -76,20 +77,22 @@ builder.Services
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
         options.SlidingExpiration = true;
 
-        options.Events.OnRedirectToLogin = context =>
+        // 401 Unauthorized + ProblemDetails
+        options.Events.OnRedirectToLogin = async context =>
         {
-            context.Response.StatusCode =
-                StatusCodes.Status401Unauthorized;
-
-            return Task.CompletedTask;
+            await Results.Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Unauthorized"
+            ).ExecuteAsync(context.HttpContext);
         };
 
-        options.Events.OnRedirectToAccessDenied = context =>
+        // 403 Forbidden + ProblemDetails
+        options.Events.OnRedirectToAccessDenied = async context =>
         {
-            context.Response.StatusCode =
-                StatusCodes.Status403Forbidden;
-
-            return Task.CompletedTask;
+            await Results.Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Forbidden"
+            ).ExecuteAsync(context.HttpContext);
         };
     });
 

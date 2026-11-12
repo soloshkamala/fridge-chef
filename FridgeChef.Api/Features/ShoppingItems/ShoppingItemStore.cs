@@ -14,10 +14,15 @@ public class ShoppingItemStore
 
     private int _nextId = 6;
 
-    public List<ShoppingItemResponse> GetAll() => _items.ToList();
+    public List<ShoppingItemResponse> GetAll()
+    {
+        return _items.ToList();
+    }
 
-    public ShoppingItemResponse? GetById(int id) =>
-        _items.FirstOrDefault(item => item.Id == id);
+    public ShoppingItemResponse? GetById(int id)
+    {
+        return _items.FirstOrDefault(item => item.Id == id);
+    }
 
     public ShoppingItemResponse Add(CreateShoppingItemRequest request)
     {
@@ -31,6 +36,7 @@ public class ShoppingItemStore
             false);
 
         _items.Add(item);
+
         return item;
     }
 
@@ -53,6 +59,7 @@ public class ShoppingItemStore
             request.IsInFridge);
 
         _items[index] = item;
+
         return item;
     }
 
@@ -64,6 +71,7 @@ public class ShoppingItemStore
             return false;
 
         _items.Remove(item);
+
         return true;
     }
 }
