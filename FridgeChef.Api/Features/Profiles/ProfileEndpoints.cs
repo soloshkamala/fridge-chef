@@ -1,4 +1,4 @@
-namespace FridgeChef.Api.Features.Profiles;
+﻿namespace FridgeChef.Api.Features.Profiles;
 
 public static class ProfileEndpoints
 {
@@ -7,6 +7,7 @@ public static class ProfileEndpoints
     {
         group.MapListProfiles();
         group.MapGetProfile();
+        group.MapGetMyProfile();
         group.MapCreateProfile();
         group.MapUpdateProfile();
         group.MapDeleteProfile();

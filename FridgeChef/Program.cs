@@ -1,4 +1,4 @@
-﻿using Microsoft.Authentication.WebAssembly.Msal;
+using Microsoft.Authentication.WebAssembly.Msal;
 using System.Globalization;
 using FridgeChef;
 using FridgeChef.Services;
@@ -49,6 +49,8 @@ builder.Services.AddScoped<ApiAuthorizationMessageHandler>();
 builder.Services.AddScoped(sp =>
 {
     var handler = sp.GetRequiredService<ApiAuthorizationMessageHandler>();
+
+    handler.InnerHandler = new HttpClientHandler();
 
     return new HttpClient(handler)
     {
@@ -122,5 +124,3 @@ CultureInfo.CurrentUICulture = culture;
 // =====================================
 
 await host.RunAsync();
-
-

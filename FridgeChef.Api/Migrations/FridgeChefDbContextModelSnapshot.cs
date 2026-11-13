@@ -773,6 +773,12 @@ namespace FridgeChef.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("EntraObjectId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("EntraTenantId")
+                        .HasColumnType("text");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -784,6 +790,9 @@ namespace FridgeChef.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("EntraTenantId", "EntraObjectId")
                         .IsUnique();
 
                     b.ToTable("Users");

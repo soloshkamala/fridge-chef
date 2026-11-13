@@ -1,4 +1,4 @@
-﻿
+using FridgeChef.Api.Services;
 using FridgeChef.Api.Features.Auth;
 using FridgeChef.Api.Features.Courses;
 using FridgeChef.Api.Features.FridgeItems;
@@ -22,6 +22,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<FridgeChefDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<CurrentUserService>();
 
 // =====================================
 // DATA STORES
@@ -109,7 +110,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ApiRead", policy =>
         policy.RequireAuthenticatedUser()
               .RequireAssertion(context =>
-                  context.User.FindAll("scp")
+                  context.User.FindAll("scp").Concat(context.User.FindAll("http://schemas.microsoft.com/identity/claims/scope"))
                       .Any(claim => claim.Value.Split(' ')
                           .Contains("access_as_user"))));
 
@@ -117,7 +118,7 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser()
               .RequireRole("User", "Admin")
               .RequireAssertion(context =>
-                  context.User.FindAll("scp")
+                  context.User.FindAll("scp").Concat(context.User.FindAll("http://schemas.microsoft.com/identity/claims/scope"))
                       .Any(claim => claim.Value.Split(' ')
                           .Contains("access_as_user"))));
 
@@ -125,7 +126,7 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser()
               .RequireRole("Admin")
               .RequireAssertion(context =>
-                  context.User.FindAll("scp")
+                  context.User.FindAll("scp").Concat(context.User.FindAll("http://schemas.microsoft.com/identity/claims/scope"))
                       .Any(claim => claim.Value.Split(' ')
                           .Contains("access_as_user"))));
 });
@@ -221,4 +222,3 @@ app.MapGroup("/api/auth")
 app.Run();
 
 public partial class Program { }
-
