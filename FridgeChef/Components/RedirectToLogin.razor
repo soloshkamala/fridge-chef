@@ -1,17 +1,14 @@
-
-@using FridgeChef.Services
+﻿@using Microsoft.AspNetCore.Components
 @inject NavigationManager Navigation
 
-<p>Redirecting to login...</p>
+<p>Перенаправлення на Microsoft Login...</p>
 
 @code {
     protected override void OnInitialized()
     {
-        var currentPath = new Uri(Navigation.Uri).PathAndQuery;
-
-        var returnUrl = Uri.EscapeDataString(currentPath);
+        var returnUrl = Uri.EscapeDataString(Navigation.Uri);
 
         Navigation.NavigateTo(
-            $"/login?returnUrl={returnUrl}");
+            $"/authentication/login?returnUrl={returnUrl}");
     }
 }

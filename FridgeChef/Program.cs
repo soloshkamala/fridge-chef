@@ -32,7 +32,7 @@ builder.Services.AddLocalization();
 // API ADDRESS
 // =====================================
 
-const string apiAddress = "https://localhost:7173/";
+const string apiAddress = "http://localhost:5039/";
 
 // =====================================
 // CATALOGUE API
@@ -44,9 +44,16 @@ builder.AddCatalogueApi();
 // DEFAULT HTTP CLIENT
 // =====================================
 
-builder.Services.AddScoped(sp => new HttpClient
+builder.Services.AddScoped<ApiAuthorizationMessageHandler>();
+
+builder.Services.AddScoped(sp =>
 {
-    BaseAddress = new Uri(apiAddress)
+    var handler = sp.GetRequiredService<ApiAuthorizationMessageHandler>();
+
+    return new HttpClient(handler)
+    {
+        BaseAddress = new Uri(apiAddress)
+    };
 });
 
 // =====================================
@@ -115,3 +122,5 @@ CultureInfo.CurrentUICulture = culture;
 // =====================================
 
 await host.RunAsync();
+
+

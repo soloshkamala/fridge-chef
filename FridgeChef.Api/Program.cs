@@ -1,4 +1,4 @@
-
+﻿
 using FridgeChef.Api.Features.Auth;
 using FridgeChef.Api.Features.Courses;
 using FridgeChef.Api.Features.FridgeItems;
@@ -9,6 +9,8 @@ using FridgeChef.Api.Features.Users;
 using FridgeChef.Api.Middleware;
 using FridgeChef.Api.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -65,7 +67,7 @@ builder.Services.AddCors(options =>
 // =====================================
 
 builder.Services
-    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Name = "FridgeChef.Auth";
@@ -97,7 +99,36 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthentication()
+    .AddMicrosoftIdentityWebApi(
+        builder.Configuration.GetSection("AzureAd"),
+        jwtBearerScheme: JwtBearerDefaults.AuthenticationScheme);
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ApiRead", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireAssertion(context =>
+                  context.User.FindAll("scp")
+                      .Any(claim => claim.Value.Split(' ')
+                          .Contains("access_as_user"))));
+
+    options.AddPolicy("ApiWrite", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireRole("User", "Admin")
+              .RequireAssertion(context =>
+                  context.User.FindAll("scp")
+                      .Any(claim => claim.Value.Split(' ')
+                          .Contains("access_as_user"))));
+
+    options.AddPolicy("ApiAdmin", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireRole("Admin")
+              .RequireAssertion(context =>
+                  context.User.FindAll("scp")
+                      .Any(claim => claim.Value.Split(' ')
+                          .Contains("access_as_user"))));
+});
 
 // =====================================
 // BUILD
@@ -190,3 +221,4 @@ app.MapGroup("/api/auth")
 app.Run();
 
 public partial class Program { }
+
