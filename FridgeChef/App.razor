@@ -1,75 +1,31 @@
-﻿
-@using FridgeChef.Services
 @using FridgeChef.Components
-@implements IDisposable
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
-@inject AuthStateService AuthState
-@inject NavigationManager Navigation
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData"
+                                DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    @if (context.User.Identity?.IsAuthenticated != true)
+                    {
+                        <RedirectToLogin />
+                    }
+                    else
+                    {
+                        <p>У вас немає доступу до цієї сторінки.</p>
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView>
 
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        @if (!AuthState.IsInitialized)
-        {
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+
+        <NotFound>
             <LayoutView Layout="@typeof(MainLayout)">
-                <p>Завантаження...</p>
+                <p>Сторінку не знайдено.</p>
             </LayoutView>
-        }
-        else if (CanAccessPage())
-        {
-            <RouteView RouteData="@routeData"
-                       DefaultLayout="@typeof(MainLayout)" />
-
-            <FocusOnNavigate RouteData="@routeData"
-                             Selector="h1" />
-        }
-        else
-        {
-            <LayoutView Layout="@typeof(MainLayout)">
-                <RedirectToLogin />
-            </LayoutView>
-        }
-    </Found>
-
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">
-                Sorry, there's nothing at this address.
-            </p>
-        </LayoutView>
-    </NotFound>
-</Router>
-
-@code {
-    protected override async Task OnInitializedAsync()
-    {
-        AuthState.OnChange += HandleAuthStateChanged;
-
-        await AuthState.InitializeAsync();
-    }
-
-    private void HandleAuthStateChanged()
-    {
-        _ = InvokeAsync(StateHasChanged);
-    }
-
-    private bool CanAccessPage()
-    {
-        var path = new Uri(Navigation.Uri)
-            .AbsolutePath
-            .TrimEnd('/')
-            .ToLowerInvariant();
-
-        bool requiresLogin =
-            path == "/fridge" ||
-            path == "/shopping-list" ||
-            path == "/kbzhv";
-
-        return !requiresLogin || AuthState.IsAuthenticated;
-    }
-
-    public void Dispose()
-    {
-        AuthState.OnChange -= HandleAuthStateChanged;
-    }
-}
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

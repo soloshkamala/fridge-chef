@@ -1,4 +1,4 @@
-
+using FridgeChef.Api.Services;
 using FridgeChef.Api.Features.Auth;
 using FridgeChef.Api.Features.Courses;
 using FridgeChef.Api.Features.FridgeItems;
@@ -9,6 +9,8 @@ using FridgeChef.Api.Features.Users;
 using FridgeChef.Api.Middleware;
 using FridgeChef.Api.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +22,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<FridgeChefDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<CurrentUserService>();
 
 // =====================================
 // DATA STORES
@@ -27,7 +30,9 @@ builder.Services.AddDbContext<FridgeChefDbContext>(options =>
 
 builder.Services.AddSingleton<CourseStore>();
 builder.Services.AddSingleton<ProfileStore>();
+builder.Services.AddSingleton<ShoppingItemStore>();
 
+// Users
 builder.Services.AddSingleton<UserStore>();
 builder.Services.AddSingleton<UserPasswordService>();
 
@@ -63,37 +68,68 @@ builder.Services.AddCors(options =>
 // =====================================
 
 builder.Services
-    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Name = "FridgeChef.Auth";
         options.Cookie.HttpOnly = true;
 
-        // Дозвіл передачі cookie між клієнтом та API
+        // Р”РѕР·РІС–Р» РїРµСЂРµРґР°С‡С– cookie РјС–Р¶ РєР»С–С”РЅС‚РѕРј С‚Р° API
         options.Cookie.SameSite = SameSiteMode.None;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
         options.SlidingExpiration = true;
 
-        options.Events.OnRedirectToLogin = context =>
+        // 401 Unauthorized + ProblemDetails
+        options.Events.OnRedirectToLogin = async context =>
         {
-            context.Response.StatusCode =
-                StatusCodes.Status401Unauthorized;
-
-            return Task.CompletedTask;
+            await Results.Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Unauthorized"
+            ).ExecuteAsync(context.HttpContext);
         };
 
-        options.Events.OnRedirectToAccessDenied = context =>
+        // 403 Forbidden + ProblemDetails
+        options.Events.OnRedirectToAccessDenied = async context =>
         {
-            context.Response.StatusCode =
-                StatusCodes.Status403Forbidden;
-
-            return Task.CompletedTask;
+            await Results.Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Forbidden"
+            ).ExecuteAsync(context.HttpContext);
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthentication()
+    .AddMicrosoftIdentityWebApi(
+        builder.Configuration.GetSection("AzureAd"),
+        jwtBearerScheme: JwtBearerDefaults.AuthenticationScheme);
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ApiRead", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireAssertion(context =>
+                  context.User.FindAll("scp").Concat(context.User.FindAll("http://schemas.microsoft.com/identity/claims/scope"))
+                      .Any(claim => claim.Value.Split(' ')
+                          .Contains("access_as_user"))));
+
+    options.AddPolicy("ApiWrite", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireRole("User", "Admin")
+              .RequireAssertion(context =>
+                  context.User.FindAll("scp").Concat(context.User.FindAll("http://schemas.microsoft.com/identity/claims/scope"))
+                      .Any(claim => claim.Value.Split(' ')
+                          .Contains("access_as_user"))));
+
+    options.AddPolicy("ApiAdmin", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireRole("Admin")
+              .RequireAssertion(context =>
+                  context.User.FindAll("scp").Concat(context.User.FindAll("http://schemas.microsoft.com/identity/claims/scope"))
+                      .Any(claim => claim.Value.Split(' ')
+                          .Contains("access_as_user"))));
+});
 
 // =====================================
 // BUILD

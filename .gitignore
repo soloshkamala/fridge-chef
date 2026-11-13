@@ -17,3 +17,5 @@ packages/
 *.log
 
 **/TestResults/
+# Local backup files
+*.bak

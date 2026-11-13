@@ -1,0 +1,16 @@
+﻿@page "/authentication/{Action}"
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject NavigationManager Navigation
+
+<RemoteAuthenticatorView Action="@Action"
+                         OnLogInSucceeded="HandleLoginSucceeded" />
+
+@code {
+    [Parameter]
+    public string? Action { get; set; }
+
+    private void HandleLoginSucceeded(RemoteAuthenticationState state)
+    {
+        Navigation.NavigateTo("/profile", replace: true);
+    }
+}

@@ -1,5 +1,4 @@
-﻿
-namespace FridgeChef.Api.Data.Entities;
+﻿namespace FridgeChef.Api.Data.Entities;
 
 public class User
 {
@@ -10,4 +9,8 @@ public class User
     public string FirstName { get; set; } = "";
 
     public string LastName { get; set; } = "";
+
+    public string? EntraObjectId { get; set; }
+
+    public string? EntraTenantId { get; set; }
 }

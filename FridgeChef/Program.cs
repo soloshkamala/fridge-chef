@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+using Microsoft.Authentication.WebAssembly.Msal;
+using System.Globalization;
 using FridgeChef;
 using FridgeChef.Services;
 using Microsoft.AspNetCore.Components.Web;
@@ -31,7 +32,7 @@ builder.Services.AddLocalization();
 // API ADDRESS
 // =====================================
 
-const string apiAddress = "https://localhost:7173/";
+const string apiAddress = "http://localhost:5039/";
 
 // =====================================
 // CATALOGUE API
@@ -43,15 +44,31 @@ builder.AddCatalogueApi();
 // DEFAULT HTTP CLIENT
 // =====================================
 
-builder.Services.AddScoped(sp => new HttpClient
+builder.Services.AddScoped<ApiAuthorizationMessageHandler>();
+
+builder.Services.AddScoped(sp =>
 {
-    BaseAddress = new Uri(apiAddress)
+    var handler = sp.GetRequiredService<ApiAuthorizationMessageHandler>();
+
+    handler.InnerHandler = new HttpClientHandler();
+
+    return new HttpClient(handler)
+    {
+        BaseAddress = new Uri(apiAddress)
+    };
 });
 
 // =====================================
 // AUTHENTICATION
 // =====================================
 
+builder.Services.AddMsalAuthentication(options =>
+{
+    builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
+
+    options.ProviderOptions.DefaultAccessTokenScopes.Add(
+        "api://f9f39e83-370c-4ed6-bfac-f93c39c97542/access_as_user");
+});
 builder.Services.AddScoped<AuthStateService>();
 
 builder.Services.AddScoped<AuthService>(sp =>

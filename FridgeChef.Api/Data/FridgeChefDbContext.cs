@@ -1,4 +1,4 @@
-﻿
+
 using FridgeChef.Api.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -40,6 +40,10 @@ public class FridgeChefDbContext : DbContext
 
         modelBuilder.Entity<User>()
             .HasIndex(x => x.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<User>()
+            .HasIndex(x => new { x.EntraTenantId, x.EntraObjectId })
             .IsUnique();
 
         modelBuilder.Entity<Diet>()
