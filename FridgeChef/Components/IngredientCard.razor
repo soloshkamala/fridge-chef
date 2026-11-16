@@ -4,15 +4,45 @@
 @inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 
 <MudPaper Class="pa-4">
-    <div>
-        <strong>@Item.Ingredient.Name</strong>
-        <div>@Item.Quantity @GetUnitTranslation(Item.Unit)</div>
+    <div class="d-flex justify-space-between align-center">
+        <div>
+            <strong>@Item.Ingredient.Name</strong>
+            <div>
+                @Item.Quantity @GetUnitTranslation(Item.Unit)
+            </div>
+        </div>
+
+        <div>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                           Color="Color.Primary"
+                           OnClick="HandleEdit" />
+
+            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                           Color="Color.Error"
+                           OnClick="HandleDelete" />
+        </div>
     </div>
 </MudPaper>
 
 @code {
     [Parameter]
     public FridgeItem Item { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<FridgeItem> OnEdit { get; set; }
+
+    [Parameter]
+    public EventCallback<FridgeItem> OnDelete { get; set; }
+
+    private async Task HandleEdit()
+    {
+        await OnEdit.InvokeAsync(Item);
+    }
+
+    private async Task HandleDelete()
+    {
+        await OnDelete.InvokeAsync(Item);
+    }
 
     private string GetUnitTranslation(string unit)
     {

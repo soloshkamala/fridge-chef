@@ -104,7 +104,9 @@
                     @foreach (var item in FridgeService.FridgeItems)
                     {
                         <div class="ingredient-wrapper" @key="item.Id">
-                            <IngredientCard Item="item" />
+                            <IngredientCard Item="item"
+                                            OnEdit="EditIngredientAsync"
+                                            OnDelete="DeleteIngredientAsync" />
                         </div>
                     }
                 </div>
@@ -245,8 +247,9 @@
             FridgeService.FridgeItems.Clear();
             FridgeService.FridgeItems.AddRange(items);
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"Fridge loading error: {ex}");
             FridgeService.ErrorMessage = Localizer["LoadingError"].Value;
         }
         finally
@@ -285,7 +288,19 @@
                 {
                     var savedItem = await ApiService.AddItemAsync(item);
 
-                    FridgeService.FridgeItems.Add(savedItem);
+                    var existingItem = FridgeService.FridgeItems
+                        .FirstOrDefault(x => x.Id == savedItem.Id);
+
+                    if (existingItem != null)
+                    {
+                        var index = FridgeService.FridgeItems.IndexOf(existingItem);
+                        FridgeService.FridgeItems[index] = savedItem;
+                    }
+                    else
+                    {
+                        FridgeService.FridgeItems.Add(savedItem);
+                    }
+
                     searchText = "";
 
                     recommendedRecipes.Clear();
@@ -323,4 +338,85 @@
             isSearchingRecipes = false;
         }
     }
+
+    private async Task DeleteIngredientAsync(FridgeItem item)
+    {
+        try
+        {
+            await ApiService.DeleteItemAsync(item.Id);
+
+            FridgeService.FridgeItems.RemoveAll(
+                x => x.Id == item.Id
+            );
+
+            FridgeService.ErrorMessage = null;
+
+            recommendedRecipes.Clear();
+            hasSearchedRecipes = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fridge delete error: {ex}");
+
+            FridgeService.ErrorMessage =
+                "Не вдалося видалити продукт.";
+        }
+    }
+
+    private async Task EditIngredientAsync(FridgeItem item)
+    {
+        var ingredient = FridgeService.Ingredients
+            .FirstOrDefault(x =>
+                x.Name.Equals(
+                    item.Ingredient.Name,
+                    StringComparison.OrdinalIgnoreCase));
+
+        if (ingredient == null)
+        {
+            Console.WriteLine(
+                $"Ingredient not found: {item.Ingredient.Name}");
+            return;
+        }
+
+        var parameters = new DialogParameters<AddIngredientDialog>
+    {
+        { x => x.Ingredient, ingredient },
+        { x => x.EditingItem, item }
+    };
+
+        var dialog = await DialogService.ShowAsync<AddIngredientDialog>(
+            "Редагувати продукт",
+            parameters);
+
+        var result = await dialog.Result;
+
+        if (result == null ||
+            result.Canceled ||
+            result.Data is not FridgeItem updatedItem)
+        {
+            return;
+        }
+
+        try
+        {
+            await ApiService.UpdateItemAsync(updatedItem);
+
+            var items = await ApiService.GetItemsAsync();
+
+            FridgeService.FridgeItems.Clear();
+            FridgeService.FridgeItems.AddRange(items);
+
+            recommendedRecipes.Clear();
+            hasSearchedRecipes = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fridge update error: {ex}");
+
+            FridgeService.ErrorMessage =
+                "Не вдалося оновити продукт.";
+        }
+    }
+
+
 }
