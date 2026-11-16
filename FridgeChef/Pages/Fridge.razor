@@ -11,6 +11,7 @@
 @inject FridgeItemsApiService ApiService
 @inject RecipesApiService RecipesApiService
 @inject IDialogService DialogService
+@inject HttpClient Http
 
 <PageTitle>@Localizer["PageTitle"]</PageTitle>
 
@@ -242,6 +243,10 @@
 
         try
         {
+            var profileResponse = await Http.GetAsync("api/profiles/me");
+            profileResponse.EnsureSuccessStatusCode();
+
+  
             var items = await ApiService.GetItemsAsync();
 
             FridgeService.FridgeItems.Clear();
