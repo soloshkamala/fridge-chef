@@ -1,4 +1,5 @@
-﻿using FridgeChef.Api.Features.Recipes.Endpoints;
+﻿
+using FridgeChef.Api.Features.Recipes.Endpoints;
 
 namespace FridgeChef.Api.Features.Recipes;
 
@@ -11,6 +12,7 @@ public static class RecipesEndpoints
             .WithTags("Recipes");
 
         GetRecommendedRecipesEndpoint.Map(group);
+        GetRecipeByIdEndpoint.Map(group);
 
         return group;
     }
