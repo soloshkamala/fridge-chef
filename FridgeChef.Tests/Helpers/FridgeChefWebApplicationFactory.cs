@@ -64,7 +64,9 @@ public class FridgeChefWebApplicationFactory
                 Id = 1,
                 Email = "test@fridgechef.local",
                 FirstName = "Test",
-                LastName = "User"
+                LastName = "User",
+                EntraObjectId = "test-object-id",
+                EntraTenantId = "test-tenant-id"
             });
 
             await dbContext.SaveChangesAsync();
