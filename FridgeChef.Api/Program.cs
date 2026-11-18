@@ -1,3 +1,4 @@
+
 using FridgeChef.Api.Services;
 using FridgeChef.Api.Features.Auth;
 using FridgeChef.Api.Features.Courses;
@@ -15,38 +16,25 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// =====================================
 // DATABASE
-// =====================================
-
 builder.Services.AddDbContext<FridgeChefDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddScoped<CurrentUserService>();
 
-// =====================================
 // DATA STORES
-// =====================================
-
 builder.Services.AddSingleton<CourseStore>();
 builder.Services.AddSingleton<ProfileStore>();
 builder.Services.AddSingleton<ShoppingItemStore>();
-
-// Users
 builder.Services.AddSingleton<UserStore>();
 builder.Services.AddSingleton<UserPasswordService>();
 
-// =====================================
 // SWAGGER
-// =====================================
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// =====================================
 // CORS
-// =====================================
-
 builder.Services.AddCors(options =>
 {
     var clientOrigin = builder.Configuration["ClientOrigin"]
@@ -63,25 +51,19 @@ builder.Services.AddCors(options =>
             .AllowCredentials());
 });
 
-// =====================================
 // COOKIE AUTHENTICATION
-// =====================================
-
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Name = "FridgeChef.Auth";
         options.Cookie.HttpOnly = true;
-
-        // Р”РѕР·РІС–Р» РїРµСЂРµРґР°С‡С– cookie РјС–Р¶ РєР»С–С”РЅС‚РѕРј С‚Р° API
         options.Cookie.SameSite = SameSiteMode.None;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
         options.SlidingExpiration = true;
 
-        // 401 Unauthorized + ProblemDetails
         options.Events.OnRedirectToLogin = async context =>
         {
             await Results.Problem(
@@ -90,7 +72,6 @@ builder.Services
             ).ExecuteAsync(context.HttpContext);
         };
 
-        // 403 Forbidden + ProblemDetails
         options.Events.OnRedirectToAccessDenied = async context =>
         {
             await Results.Problem(
@@ -110,7 +91,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ApiRead", policy =>
         policy.RequireAuthenticatedUser()
               .RequireAssertion(context =>
-                  context.User.FindAll("scp").Concat(context.User.FindAll("http://schemas.microsoft.com/identity/claims/scope"))
+                  context.User.FindAll("scp")
+                      .Concat(context.User.FindAll(
+                          "http://schemas.microsoft.com/identity/claims/scope"))
                       .Any(claim => claim.Value.Split(' ')
                           .Contains("access_as_user"))));
 
@@ -118,7 +101,9 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser()
               .RequireRole("User", "Admin")
               .RequireAssertion(context =>
-                  context.User.FindAll("scp").Concat(context.User.FindAll("http://schemas.microsoft.com/identity/claims/scope"))
+                  context.User.FindAll("scp")
+                      .Concat(context.User.FindAll(
+                          "http://schemas.microsoft.com/identity/claims/scope"))
                       .Any(claim => claim.Value.Split(' ')
                           .Contains("access_as_user"))));
 
@@ -126,40 +111,30 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser()
               .RequireRole("Admin")
               .RequireAssertion(context =>
-                  context.User.FindAll("scp").Concat(context.User.FindAll("http://schemas.microsoft.com/identity/claims/scope"))
+                  context.User.FindAll("scp")
+                      .Concat(context.User.FindAll(
+                          "http://schemas.microsoft.com/identity/claims/scope"))
                       .Any(claim => claim.Value.Split(' ')
                           .Contains("access_as_user"))));
 });
 
-// =====================================
 // BUILD
-// =====================================
-
 var app = builder.Build();
 
-// =====================================
 // MIDDLEWARE
-// =====================================
-
 app.UseMiddleware<RequestLoggingMiddleware>();
 
-app.UseHttpsRedirection();
+// UseHttpsRedirection() прибрано для локального HTTP-з'єднання
 
 app.UseCors("Client");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-// =====================================
 // RECIPES
-// =====================================
-
 app.MapRecipesEndpoints();
 
-// =====================================
 // SWAGGER
-// =====================================
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(options =>
@@ -171,54 +146,33 @@ if (app.Environment.IsDevelopment())
             "FridgeChef API v1"));
 }
 
-// =====================================
 // FRIDGE
-// =====================================
-
 app.MapFridgeItemsEndpoints();
 
-// =====================================
 // COURSES
-// =====================================
-
 app.MapCourses();
 
-// =====================================
-// SHOPPING ITEMS - POSTGRESQL
-// =====================================
-
+// SHOPPING ITEMS
 app.MapGroup("/api/shopping-items")
     .MapShoppingItemEndpoints()
     .WithTags("Shopping Items");
 
-// =====================================
 // PROFILES
-// =====================================
-
 app.MapGroup("/api/profiles")
     .MapProfileEndpoints()
     .WithTags("Profiles");
 
-// =====================================
 // USERS
-// =====================================
-
 app.MapGroup("/api/users")
     .MapUserEndpoints()
     .WithTags("Users");
 
-// =====================================
 // AUTHENTICATION
-// =====================================
-
 app.MapGroup("/api/auth")
     .MapAuthEndpoints()
     .WithTags("Authentication");
 
-// =====================================
 // RUN
-// =====================================
-
 app.Run();
 
 public partial class Program { }

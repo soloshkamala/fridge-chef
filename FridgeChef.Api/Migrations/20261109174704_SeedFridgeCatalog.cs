@@ -1,300 +1,115 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
 namespace FridgeChef.Api.Migrations
 {
-    /// <inheritdoc />
     public partial class SeedFridgeCatalog : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.InsertData(
-                table: "Categories",
-                columns: new[] { "Id", "Name" },
-                values: new object[,]
-                {
-                    { 2, "Молочні продукти" },
-                    { 3, "М'ясо та ковбаси" },
-                    { 4, "Овочі" },
-                    { 5, "Фрукти" },
-                    { 6, "Яйця" },
-                    { 7, "Бакалія" },
-                    { 8, "Напої" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Units",
-                columns: new[] { "Id", "Name", "ShortName" },
-                values: new object[,]
-                {
-                    { 1, "Штуки", "шт" },
-                    { 2, "Мілілітри", "мл" },
-                    { 3, "Літри", "л" },
-                    { 4, "Грами", "г" },
-                    { 5, "Кілограми", "кг" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Products",
-                columns: new[] { "Id", "CategoryId", "Name" },
-                values: new object[,]
-                {
-                    { 1, 2, "Молоко" },
-                    { 2, 2, "Сир" },
-                    { 3, 2, "Масло" },
-                    { 4, 2, "Сметана" },
-                    { 5, 2, "Йогурт" },
-                    { 6, 2, "Кефір" },
-                    { 7, 3, "Ковбаса" },
-                    { 8, 3, "Куряче філе" },
-                    { 9, 3, "Яловичина" },
-                    { 10, 3, "Фарш" },
-                    { 11, 4, "Помідори" },
-                    { 12, 4, "Огірки" },
-                    { 13, 4, "Картопля" },
-                    { 14, 4, "Морква" },
-                    { 15, 4, "Цибуля" },
-                    { 16, 4, "Перець" },
-                    { 17, 5, "Яблука" },
-                    { 18, 5, "Банани" },
-                    { 19, 5, "Апельсини" },
-                    { 20, 5, "Лимони" },
-                    { 21, 6, "Яйця" },
-                    { 22, 7, "Рис" },
-                    { 23, 7, "Гречка" },
-                    { 24, 7, "Макарони" },
-                    { 25, 7, "Борошно" },
-                    { 26, 7, "Цукор" },
-                    { 27, 8, "Вода" },
-                    { 28, 8, "Сік" }
-                });
             migrationBuilder.Sql("""
-    SELECT setval(
-        pg_get_serial_sequence('"Categories"', 'Id'),
-        COALESCE(MAX("Id"), 1),
-        MAX("Id") IS NOT NULL
-    ) FROM "Categories";
+                -- 1. Додаємо категорії, яких ще немає
+                INSERT INTO "Categories" ("Name")
+                SELECT v."Name"
+                FROM (VALUES
+                    ('Молочні продукти'),
+                    ('М''ясо та ковбаси'),
+                    ('Овочі'),
+                    ('Фрукти'),
+                    ('Яйця'),
+                    ('Бакалія'),
+                    ('Напої')
+                ) AS v("Name")
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM "Categories" c
+                    WHERE LOWER(TRIM(c."Name")) = LOWER(TRIM(v."Name"))
+                );
 
-    SELECT setval(
-        pg_get_serial_sequence('"Products"', 'Id'),
-        COALESCE(MAX("Id"), 1),
-        MAX("Id") IS NOT NULL
-    ) FROM "Products";
+                -- 2. Додаємо одиниці вимірювання, яких ще немає
+                INSERT INTO "Units" ("Name", "ShortName")
+                SELECT v."Name", v."ShortName"
+                FROM (VALUES
+                    ('Штуки', 'шт'),
+                    ('Мілілітри', 'мл'),
+                    ('Літри', 'л'),
+                    ('Грами', 'г'),
+                    ('Кілограми', 'кг')
+                ) AS v("Name", "ShortName")
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM "Units" u
+                    WHERE LOWER(TRIM(u."Name")) = LOWER(TRIM(v."Name"))
+                       OR LOWER(TRIM(u."ShortName")) = LOWER(TRIM(v."ShortName"))
+                );
 
-    SELECT setval(
-        pg_get_serial_sequence('"Units"', 'Id'),
-        COALESCE(MAX("Id"), 1),
-        MAX("Id") IS NOT NULL
-    ) FROM "Units";
-    """);
+                -- 3. Додаємо продукти, яких ще немає
+                INSERT INTO "Products" ("Name", "CategoryId")
+                SELECT v."Name", c."Id"
+                FROM (VALUES
+                    ('Молоко', 'Молочні продукти'),
+                    ('Сир', 'Молочні продукти'),
+                    ('Масло', 'Молочні продукти'),
+                    ('Сметана', 'Молочні продукти'),
+                    ('Йогурт', 'Молочні продукти'),
+                    ('Кефір', 'Молочні продукти'),
+                    ('Ковбаса', 'М''ясо та ковбаси'),
+                    ('Куряче філе', 'М''ясо та ковбаси'),
+                    ('Яловичина', 'М''ясо та ковбаси'),
+                    ('Фарш', 'М''ясо та ковбаси'),
+                    ('Помідори', 'Овочі'),
+                    ('Огірки', 'Овочі'),
+                    ('Картопля', 'Овочі'),
+                    ('Морква', 'Овочі'),
+                    ('Цибуля', 'Овочі'),
+                    ('Перець', 'Овочі'),
+                    ('Яблука', 'Фрукти'),
+                    ('Банани', 'Фрукти'),
+                    ('Апельсини', 'Фрукти'),
+                    ('Лимони', 'Фрукти'),
+                    ('Яйця', 'Яйця'),
+                    ('Рис', 'Бакалія'),
+                    ('Гречка', 'Бакалія'),
+                    ('Макарони', 'Бакалія'),
+                    ('Борошно', 'Бакалія'),
+                    ('Цукор', 'Бакалія'),
+                    ('Вода', 'Напої'),
+                    ('Сік', 'Напої')
+                ) AS v("Name", "CategoryName")
+                INNER JOIN "Categories" c
+                    ON LOWER(TRIM(c."Name")) = LOWER(TRIM(v."CategoryName"))
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM "Products" p
+                    WHERE LOWER(TRIM(p."Name")) = LOWER(TRIM(v."Name"))
+                );
+
+                -- 4. Синхронізуємо лічильники ID
+                SELECT setval(
+                    pg_get_serial_sequence('"Categories"', 'Id'),
+                    COALESCE((SELECT MAX("Id") FROM "Categories"), 1),
+                    EXISTS (SELECT 1 FROM "Categories")
+                );
+
+                SELECT setval(
+                    pg_get_serial_sequence('"Products"', 'Id'),
+                    COALESCE((SELECT MAX("Id") FROM "Products"), 1),
+                    EXISTS (SELECT 1 FROM "Products")
+                );
+
+                SELECT setval(
+                    pg_get_serial_sequence('"Units"', 'Id'),
+                    COALESCE((SELECT MAX("Id") FROM "Units"), 1),
+                    EXISTS (SELECT 1 FROM "Units")
+                );
+                """);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 1);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 2);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 3);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 4);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 5);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 6);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 7);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 8);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 9);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 10);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 11);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 12);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 13);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 14);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 15);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 16);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 17);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 18);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 19);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 20);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 21);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 22);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 23);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 24);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 25);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 26);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 27);
-
-            migrationBuilder.DeleteData(
-                table: "Products",
-                keyColumn: "Id",
-                keyValue: 28);
-
-            migrationBuilder.DeleteData(
-                table: "Units",
-                keyColumn: "Id",
-                keyValue: 1);
-
-            migrationBuilder.DeleteData(
-                table: "Units",
-                keyColumn: "Id",
-                keyValue: 2);
-
-            migrationBuilder.DeleteData(
-                table: "Units",
-                keyColumn: "Id",
-                keyValue: 3);
-
-            migrationBuilder.DeleteData(
-                table: "Units",
-                keyColumn: "Id",
-                keyValue: 4);
-
-            migrationBuilder.DeleteData(
-                table: "Units",
-                keyColumn: "Id",
-                keyValue: 5);
-
-            migrationBuilder.DeleteData(
-                table: "Categories",
-                keyColumn: "Id",
-                keyValue: 2);
-
-            migrationBuilder.DeleteData(
-                table: "Categories",
-                keyColumn: "Id",
-                keyValue: 3);
-
-            migrationBuilder.DeleteData(
-                table: "Categories",
-                keyColumn: "Id",
-                keyValue: 4);
-
-            migrationBuilder.DeleteData(
-                table: "Categories",
-                keyColumn: "Id",
-                keyValue: 5);
-
-            migrationBuilder.DeleteData(
-                table: "Categories",
-                keyColumn: "Id",
-                keyValue: 6);
-
-            migrationBuilder.DeleteData(
-                table: "Categories",
-                keyColumn: "Id",
-                keyValue: 7);
-
-            migrationBuilder.DeleteData(
-                table: "Categories",
-                keyColumn: "Id",
-                keyValue: 8);
+            // Не видаляємо дані, щоб не втратити наявні записи.
         }
     }
 }
