@@ -7,7 +7,7 @@
 <MudDialog Class="ingredient-dialog" Options="@(new DialogOptions { BackdropClick = false })">
     <TitleContent>
         <MudText Typo="Typo.h6">
-            @Localizer[$"Ingredient{Ingredient.Id}"]
+            @Ingredient.Name
         </MudText>
     </TitleContent>
 
@@ -75,11 +75,11 @@
     private void Add()
     {
         var result = new FridgeItem
-        {
-            Ingredient = Ingredient,
-            Quantity = model.Quantity,
-            Unit = model.Unit ?? ""
-        };
+            {
+                Ingredient = Ingredient,
+                Quantity = model.Quantity,
+                Unit = model.Unit ?? ""
+            };
 
         MudDialog.Close(DialogResult.Ok(result));
     }

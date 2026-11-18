@@ -9,6 +9,7 @@
 @inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 @inject FridgeService FridgeService
 @inject FridgeItemsApiService ApiService
+@inject ProductsApiService ProductsApiService
 @inject RecipesApiService RecipesApiService
 @inject IDialogService DialogService
 
@@ -18,7 +19,6 @@
 
     <section class="hero">
         <div class="hero-content">
-
             <h1>
                 @Localizer["HeroTitleFirst"]
                 <br />
@@ -68,13 +68,12 @@
                                       Class="search-result-item"
                                       Elevation="0"
                                       @onclick="() => OpenIngredientDialog(ingredient)">
-                                <span>
-                                    @Localizer[$"Ingredient{ingredient.Id}"]
-                                </span>
+                                <span>@ingredient.Name</span>
                                 <span class="add-symbol">+</span>
                             </MudPaper>
                         }
                     }
+
                 </div>
             }
         </div>
@@ -240,6 +239,12 @@
 
         try
         {
+            // Завантажуємо каталог продуктів із бази даних
+            var products = await ProductsApiService.GetProductsAsync();
+
+            FridgeService.SetIngredients(products);
+
+            // Завантажуємо продукти, які вже є в холодильнику
             var items = await ApiService.GetItemsAsync();
 
             FridgeService.FridgeItems.Clear();
@@ -257,10 +262,9 @@
 
     private IEnumerable<Ingredient> FilteredIngredients =>
         FridgeService.Ingredients
-            .Where(x =>
-                Localizer[$"Ingredient{x.Id}"].Value.Contains(
-                    searchText,
-                    StringComparison.CurrentCultureIgnoreCase));
+            .Where(x => x.Name.Contains(
+                searchText,
+                StringComparison.CurrentCultureIgnoreCase));
 
     private async Task OpenIngredientDialog(Ingredient ingredient)
     {

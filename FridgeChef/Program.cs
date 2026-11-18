@@ -1,3 +1,4 @@
+
 using Microsoft.Authentication.WebAssembly.Msal;
 using System.Globalization;
 using FridgeChef;
@@ -69,6 +70,7 @@ builder.Services.AddMsalAuthentication(options =>
     options.ProviderOptions.DefaultAccessTokenScopes.Add(
         "api://f9f39e83-370c-4ed6-bfac-f93c39c97542/access_as_user");
 });
+
 builder.Services.AddScoped<AuthStateService>();
 
 builder.Services.AddScoped<AuthService>(sp =>
@@ -87,6 +89,7 @@ builder.Services.AddScoped<AuthService>(sp =>
 
 builder.Services.AddScoped<FridgeService>();
 builder.Services.AddScoped<FridgeItemsApiService>();
+builder.Services.AddScoped<ProductsApiService>();
 builder.Services.AddScoped<RecipesApiService>();
 builder.Services.AddScoped<ShoppingItemApiService>();
 builder.Services.AddScoped<ProfileService>();
