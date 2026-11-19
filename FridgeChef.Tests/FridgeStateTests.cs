@@ -28,6 +28,7 @@ namespace FridgeChef.Tests
             Services.AddScoped<FridgeService>();
             Services.AddScoped<FridgeItemsApiService>();
             Services.AddScoped<RecipesApiService>();
+            Services.AddScoped<ProductsApiService>();
         }
 
         [Fact]
@@ -46,7 +47,6 @@ namespace FridgeChef.Tests
         [Fact]
         public void Loading_fridge_shows_loading_state()
         {
-            // HTTP-запит залишається незавершеним.
             handler.KeepPending = true;
 
             var page = Render<Fridge>();
@@ -57,35 +57,31 @@ namespace FridgeChef.Tests
                     page.Markup));
         }
 
-[Fact]
-public void Error_fridge_shows_error_state()
-{
-    // Імітуємо помилку сервера
-    handler.StatusCode = HttpStatusCode.InternalServerError;
+        [Fact]
+        public void Error_fridge_shows_error_state()
+        {
+            handler.StatusCode = HttpStatusCode.InternalServerError;
 
-    var page = Render<Fridge>();
+            var page = Render<Fridge>();
 
-    var service = Services.GetRequiredService<FridgeService>();
+            var service = Services.GetRequiredService<FridgeService>();
 
-    page.WaitForAssertion(() =>
-    {
-        Assert.False(service.IsLoading);
+            page.WaitForAssertion(() =>
+            {
+                Assert.False(service.IsLoading);
 
-        Assert.False(
-            string.IsNullOrWhiteSpace(service.ErrorMessage)
-        );
+                Assert.False(
+                    string.IsNullOrWhiteSpace(service.ErrorMessage));
 
-        Assert.Contains(
-            service.ErrorMessage!,
-            page.Markup
-        );
-    });
-}
+                Assert.Contains(
+                    service.ErrorMessage!,
+                    page.Markup);
+            });
+        }
 
         [Fact]
         public void Data_fridge_shows_products_and_recipes_section()
         {
-            // Сервер повертає один продукт.
             handler.ResponseJson = """
             [
                 {
@@ -102,6 +98,7 @@ public void Error_fridge_shows_error_state()
             page.WaitForAssertion(() =>
             {
                 Assert.Contains("Молоко", page.Markup);
+
                 Assert.Contains(
                     "Підібрані рецепти",
                     page.Markup);
@@ -129,6 +126,15 @@ public void Error_fridge_shows_error_state()
         {
             var service = new FridgeService();
 
+            service.SetIngredients(new List<ProductResponse>
+            {
+                new ProductResponse
+                {
+                    Id = 1,
+                    Name = "Молоко"
+                }
+            });
+
             var milk = service.Ingredients
                 .First(x => x.Name == "Молоко");
 
@@ -141,6 +147,15 @@ public void Error_fridge_shows_error_state()
         public void AddToFridge_rejects_invalid_unit()
         {
             var service = new FridgeService();
+
+            service.SetIngredients(new List<ProductResponse>
+            {
+                new ProductResponse
+                {
+                    Id = 1,
+                    Name = "Молоко"
+                }
+            });
 
             var milk = service.Ingredients
                 .First(x => x.Name == "Молоко");
@@ -197,15 +212,56 @@ public void Error_fridge_shows_error_state()
                     return pendingResponse.Task;
                 }
 
-                var response = new HttpResponseMessage(StatusCode)
+                var path = request.RequestUri?.AbsolutePath ?? "";
+
+                if (StatusCode != HttpStatusCode.OK)
+                {
+                    return Task.FromResult(
+                        CreateResponse(StatusCode, "{}"));
+                }
+
+                if (path.Equals(
+                    "/api/profiles/me",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    return Task.FromResult(
+                        CreateResponse(HttpStatusCode.OK, "{}"));
+                }
+
+                if (path.Equals(
+                    "/api/products",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    const string productsJson = """
+                    [
+                        {
+                            "id": 1,
+                            "name": "Молоко",
+                            "categoryId": 1,
+                            "categoryName": "Молочні продукти"
+                        }
+                    ]
+                    """;
+
+                    return Task.FromResult(
+                        CreateResponse(HttpStatusCode.OK, productsJson));
+                }
+
+                return Task.FromResult(
+                    CreateResponse(HttpStatusCode.OK, ResponseJson));
+            }
+
+            private static HttpResponseMessage CreateResponse(
+                HttpStatusCode statusCode,
+                string json)
+            {
+                return new HttpResponseMessage(statusCode)
                 {
                     Content = new StringContent(
-                        ResponseJson,
+                        json,
                         Encoding.UTF8,
                         "application/json")
                 };
-
-                return Task.FromResult(response);
             }
         }
     }
