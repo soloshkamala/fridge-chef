@@ -1,4 +1,5 @@
-﻿using FridgeChef.Models;
+﻿
+using FridgeChef.Models;
 
 namespace FridgeChef.Services
 {
@@ -6,79 +7,42 @@ namespace FridgeChef.Services
     {
         public bool IsLoading { get; set; } = false;
         public string? ErrorMessage { get; set; }
-        public List<Ingredient> Ingredients { get; } = new()
-        {
-            new Ingredient
-            {
-                Id = 1,
-                Name = "Яйця",
-                AllowedUnits = new() { "шт" }
-            },
 
-            new Ingredient
-            {
-                Id = 2,
-                Name = "Молоко",
-                AllowedUnits = new() { "мл", "л" }
-            },
-
-            new Ingredient
-            {
-                Id = 3,
-                Name = "Ковбаса",
-                AllowedUnits = new() { "г", "кг" }
-            },
-
-            new Ingredient
-            {
-                Id = 4,
-                Name = "Сир",
-                AllowedUnits = new() { "г", "кг" }
-            },
-
-            new Ingredient
-            {
-                Id = 5,
-                Name = "Помідори",
-                AllowedUnits = new() { "шт", "г", "кг" }
-            },
-
-            new Ingredient
-            {
-                Id = 6,
-                Name = "Огірки",
-                AllowedUnits = new() { "шт", "г", "кг" }
-            },
-
-            new Ingredient
-            {
-                Id = 7,
-                Name = "Картопля",
-                AllowedUnits = new() { "шт", "г", "кг" }
-            },
-
-            new Ingredient
-            {
-                Id = 8,
-                Name = "Масло",
-                AllowedUnits = new() { "г" }
-            }
-        };
+        public List<Ingredient> Ingredients { get; set; } = new();
 
         public List<FridgeItem> FridgeItems { get; } = new();
 
+        public void SetIngredients(List<ProductResponse> products)
+        {
+            Ingredients = products.Select(product => new Ingredient
+            {
+                Id = product.Id,
+                Name = product.Name,
+                AllowedUnits = GetAllowedUnits(product.Name)
+            }).ToList();
+        }
+
+        private List<string> GetAllowedUnits(string name)
+        {
+            return name.ToLower() switch
+            {
+                "яйця" => new() { "шт" },
+                "молоко" => new() { "мл", "л" },
+                "ковбаса" => new() { "г", "кг" },
+                "сир" => new() { "г", "кг" },
+                "помідори" => new() { "шт", "г", "кг" },
+                "огірки" => new() { "шт", "г", "кг" },
+                "картопля" => new() { "шт", "г", "кг" },
+                "масло" => new() { "г" },
+                _ => new() { "шт", "г", "кг" }
+            };
+        }
 
         public void AddToFridge(Ingredient ingredient, double quantity, string unit)
         {
-            if (quantity <= 0)
-            {
-                return;
-            }
+            if (quantity <= 0) return;
+            if (!ingredient.AllowedUnits.Contains(unit)) return;
 
-            if (!ingredient.AllowedUnits.Contains(unit))
-            {
-                return;
-            }
             if (unit == "кг")
             {
                 quantity *= 1000;
@@ -89,6 +53,7 @@ namespace FridgeChef.Services
                 quantity *= 1000;
                 unit = "мл";
             }
+
             var existingItem = FridgeItems.FirstOrDefault(item =>
                 item.Ingredient.Id == ingredient.Id &&
                 item.Unit == unit);
@@ -110,6 +75,5 @@ namespace FridgeChef.Services
                 });
             }
         }
-
     }
 }

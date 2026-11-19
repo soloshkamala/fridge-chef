@@ -9,6 +9,7 @@
 @inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 @inject FridgeService FridgeService
 @inject FridgeItemsApiService ApiService
+@inject ProductsApiService ProductsApiService
 @inject RecipesApiService RecipesApiService
 @inject IDialogService DialogService
 @inject HttpClient Http
@@ -69,13 +70,12 @@
                                       Class="search-result-item"
                                       Elevation="0"
                                       @onclick="() => OpenIngredientDialog(ingredient)">
-                                <span>
-                                    @Localizer[$"Ingredient{ingredient.Id}"]
-                                </span>
+                                <span>@ingredient.Name</span>
                                 <span class="add-symbol">+</span>
                             </MudPaper>
                         }
                     }
+
                 </div>
             }
         </div>
@@ -223,6 +223,9 @@
             var profileResponse = await Http.GetAsync("api/profiles/me");
             profileResponse.EnsureSuccessStatusCode();
 
+            var products = await ProductsApiService.GetProductsAsync();
+            FridgeService.SetIngredients(products);
+
             var items = await ApiService.GetItemsAsync();
 
             FridgeService.FridgeItems.Clear();
@@ -241,10 +244,9 @@
 
     private IEnumerable<Ingredient> FilteredIngredients =>
         FridgeService.Ingredients
-            .Where(x =>
-                Localizer[$"Ingredient{x.Id}"].Value.Contains(
-                    searchText,
-                    StringComparison.CurrentCultureIgnoreCase));
+            .Where(x => x.Name.Contains(
+                searchText,
+                StringComparison.CurrentCultureIgnoreCase));
 
     private async Task OpenIngredientDialog(Ingredient ingredient)
     {

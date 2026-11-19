@@ -1,4 +1,4 @@
-
+using FridgeChef.Api.Features.Products;
 using FridgeChef.Api.Services;
 using FridgeChef.Api.Features.Auth;
 using FridgeChef.Api.Features.Courses;
@@ -148,6 +148,9 @@ if (app.Environment.IsDevelopment())
 
 // FRIDGE
 app.MapFridgeItemsEndpoints();
+
+// PRODUCTS
+app.MapProductsEndpoints();
 
 // COURSES
 app.MapCourses();
