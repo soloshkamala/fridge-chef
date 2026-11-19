@@ -3,6 +3,7 @@ using FridgeChef.Api.Features.FridgeItems.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using FridgeChef.Api.Services;
 
 namespace FridgeChef.Api.Features.FridgeItems.Endpoints;
 
@@ -11,7 +12,7 @@ public static class ReplaceFridgeItemEndpoint
     public static void Map(RouteGroupBuilder group)
     {
         group.MapPut("/{id:int}", async Task<Results<NoContent, ProblemHttpResult>>
-            (int id, SaveFridgeItemRequest request, FridgeChefDbContext dbContext, ClaimsPrincipal user) =>
+            (int id, SaveFridgeItemRequest request,FridgeChefDbContext dbContext, ClaimsPrincipal user,CurrentUserService currentUserService) =>
         {
             if (string.IsNullOrWhiteSpace(request.Name) ||
                 string.IsNullOrWhiteSpace(request.Unit) ||
@@ -22,9 +23,9 @@ public static class ReplaceFridgeItemEndpoint
                     title: "Invalid product data");
             }
 
-            var userIdValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = await currentUserService.GetUserIdAsync(user);
 
-            if (!int.TryParse(userIdValue, out var userId))
+            if (userId == null)
             {
                 return TypedResults.Problem(
                     statusCode: 401,

@@ -10,6 +10,9 @@ public class RecipeResponse
     public string Description { get; set; } = "";
 
     public string ImageUrl { get; set; } = "";
+
+    public string CategoryName { get; set; } = "";
+
     public int CookingTime { get; set; }
 
     public int Calories { get; set; }
@@ -17,7 +20,6 @@ public class RecipeResponse
     public int Servings { get; set; }
 
     public string Instructions { get; set; } = "";
-
 
     public List<RecipeIngredientResponse> Ingredients { get; set; } = new();
 }

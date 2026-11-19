@@ -68,6 +68,33 @@ namespace FridgeChef.Services
             };
         }
 
+
+        public async Task UpdateItemAsync(FridgeItem item)
+        {
+            var request = new
+            {
+                Name = item.Ingredient.Name,
+                Quantity = (decimal)item.Quantity,
+                Unit = item.Unit
+            };
+
+            var response = await httpClient.PutAsJsonAsync(
+                $"{ApiUrl}/{item.Id}",
+                request
+            );
+
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task DeleteItemAsync(int id)
+        {
+            var response = await httpClient.DeleteAsync(
+                $"{ApiUrl}/{id}"
+            );
+
+            response.EnsureSuccessStatusCode();
+        }
+
         private class ApiFridgeItem
         {
             public int Id { get; set; }

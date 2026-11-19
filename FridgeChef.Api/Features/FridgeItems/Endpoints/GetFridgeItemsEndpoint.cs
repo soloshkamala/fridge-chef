@@ -4,6 +4,7 @@ using FridgeChef.Api.Features.FridgeItems.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using FridgeChef.Api.Services;
 
 namespace FridgeChef.Api.Features.FridgeItems.Endpoints;
 
@@ -12,11 +13,11 @@ public static class GetFridgeItemsEndpoint
     public static void Map(RouteGroupBuilder group)
     {
         group.MapGet("/", async Task<Results<Ok<List<FridgeItemResponse>>, ProblemHttpResult>>
-            (FridgeChefDbContext dbContext, ClaimsPrincipal user) =>
+            (FridgeChefDbContext dbContext, ClaimsPrincipal user, CurrentUserService currentUserService) =>
         {
-            var userIdValue = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = await currentUserService.GetUserIdAsync(user);
 
-            if (!int.TryParse(userIdValue, out var userId))
+            if (userId == null)
             {
                 return TypedResults.Problem(
                     statusCode: 401,

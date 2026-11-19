@@ -11,6 +11,8 @@
 @inject FridgeItemsApiService ApiService
 @inject RecipesApiService RecipesApiService
 @inject IDialogService DialogService
+@inject HttpClient Http
+@inject NavigationManager Navigation
 
 <PageTitle>@Localizer["PageTitle"]</PageTitle>
 
@@ -18,7 +20,6 @@
 
     <section class="hero">
         <div class="hero-content">
-
             <h1>
                 @Localizer["HeroTitleFirst"]
                 <br />
@@ -104,7 +105,9 @@
                     @foreach (var item in FridgeService.FridgeItems)
                     {
                         <div class="ingredient-wrapper" @key="item.Id">
-                            <IngredientCard Item="item" />
+                            <IngredientCard Item="item"
+                                            OnEdit="EditIngredientAsync"
+                                            OnDelete="DeleteIngredientAsync" />
                         </div>
                     }
                 </div>
@@ -113,7 +116,10 @@
                     <h2>@Localizer["RecipesTitle"]</h2>
 
                     <MudButton Variant="Variant.Filled"
-                               Color="Color.Warning"
+                               Style="background-color: #FA641E;
+                                          color: white;
+                                          border-radius: 30px;
+                                          padding: 10px 24px;"
                                Disabled="@isSearchingRecipes"
                                OnClick="SearchRecipesAsync">
 
@@ -126,7 +132,7 @@
                         }
                         else
                         {
-                            <span>Знайти рецепти</span>
+                            <span>Підібрати рецепти</span>
                         }
 
                     </MudButton>
@@ -141,64 +147,38 @@
                     {
                         @if (recommendedRecipes.Count == 0)
                         {
-                            <p>За наявними продуктами рецептів поки не знайдено.</p>
+                            <p>
+                                За наявними продуктами рецептів поки не знайдено.
+                            </p>
                         }
                         else
                         {
-                            <div class="recipes-grid">
+
+                            <div class="recipes-grid"
+                                 style="display:grid;grid-template-columns:repeat(auto-fill, 220px);gap:24px;margin-top:24px;justify-content:start;">
 
                                 @foreach (var recommendation in recommendedRecipes)
                                 {
-                                    <MudPaper @key="recommendation.Recipe.Id"
-                                              Class="recipe-card"
-                                              Elevation="2">
+                                    <div @key="recommendation.Recipe.Id"
+                                         role="link"
+                                         tabindex="0"
+                                         style="cursor:pointer;"
+                                         @onclick="() => OpenRecipe(recommendation.Recipe.Id)"
+                                         @onkeydown="e => HandleRecipeKeyDown(e, recommendation.Recipe.Id)">
 
-                                        @if (!string.IsNullOrWhiteSpace(recommendation.Recipe.ImageUrl))
-                                        {
-                                            <img src="@recommendation.Recipe.ImageUrl"
-                                                 alt="@recommendation.Recipe.Name"
-                                                 class="recipe-image" />
+                                        <RecipeCard UseDatabaseTitle="true"
+                                                    Recipe="@(new RecipeSummary(
+                                                                        recommendation.Recipe.Id.ToString(),
+                                                                        recommendation.Recipe.Name,
+                                                                        recommendation.Recipe.ImageUrl,
+                                                                        recommendation.Recipe.CookingTime,
+                                                                        recommendation.Recipe.Calories
+                                                                    ))" />
+
+                    </div>
                                         }
-
-                                        <div class="recipe-card-content">
-
-                                            <h3>@recommendation.Recipe.Name</h3>
-
-                                            <p>@recommendation.Recipe.Description</p>
-
-                                            <p>
-                                                Час приготування:
-                                                @recommendation.Recipe.CookingTime хв.
-                                            </p>
-
-                                            <p>
-                                                Калорійність:
-                                                @recommendation.Recipe.Calories ккал
-                                            </p>
-
-                                            <p>
-                                                Відповідність:
-                                                @recommendation.MatchPercentage%
-                                            </p>
-
-                                            <p>
-                                                <strong>Є в холодильнику:</strong>
-                                                @string.Join(", ", recommendation.AvailableIngredients)
-                                            </p>
-
-                                            @if (recommendation.MissingIngredients.Count > 0)
-                                            {
-                                                <p>
-                                                    <strong>Не вистачає:</strong>
-                                                    @string.Join(", ", recommendation.MissingIngredients)
-                                                </p>
-                                            }
-
-                                        </div>
-                                    </MudPaper>
-                                }
-
                             </div>
+
                         }
                     }
                 </div>
@@ -240,13 +220,17 @@
 
         try
         {
+            var profileResponse = await Http.GetAsync("api/profiles/me");
+            profileResponse.EnsureSuccessStatusCode();
+
             var items = await ApiService.GetItemsAsync();
 
             FridgeService.FridgeItems.Clear();
             FridgeService.FridgeItems.AddRange(items);
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"Fridge loading error: {ex}");
             FridgeService.ErrorMessage = Localizer["LoadingError"].Value;
         }
         finally
@@ -279,13 +263,27 @@
 
             var result = await dialog.Result;
 
-            if (result != null && !result.Canceled && result.Data is FridgeItem item)
+            if (result != null &&
+                !result.Canceled &&
+                result.Data is FridgeItem item)
             {
                 try
                 {
                     var savedItem = await ApiService.AddItemAsync(item);
 
-                    FridgeService.FridgeItems.Add(savedItem);
+                    var existingItem = FridgeService.FridgeItems
+                        .FirstOrDefault(x => x.Id == savedItem.Id);
+
+                    if (existingItem != null)
+                    {
+                        var index = FridgeService.FridgeItems.IndexOf(existingItem);
+                        FridgeService.FridgeItems[index] = savedItem;
+                    }
+                    else
+                    {
+                        FridgeService.FridgeItems.Add(savedItem);
+                    }
+
                     searchText = "";
 
                     recommendedRecipes.Clear();
@@ -293,7 +291,8 @@
                 }
                 catch
                 {
-                    FridgeService.ErrorMessage = "Не вдалося додати продукт на сервер.";
+                    FridgeService.ErrorMessage =
+                        "Не вдалося додати продукт на сервер.";
                 }
             }
         }
@@ -311,16 +310,116 @@
 
         try
         {
-            recommendedRecipes = await RecipesApiService.GetRecommendedRecipesAsync();
+            recommendedRecipes =
+                await RecipesApiService.GetRecommendedRecipesAsync();
+
             hasSearchedRecipes = true;
         }
-        catch
+        catch (Exception ex)
         {
-            recipesError = "Не вдалося завантажити рецепти. Спробуйте ще раз.";
+            Console.WriteLine($"Recipes loading error: {ex}");
+
+            recipesError =
+                "Не вдалося завантажити рецепти. Спробуйте ще раз.";
         }
         finally
         {
             isSearchingRecipes = false;
         }
     }
+
+    private async Task DeleteIngredientAsync(FridgeItem item)
+    {
+        try
+        {
+            await ApiService.DeleteItemAsync(item.Id);
+
+            FridgeService.FridgeItems.RemoveAll(
+                x => x.Id == item.Id
+            );
+
+            FridgeService.ErrorMessage = null;
+
+            recommendedRecipes.Clear();
+            hasSearchedRecipes = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fridge delete error: {ex}");
+
+            FridgeService.ErrorMessage =
+                "Не вдалося видалити продукт.";
+        }
+    }
+
+    private async Task EditIngredientAsync(FridgeItem item)
+    {
+        var ingredient = FridgeService.Ingredients
+            .FirstOrDefault(x =>
+                x.Name.Equals(
+                    item.Ingredient.Name,
+                    StringComparison.OrdinalIgnoreCase));
+
+        if (ingredient == null)
+        {
+            Console.WriteLine(
+                $"Ingredient not found: {item.Ingredient.Name}");
+            return;
+        }
+
+        var parameters = new DialogParameters<AddIngredientDialog>
+        {
+            { x => x.Ingredient, ingredient },
+            { x => x.EditingItem, item }
+        };
+
+        var dialog = await DialogService.ShowAsync<AddIngredientDialog>(
+            "Редагувати продукт",
+            parameters);
+
+        var result = await dialog.Result;
+
+        if (result == null ||
+            result.Canceled ||
+            result.Data is not FridgeItem updatedItem)
+        {
+            return;
+        }
+
+        try
+        {
+            await ApiService.UpdateItemAsync(updatedItem);
+
+            var items = await ApiService.GetItemsAsync();
+
+            FridgeService.FridgeItems.Clear();
+            FridgeService.FridgeItems.AddRange(items);
+
+            recommendedRecipes.Clear();
+            hasSearchedRecipes = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fridge update error: {ex}");
+
+            FridgeService.ErrorMessage =
+                "Не вдалося оновити продукт.";
+        }
+    }
+
+    private void OpenRecipe(int recipeId)
+    {
+        Navigation.NavigateTo($"/recipes/{recipeId}");
+    }
+
+    private void HandleRecipeKeyDown(
+        Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e,
+        int recipeId)
+    {
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            OpenRecipe(recipeId);
+        }
+    }
+
 }

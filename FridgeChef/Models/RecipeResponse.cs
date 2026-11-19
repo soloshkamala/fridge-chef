@@ -1,4 +1,5 @@
-﻿namespace FridgeChef.Models.Recipes;
+﻿
+namespace FridgeChef.Models.Recipes;
 
 public class RecipeResponse
 {
@@ -10,9 +11,15 @@ public class RecipeResponse
 
     public string ImageUrl { get; set; } = "";
 
+    public string CategoryName { get; set; } = "";
+
     public int CookingTime { get; set; }
 
     public int Calories { get; set; }
+
+    public int Servings { get; set; }
+
+    public string Instructions { get; set; } = "";
 
     public List<RecipeIngredientResponse> Ingredients { get; set; } = new();
 }

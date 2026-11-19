@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using FridgeChef.Api.Data;
 using FridgeChef.Api.Features.Recipes.Models;
+using FridgeChef.Api.Services;
 
 namespace FridgeChef.Api.Features.Recipes.Endpoints;
 
@@ -9,20 +10,21 @@ public static class GetRecommendedRecipesEndpoint
 {
     public static void Map(RouteGroupBuilder group)
     {
-        group.MapGet("/recommended", async (
-            FridgeChefDbContext dbContext,
-            ClaimsPrincipal user,
-            CancellationToken cancellationToken) =>
-        {
-            var userIdValue = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (!int.TryParse(userIdValue, out int userId))
+            group.MapGet("/recommended", async (
+               FridgeChefDbContext dbContext,
+               ClaimsPrincipal user,
+               CurrentUserService currentUserService,
+               CancellationToken cancellationToken) =>
             {
-                return Results.Unauthorized();
-            }
+                var userId = await currentUserService.GetUserIdAsync(user);
 
-            var fridgeProductIds = await dbContext.FridgeItems
-                .Where(item => item.UserId == userId)
+                if (userId == null)
+                {
+                    return Results.Unauthorized();
+                }
+
+                var fridgeProductIds = await dbContext.FridgeItems
+                .Where(item => item.UserId == userId.Value)
                 .Select(item => item.ProductId)
                 .ToListAsync(cancellationToken);
 

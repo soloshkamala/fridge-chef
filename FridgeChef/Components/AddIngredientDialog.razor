@@ -43,7 +43,7 @@
                        Variant="Variant.Filled"
                        ButtonType="ButtonType.Submit"
                        Class="mt-3">
-                @Localizer["AddButton"]
+                @(IsEditing ? "Зберегти" : Localizer["AddButton"].Value)
             </MudButton>
         </EditForm>
     </DialogContent>
@@ -61,12 +61,21 @@
 
     [Parameter]
     public Ingredient Ingredient { get; set; } = new();
+    [Parameter]
+    public FridgeItem? EditingItem { get; set; }
+
+    private bool IsEditing => EditingItem != null;
 
     private AddIngredientModel model = new();
 
     protected override void OnParametersSet()
     {
-        if (Ingredient.AllowedUnits.Count > 0)
+        if (EditingItem != null)
+        {
+            model.Quantity = EditingItem.Quantity;
+            model.Unit = EditingItem.Unit;
+        }
+        else if (Ingredient.AllowedUnits.Count > 0)
         {
             model.Unit = Ingredient.AllowedUnits[0];
         }
@@ -76,6 +85,7 @@
     {
         var result = new FridgeItem
         {
+            Id = EditingItem?.Id ?? 0,
             Ingredient = Ingredient,
             Quantity = model.Quantity,
             Unit = model.Unit ?? ""
