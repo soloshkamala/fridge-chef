@@ -93,6 +93,7 @@ builder.Services.AddScoped<ProductsApiService>();
 builder.Services.AddScoped<RecipesApiService>();
 builder.Services.AddScoped<ShoppingItemApiService>();
 builder.Services.AddScoped<ProfileService>();
+builder.Services.AddScoped<FridgeSignalRService>();
 
 // =====================================
 // BUILD APPLICATION

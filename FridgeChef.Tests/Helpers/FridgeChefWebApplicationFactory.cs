@@ -1,4 +1,5 @@
-﻿using FridgeChef.Api.Data;
+﻿extern alias FridgeApi;
+using FridgeChef.Api.Data;
 using FridgeChef.Api.Data.Entities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -10,10 +11,11 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
 using Xunit;
 
+
 namespace FridgeChef.Tests.Helpers;
 
 public class FridgeChefWebApplicationFactory
-    : WebApplicationFactory<Program>, IAsyncLifetime
+    : WebApplicationFactory<FridgeApi::Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer postgres =
         new PostgreSqlBuilder()

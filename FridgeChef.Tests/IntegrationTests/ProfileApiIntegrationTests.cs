@@ -1,4 +1,4 @@
-﻿
+﻿extern alias FridgeApi;
 using System.Net;
 using System.Net.Http.Json;
 using FridgeChef.Api.Data;
@@ -25,9 +25,9 @@ public class ProfileApiIntegrationTests
 
         await postgres.StartAsync();
 
-       
-        using var factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
+
+        using var factory = new WebApplicationFactory<FridgeApi::Program>()
+                    .WithWebHostBuilder(builder =>
             {
                 builder.UseSetting(
                     "ConnectionStrings:DefaultConnection",
