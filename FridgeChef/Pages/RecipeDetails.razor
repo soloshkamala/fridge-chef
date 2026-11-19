@@ -1,0 +1,245 @@
+﻿@page "/recipes/{Id:int}"
+
+@using FridgeChef.Models.Recipes
+@using FridgeChef.Services
+
+@inject RecipesApiService RecipesApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Рецепт</PageTitle>
+
+<div class="recipe-details-page">
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Color="Color.Warning"
+                             Indeterminate="true" />
+        <MudText>Завантаження рецепта...</MudText>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error">
+            @errorMessage
+        </MudAlert>
+    }
+    else if (recipe == null)
+    {
+        <MudText>Рецепт не знайдено.</MudText>
+    }
+    else
+    {
+        <MudButton Variant="Variant.Text"
+                   OnClick="GoBack">
+            ← Назад до холодильника
+        </MudButton>
+
+        <div class="recipe-header">
+
+            @if (!string.IsNullOrWhiteSpace(recipe.ImageUrl))
+            {
+                <img src="@recipe.ImageUrl"
+                     alt="@recipe.Name"
+                     class="recipe-photo" />
+            }
+
+            <div class="recipe-header-info">
+
+                <h1>@recipe.Name</h1>
+
+                @if (!string.IsNullOrWhiteSpace(recipe.CategoryName))
+                {
+                    <div class="recipe-category">
+                        @recipe.CategoryName
+                    </div>
+                }
+
+                <p>@recipe.Description</p>
+
+                <div class="recipe-stats">
+                    <span>⏱ @recipe.CookingTime хв</span>
+                    <span>🔥 @recipe.Calories ккал</span>
+                    <span>🍽 @recipe.Servings порцій</span>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="recipe-content">
+
+            <section class="recipe-section">
+                <h2>Інгредієнти</h2>
+
+                @if (recipe.Ingredients.Count == 0)
+                {
+                    <p>Інгредієнти не вказані.</p>
+                }
+                else
+                {
+                    <ul class="ingredients-list">
+                        @foreach (var ingredient in recipe.Ingredients)
+                        {
+                            <li>
+                                <span>@ingredient.Name</span>
+                                <span>
+                                    @ingredient.Quantity
+                                    @ingredient.Unit
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="recipe-section">
+                <h2>Спосіб приготування</h2>
+
+                <p class="recipe-instructions">
+                    @recipe.Instructions
+                </p>
+            </section>
+
+        </div>
+    }
+
+</div>
+
+<style>
+    .recipe-details-page {
+        max-width: 1100px;
+        margin: 30px auto;
+        padding: 24px;
+    }
+
+    .recipe-header {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 36px;
+        margin-top: 24px;
+        align-items: center;
+    }
+
+    .recipe-photo {
+        width: 100%;
+        height: 350px;
+        object-fit: cover;
+        border-radius: 18px;
+    }
+
+    .recipe-header-info h1 {
+        font-size: 34px;
+        font-weight: 700;
+        margin-bottom: 16px;
+    }
+
+    .recipe-category {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        background-color: #fff0e6;
+        color: #FA641E;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+
+    .recipe-header-info p {
+        color: #666;
+        line-height: 1.7;
+    }
+
+    .recipe-stats {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-top: 24px;
+    }
+
+        .recipe-stats span {
+            padding: 10px 16px;
+            border-radius: 12px;
+            background-color: #f6f6f6;
+            font-weight: 500;
+        }
+
+    .recipe-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 36px;
+        margin-top: 40px;
+    }
+
+    .recipe-section {
+        padding: 28px;
+        border: 1px solid #eee8e2;
+        border-radius: 18px;
+        background-color: white;
+    }
+
+        .recipe-section h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+    .ingredients-list {
+        list-style: none;
+        padding: 0;
+    }
+
+        .ingredients-list li {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+    .recipe-instructions {
+        line-height: 1.9;
+        white-space: pre-line;
+    }
+
+    @@media (max-width: 768px) {
+        .recipe-header,
+        .recipe-content {
+            grid-template-columns: 1fr;
+        }
+
+        .recipe-photo {
+            height: 250px;
+        }
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private RecipeResponse? recipe;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        recipe = null;
+
+        try
+        {
+            recipe = await RecipesApiService.GetRecipeByIdAsync(Id);
+        }
+        catch (Exception)
+        {
+            errorMessage = "Не вдалося завантажити рецепт.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/fridge");
+    }
+}

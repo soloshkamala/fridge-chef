@@ -1,23 +1,39 @@
 ﻿@using FridgeChef.Models
 @using Microsoft.Extensions.Localization
+
 @inject IStringLocalizer<FridgeChef.Resources.ProfileResource> L
+
 <MudCard Class="recipe-card" Elevation="0">
 
     <div class="recipe-image">
-        <MudCardMedia Image="@Recipe.ImageUrl"
-                      Height="150" />
 
-        <div class="recipe-bookmark">
-            <MudIcon Icon="@Icons.Material.Outlined.Bookmark"
-                     Size="Size.Small" />
-        </div>
+        @if (!string.IsNullOrWhiteSpace(Recipe.ImageUrl))
+        {
+            <MudCardMedia Image="@Recipe.ImageUrl"
+                          Height="150" />
+        }
+        else
+        {
+            <div class="recipe-image-placeholder">
+                Немає фото
+            </div>
+        }
+
+        @if (!UseDatabaseTitle)
+        {
+            <div class="recipe-bookmark">
+                <MudIcon Icon="@Icons.Material.Outlined.Bookmark"
+                         Size="Size.Small" />
+            </div>
+        }
+
     </div>
 
     <MudCardContent Class="pa-3">
 
         <MudText Typo="Typo.subtitle2"
                  Class="recipe-title">
-            @GetLocalizedTitle()
+            @(UseDatabaseTitle? Recipe.Title: GetLocalizedTitle())
         </MudText>
 
         <div class="d-flex align-center flex-wrap mt-2"
@@ -51,6 +67,7 @@
         background-color: white;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         height: 100%;
+        width: 100%;
     }
 
         .recipe-card:hover {
@@ -67,6 +84,15 @@
             background-size: cover;
             background-position: center;
         }
+
+    .recipe-image-placeholder {
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #ebe8e3;
+        color: #777;
+    }
 
     .recipe-bookmark {
         position: absolute;
@@ -98,6 +124,9 @@
 @code {
     [Parameter, EditorRequired]
     public RecipeSummary Recipe { get; set; } = default!;
+
+    [Parameter]
+    public bool UseDatabaseTitle { get; set; } = false;
 
     private string GetLocalizedTitle()
     {
