@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using Microsoft.EntityFrameworkCore;
+using FridgeChef.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -118,6 +119,9 @@ builder.Services.AddAuthorization(options =>
                           .Contains("access_as_user"))));
 });
 
+// SIGNALR
+builder.Services.AddSignalR();
+
 // BUILD
 var app = builder.Build();
 
@@ -174,6 +178,9 @@ app.MapGroup("/api/users")
 app.MapGroup("/api/auth")
     .MapAuthEndpoints()
     .WithTags("Authentication");
+
+// SIGNALR HUB
+app.MapHub<FridgeChefHub>("/hubs/fridgechef");
 
 // RUN
 app.Run();
