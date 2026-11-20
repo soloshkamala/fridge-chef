@@ -13,6 +13,7 @@ public static class RecipesEndpoints
 
         GetRecommendedRecipesEndpoint.Map(group);
         GetRecipeByIdEndpoint.Map(group);
+        RecipeCollectionEndpoint.Map(group);
 
         return group;
     }

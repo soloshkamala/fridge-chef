@@ -144,7 +144,6 @@ var app = builder.Build();
 // MIDDLEWARE
 app.UseMiddleware<RequestLoggingMiddleware>();
 
-// UseHttpsRedirection() прибрано для локального HTTP-з'єднання
 
 app.UseCors("Client");
 
