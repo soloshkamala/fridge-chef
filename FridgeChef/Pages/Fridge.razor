@@ -131,11 +131,11 @@
                             <MudProgressCircular Indeterminate="true"
                                                  Size="Size.Small"
                                                  Class="mr-2" />
-                            <span>Шукаємо рецепти...</span>
+                            <span>@Localizer["SearchingRecipes"]</span>
                         }
                         else
                         {
-                            <span>Підібрати рецепти</span>
+                            <span>@Localizer["FindRecipes"]</span>
                         }
 
                     </MudButton>
@@ -150,9 +150,7 @@
                     {
                         @if (recommendedRecipes.Count == 0)
                         {
-                            <p>
-                                За наявними продуктами рецептів поки не знайдено.
-                            </p>
+                            <p>@Localizer["NoRecommendedRecipes"]</p>
                         }
                         else
                         {
@@ -318,7 +316,7 @@
                     Console.WriteLine($"Fridge add error: {ex}");
 
                     FridgeService.ErrorMessage =
-                        "Не вдалося додати продукт на сервер.";
+                        Localizer["ProductAddError"].Value;
                 }
             }
         }
@@ -346,7 +344,7 @@
             Console.WriteLine($"Recipes loading error: {ex}");
 
             recipesError =
-                "Не вдалося завантажити рецепти. Спробуйте ще раз.";
+                Localizer["RecipesLoadError"].Value;
         }
         finally
         {
@@ -376,7 +374,7 @@
             Console.WriteLine($"Fridge delete error: {ex}");
 
             FridgeService.ErrorMessage =
-                "Не вдалося видалити продукт.";
+                Localizer["ProductDeleteError"].Value;
         }
     }
 
@@ -402,7 +400,7 @@
         };
 
         var dialog = await DialogService.ShowAsync<AddIngredientDialog>(
-            "Редагувати продукт",
+            Localizer["EditProduct"].Value,
             parameters);
 
         var result = await dialog.Result;
@@ -433,7 +431,7 @@
             Console.WriteLine($"Fridge update error: {ex}");
 
             FridgeService.ErrorMessage =
-                "Не вдалося оновити продукт.";
+                Localizer["ProductUpdateError"].Value;
         }
     }
 

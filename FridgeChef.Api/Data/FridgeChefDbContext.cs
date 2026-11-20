@@ -12,6 +12,7 @@ public class FridgeChefDbContext : DbContext
     {
     }
 
+    public DbSet<ProductUnit> ProductUnits => Set<ProductUnit>();
     public DbSet<User> Users => Set<User>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<Diet> Diets => Set<Diet>();
@@ -269,6 +270,23 @@ public class FridgeChefDbContext : DbContext
             .WithMany()
             .HasForeignKey(x => x.RecipeId)
             .OnDelete(DeleteBehavior.Cascade);
+
+
+        modelBuilder.Entity<ProductUnit>()
+            .HasKey(x => new { x.ProductId, x.UnitId });
+
+        modelBuilder.Entity<ProductUnit>()
+            .HasOne(x => x.Product)
+            .WithMany()
+            .HasForeignKey(x => x.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProductUnit>()
+            .HasOne(x => x.Unit)
+            .WithMany()
+            .HasForeignKey(x => x.UnitId)
+            .OnDelete(DeleteBehavior.Restrict);
+
 
         // =====================================
         // ПОЧАТКОВІ КАТЕГОРІЇ РЕЦЕПТІВ

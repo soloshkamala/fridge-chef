@@ -1,4 +1,5 @@
-﻿using FridgeChef.Api.Data;
+﻿
+using FridgeChef.Api.Data;
 using FridgeChef.Api.Features.FridgeItems.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +16,7 @@ public static class ReplaceFridgeItemEndpoint
     public static void Map(RouteGroupBuilder group)
     {
         group.MapPut("/{id:int}", async Task<Results<NoContent, ProblemHttpResult>>
-            (int id, SaveFridgeItemRequest request,FridgeChefDbContext dbContext, ClaimsPrincipal user, CurrentUserService currentUserService,
+            (int id, SaveFridgeItemRequest request, FridgeChefDbContext dbContext, ClaimsPrincipal user, CurrentUserService currentUserService,
             IHubContext<FridgeChefHub> hubContext, ILogger<FridgeChefHub> logger) =>
         {
             if (string.IsNullOrWhiteSpace(request.Name) ||
@@ -67,6 +68,16 @@ public static class ReplaceFridgeItemEndpoint
                 return TypedResults.Problem(
                     statusCode: 400,
                     title: "Unit not found");
+            }
+
+            var isUnitAllowed = await dbContext.ProductUnits
+                .AnyAsync(x => x.ProductId == product.Id && x.UnitId == unit.Id);
+
+            if (!isUnitAllowed)
+            {
+                return TypedResults.Problem(
+                    statusCode: 400,
+                    title: "Unit is not allowed for this product");
             }
 
             var duplicateExists = await dbContext.FridgeItems.AnyAsync(x =>

@@ -23,7 +23,12 @@ public static class ProductsEndpoints
                     Id = p.Id,
                     Name = p.Name,
                     CategoryId = p.CategoryId,
-                    CategoryName = p.Category.Name
+                    CategoryName = p.Category.Name,
+                    AllowedUnits = db.ProductUnits
+                        .Where(pu => pu.ProductId == p.Id)
+                        .OrderBy(pu => pu.UnitId)
+                        .Select(pu => pu.Unit.ShortName)
+                        .ToList()
                 })
                 .ToListAsync();
 

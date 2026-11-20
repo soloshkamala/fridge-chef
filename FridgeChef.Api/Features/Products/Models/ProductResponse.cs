@@ -10,4 +10,6 @@ public class ProductResponse
     public int CategoryId { get; set; }
 
     public string CategoryName { get; set; } = "";
+
+    public List<string> AllowedUnits { get; set; } = new();
 }

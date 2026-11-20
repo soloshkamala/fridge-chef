@@ -27,10 +27,6 @@
                 @Localizer["NavFridge"]
             </NavLink>
 
-            <NavLink href="/recipes">
-                @Localizer["NavRecipes"]
-            </NavLink>
-
             <NavLink href="/shopping-list">
                 @Localizer["NavShoppingList"]
             </NavLink>
@@ -58,22 +54,22 @@
             </div>
 
             <AuthorizeView>
-    <Authorized Context="auth">
-        <NavLink href="/profile" class="logout-button">
-            @auth.User.Identity?.Name
-        </NavLink>
+                <Authorized Context="auth">
+                    <NavLink href="/profile" class="logout-button">
+                        @auth.User.Identity?.Name
+                    </NavLink>
 
-        <NavLink href="/authentication/logout" class="logout-button">
-            Log Out
-        </NavLink>
-    </Authorized>
+                    <NavLink href="/authentication/logout" class="logout-button">
+                        @Localizer["NavLogout"]
+                    </NavLink>
+                </Authorized>
 
-    <NotAuthorized>
-        <NavLink href="/login" class="logout-button">
-            Log In
-        </NavLink>
-    </NotAuthorized>
-</AuthorizeView>
+                <NotAuthorized>
+                    <NavLink href="/login" class="logout-button">
+                        @Localizer["NavLogin"]
+                    </NavLink>
+                </NotAuthorized>
+            </AuthorizeView>
         </div>
 
     </nav>

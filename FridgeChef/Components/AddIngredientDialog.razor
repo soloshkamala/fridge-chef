@@ -1,57 +1,50 @@
 ﻿@using FridgeChef.Models
 @using Microsoft.Extensions.Localization
 @using System.Globalization
-
 @inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 
 <MudDialog Class="ingredient-dialog" Options="@(new DialogOptions { BackdropClick = false })">
     <TitleContent>
-        <MudText Typo="Typo.h6">
-            @Ingredient.Name
-        </MudText>
+        <MudText Typo="Typo.h6">@Ingredient.Name</MudText>
     </TitleContent>
-
     <DialogContent>
         <EditForm Model="@model" OnValidSubmit="Add">
-            <DataAnnotationsValidator />
 
             <MudNumericField T="double"
                              @bind-Value="model.Quantity"
-                             For="@(() => model.Quantity)"
-                             Culture="@CultureInfo.CurrentCulture"
                              Label="@Localizer["QuantityLabel"]"
+                             Culture="@CultureInfo.CurrentCulture"
+                             Error="@(ValidateQuantity(model.Quantity) != null)"
+                             ErrorText="@ValidateQuantity(model.Quantity)"
+                             Immediate="true"
                              Variant="Variant.Outlined"
                              Class="mb-4" />
 
+
             <MudSelect T="string"
                        @bind-Value="model.Unit"
-                       For="@(() => model.Unit)"
-                       ToStringFunc="GetUnitTranslation"
                        Label="@Localizer["UnitLabel"]"
+                       Validation="@(new Func<string, string?>(ValidateUnit))"
+                       ToStringFunc="GetUnitTranslation"
                        Variant="Variant.Outlined">
-
                 @foreach (var allowedUnit in Ingredient.AllowedUnits)
                 {
                     <MudSelectItem T="string" Value="@allowedUnit">
                         @GetUnitTranslation(allowedUnit)
                     </MudSelectItem>
                 }
-
             </MudSelect>
 
             <MudButton Color="Color.Primary"
                        Variant="Variant.Filled"
                        ButtonType="ButtonType.Submit"
                        Class="mt-3">
-                @(IsEditing ? "Зберегти" : Localizer["AddButton"].Value)
+                @(IsEditing? Localizer["SaveButton"].Value : Localizer["AddButton"].Value)
             </MudButton>
         </EditForm>
     </DialogContent>
-
     <DialogActions>
-        <MudButton OnClick="Cancel">
-            @Localizer["CancelButton"]
-        </MudButton>
+        <MudButton OnClick="Cancel">@Localizer["CancelButton"]</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -61,6 +54,7 @@
 
     [Parameter]
     public Ingredient Ingredient { get; set; } = new();
+
     [Parameter]
     public FridgeItem? EditingItem { get; set; }
 
@@ -81,8 +75,28 @@
         }
     }
 
+    private string? ValidateQuantity(double quantity)
+    {
+        return quantity > 0 && !double.IsNaN(quantity) && !double.IsInfinity(quantity)
+            ? null
+            : Localizer["QuantityGreaterThanZero"].Value;
+    }
+
+    private string? ValidateUnit(string? unit)
+    {
+        return !string.IsNullOrWhiteSpace(unit) && Ingredient.AllowedUnits.Contains(unit)
+            ? null
+            : Localizer["UnitRequired"].Value;
+    }
+
     private void Add()
     {
+        if (ValidateQuantity(model.Quantity) != null ||
+            ValidateUnit(model.Unit) != null)
+        {
+            return;
+        }
+
         var result = new FridgeItem
         {
             Id = EditingItem?.Id ?? 0,
@@ -99,16 +113,13 @@
         MudDialog.Cancel();
     }
 
-    private string GetUnitTranslation(string unit)
+    private string GetUnitTranslation(string unit) => unit switch
     {
-        return unit switch
-        {
-            "шт" => Localizer["UnitPieces"].Value,
-            "мл" => Localizer["UnitMilliliters"].Value,
-            "л" => Localizer["UnitLiters"].Value,
-            "г" => Localizer["UnitGrams"].Value,
-            "кг" => Localizer["UnitKilograms"].Value,
-            _ => unit
-        };
-    }
+        "шт" => Localizer["UnitPieces"].Value,
+        "мл" => Localizer["UnitMilliliters"].Value,
+        "л" => Localizer["UnitLiters"].Value,
+        "г" => Localizer["UnitGrams"].Value,
+        "кг" => Localizer["UnitKilograms"].Value,
+        _ => unit
+    };
 }

@@ -155,6 +155,21 @@ namespace FridgeChef.Api.Migrations
                     b.ToTable("Products");
                 });
 
+            modelBuilder.Entity("FridgeChef.Api.Data.Entities.ProductUnit", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UnitId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ProductId", "UnitId");
+
+                    b.HasIndex("UnitId");
+
+                    b.ToTable("ProductUnits");
+                });
+
             modelBuilder.Entity("FridgeChef.Api.Data.Entities.Recipe", b =>
                 {
                     b.Property<int>("Id")
@@ -554,6 +569,25 @@ namespace FridgeChef.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("FridgeChef.Api.Data.Entities.ProductUnit", b =>
+                {
+                    b.HasOne("FridgeChef.Api.Data.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FridgeChef.Api.Data.Entities.Unit", "Unit")
+                        .WithMany()
+                        .HasForeignKey("UnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Unit");
                 });
 
             modelBuilder.Entity("FridgeChef.Api.Data.Entities.Recipe", b =>
