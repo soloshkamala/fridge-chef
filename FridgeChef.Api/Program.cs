@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using Microsoft.EntityFrameworkCore;
 using FridgeChef.Api.Hubs;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -122,13 +124,26 @@ builder.Services.AddAuthorization(options =>
 // SIGNALR
 builder.Services.AddSignalR();
 
+// AZURE MONITOR
+var connectionString =
+    builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
+if (!string.IsNullOrWhiteSpace(connectionString))
+{
+    builder.Services.AddOpenTelemetry()
+        .UseAzureMonitor()
+        .WithTracing(tracing =>
+        {
+            tracing.AddSource("FridgeChef.Api.Fridge");
+        });
+}
+
 // BUILD
 var app = builder.Build();
 
 // MIDDLEWARE
 app.UseMiddleware<RequestLoggingMiddleware>();
 
-// UseHttpsRedirection() прибрано для локального HTTP-з'єднання
 
 app.UseCors("Client");
 

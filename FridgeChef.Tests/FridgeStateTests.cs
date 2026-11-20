@@ -1,4 +1,5 @@
-﻿
+﻿using Moq;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Bunit;
 using FridgeChef.Models;
 using FridgeChef.Pages;
@@ -29,6 +30,21 @@ namespace FridgeChef.Tests
             Services.AddScoped<FridgeItemsApiService>();
             Services.AddScoped<RecipesApiService>();
             Services.AddScoped<ProductsApiService>();
+            var tokenProvider = new Mock<IAccessTokenProvider>();
+
+            var signalRMock = new Mock<FridgeSignalRService>(
+                tokenProvider.Object);
+
+            signalRMock
+                .Setup(x => x.StartAsync())
+                .Returns(Task.CompletedTask);
+
+            signalRMock
+                .Setup(x => x.SubscribeToItemsAsync(
+                    It.IsAny<IEnumerable<int>>()))
+                .Returns(Task.CompletedTask);
+
+            Services.AddSingleton(signalRMock.Object);
         }
 
         [Fact]

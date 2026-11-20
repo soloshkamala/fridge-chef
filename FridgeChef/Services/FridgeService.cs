@@ -18,25 +18,12 @@ namespace FridgeChef.Services
             {
                 Id = product.Id,
                 Name = product.Name,
-                AllowedUnits = GetAllowedUnits(product.Name)
+                AllowedUnits = product.AllowedUnits
             }).ToList();
         }
 
-        private List<string> GetAllowedUnits(string name)
-        {
-            return name.ToLower() switch
-            {
-                "яйця" => new() { "шт" },
-                "молоко" => new() { "мл", "л" },
-                "ковбаса" => new() { "г", "кг" },
-                "сир" => new() { "г", "кг" },
-                "помідори" => new() { "шт", "г", "кг" },
-                "огірки" => new() { "шт", "г", "кг" },
-                "картопля" => new() { "шт", "г", "кг" },
-                "масло" => new() { "г" },
-                _ => new() { "шт", "г", "кг" }
-            };
-        }
+
+
 
         public void AddToFridge(Ingredient ingredient, double quantity, string unit)
         {

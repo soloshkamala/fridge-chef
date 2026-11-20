@@ -12,6 +12,7 @@ public class FridgeChefDbContext : DbContext
     {
     }
 
+    public DbSet<ProductUnit> ProductUnits => Set<ProductUnit>();
     public DbSet<User> Users => Set<User>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<Diet> Diets => Set<Diet>();
@@ -29,7 +30,8 @@ public class FridgeChefDbContext : DbContext
     public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
     public DbSet<RecipeCategory> RecipeCategories => Set<RecipeCategory>();
-
+    public DbSet<UserRecipeCollection> UserRecipeCollections
+    => Set<UserRecipeCollection>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -245,6 +247,41 @@ public class FridgeChefDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<RecipeIngredient>()
+            .HasOne(x => x.Unit)
+            .WithMany()
+            .HasForeignKey(x => x.UnitId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // =====================================
+        // USER RECIPE COLLECTIONS
+        // =====================================
+
+        modelBuilder.Entity<UserRecipeCollection>()
+            .HasKey(x => new { x.UserId, x.RecipeId });
+
+        modelBuilder.Entity<UserRecipeCollection>()
+            .HasOne(x => x.User)
+            .WithMany()
+            .HasForeignKey(x => x.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserRecipeCollection>()
+            .HasOne(x => x.Recipe)
+            .WithMany()
+            .HasForeignKey(x => x.RecipeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+
+        modelBuilder.Entity<ProductUnit>()
+            .HasKey(x => new { x.ProductId, x.UnitId });
+
+        modelBuilder.Entity<ProductUnit>()
+            .HasOne(x => x.Product)
+            .WithMany()
+            .HasForeignKey(x => x.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ProductUnit>()
             .HasOne(x => x.Unit)
             .WithMany()
             .HasForeignKey(x => x.UnitId)

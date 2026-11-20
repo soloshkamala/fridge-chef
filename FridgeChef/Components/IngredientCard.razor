@@ -3,7 +3,7 @@
 
 @inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 
-<MudPaper Class="pa-4">
+<MudPaper Class="pa-4" data-testid="@($"fridge-item-{Item.Id}")">
     <div class="d-flex justify-space-between align-center">
         <div>
             <strong>@Item.Ingredient.Name</strong>

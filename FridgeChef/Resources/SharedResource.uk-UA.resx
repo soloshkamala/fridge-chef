@@ -144,30 +144,6 @@
   <data name="HeroTitleSecond" xml:space="preserve">
     <value>що є в холодильнику?</value>
   </data>
-  <data name="Ingredient1" xml:space="preserve">
-    <value>Яйця</value>
-  </data>
-  <data name="Ingredient2" xml:space="preserve">
-    <value>Молоко</value>
-  </data>
-  <data name="Ingredient3" xml:space="preserve">
-    <value>Ковбаса</value>
-  </data>
-  <data name="Ingredient4" xml:space="preserve">
-    <value>Сир</value>
-  </data>
-  <data name="Ingredient5" xml:space="preserve">
-    <value>Помідори</value>
-  </data>
-  <data name="Ingredient6" xml:space="preserve">
-    <value>Огірки</value>
-  </data>
-  <data name="Ingredient7" xml:space="preserve">
-    <value>Картопля</value>
-  </data>
-  <data name="Ingredient8" xml:space="preserve">
-    <value>Масло</value>
-  </data>
   <data name="Loading" xml:space="preserve">
     <value>Завантаження...</value>
   </data>
@@ -180,8 +156,11 @@
   <data name="NavHome" xml:space="preserve">
     <value>Головна</value>
   </data>
+  <data name="NavLogin" xml:space="preserve">
+    <value>Увійти</value>
+  </data>
   <data name="NavLogout" xml:space="preserve">
-    <value>Вихід</value>
+    <value>Вийти</value>
   </data>
   <data name="NavRecipes" xml:space="preserve">
     <value>Рецепти</value>
@@ -221,5 +200,38 @@
   </data>
   <data name="UnitPieces" xml:space="preserve">
     <value>шт</value>
+  </data>
+  <data name="FindRecipes" xml:space="preserve">
+    <value>Підібрати рецепти</value>
+  </data>
+  <data name="SearchingRecipes" xml:space="preserve">
+    <value>Шукаємо рецепти...</value>
+  </data>
+  <data name="NoRecommendedRecipes" xml:space="preserve">
+    <value>За наявними продуктами рецептів поки не знайдено.</value>
+  </data>
+  <data name="RecipesLoadError" xml:space="preserve">
+    <value>Не вдалося завантажити рецепти. Спробуйте ще раз.</value>
+  </data>
+  <data name="ProductAddError" xml:space="preserve">
+    <value>Не вдалося додати продукт на сервер.</value>
+  </data>
+  <data name="ProductDeleteError" xml:space="preserve">
+    <value>Не вдалося видалити продукт.</value>
+  </data>
+  <data name="ProductUpdateError" xml:space="preserve">
+    <value>Не вдалося оновити продукт.</value>
+  </data>
+  <data name="EditProduct" xml:space="preserve">
+    <value>Редагувати продукт</value>
+  </data>
+  <data name="SaveButton" xml:space="preserve">
+    <value>Зберегти</value>
+  </data>
+  <data name="QuantityGreaterThanZero" xml:space="preserve">
+    <value>Кількість повинна бути більшою за нуль</value>
+  </data>
+  <data name="UnitRequired" xml:space="preserve">
+    <value>Оберіть одиницю вимірювання</value>
   </data>
 </root>

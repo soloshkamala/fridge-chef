@@ -144,30 +144,6 @@
   <data name="HeroTitleSecond" xml:space="preserve">
     <value>what's in your fridge?</value>
   </data>
-  <data name="Ingredient1" xml:space="preserve">
-    <value>Eggs</value>
-  </data>
-  <data name="Ingredient2" xml:space="preserve">
-    <value>Milk</value>
-  </data>
-  <data name="Ingredient3" xml:space="preserve">
-    <value>Sausage</value>
-  </data>
-  <data name="Ingredient4" xml:space="preserve">
-    <value>Cheese</value>
-  </data>
-  <data name="Ingredient5" xml:space="preserve">
-    <value>Tomatoes</value>
-  </data>
-  <data name="Ingredient6" xml:space="preserve">
-    <value>Cucumbers</value>
-  </data>
-  <data name="Ingredient7" xml:space="preserve">
-    <value>Potatoes</value>
-  </data>
-  <data name="Ingredient8" xml:space="preserve">
-    <value>Butter</value>
-  </data>
   <data name="Loading" xml:space="preserve">
     <value>Loading...</value>
   </data>
@@ -179,6 +155,9 @@
   </data>
   <data name="NavHome" xml:space="preserve">
     <value>Home</value>
+  </data>
+  <data name="NavLogin" xml:space="preserve">
+    <value>Log In</value>
   </data>
   <data name="NavLogout" xml:space="preserve">
     <value>Log Out</value>
@@ -221,5 +200,38 @@
   </data>
   <data name="UnitPieces" xml:space="preserve">
     <value>pcs</value>
+  </data>
+  <data name="FindRecipes" xml:space="preserve">
+    <value>Find recipes</value>
+  </data>
+  <data name="SearchingRecipes" xml:space="preserve">
+    <value>Searching for recipes...</value>
+  </data>
+  <data name="NoRecommendedRecipes" xml:space="preserve">
+    <value>No recipes found for your available ingredients.</value>
+  </data>
+  <data name="RecipesLoadError" xml:space="preserve">
+    <value>Failed to load recipes. Please try again.</value>
+  </data>
+  <data name="ProductAddError" xml:space="preserve">
+    <value>Failed to add the product.</value>
+  </data>
+  <data name="ProductDeleteError" xml:space="preserve">
+    <value>Failed to delete the product.</value>
+  </data>
+  <data name="ProductUpdateError" xml:space="preserve">
+    <value>Failed to update the product.</value>
+  </data>
+  <data name="EditProduct" xml:space="preserve">
+    <value>Edit product</value>
+  </data>
+  <data name="SaveButton" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="QuantityGreaterThanZero" xml:space="preserve">
+    <value>Quantity must be greater than zero</value>
+  </data>
+  <data name="UnitRequired" xml:space="preserve">
+    <value>Please select a unit of measurement</value>
   </data>
 </root>

@@ -1,5 +1,6 @@
 ﻿@page "/recipes/{Id:int}"
 
+@using FridgeChef.Models
 @using FridgeChef.Models.Recipes
 @using FridgeChef.Services
 
@@ -60,6 +61,34 @@
                     <span>🔥 @recipe.Calories ккал</span>
                     <span>🍽 @recipe.Servings порцій</span>
                 </div>
+
+                <div class="recipe-actions">
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Warning"
+                               StartIcon="@(isSaved ? Icons.Material.Filled.Bookmark : Icons.Material.Filled.BookmarkBorder)"
+                               Disabled="@(isUpdating || !isCollectionLoaded)"
+                               OnClick="ToggleSaved">
+                        @(isSaved ? "Збережено" : "Зберегти рецепт")
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Error"
+                               StartIcon="@(isFavorite ? Icons.Material.Filled.Favorite : Icons.Material.Filled.FavoriteBorder)"
+                               Disabled="@(isUpdating || !isCollectionLoaded)"
+                               OnClick="ToggleFavorite">
+                        @(isFavorite ? "В улюблених" : "До улюблених")
+                    </MudButton>
+
+                </div>
+
+                @if (!string.IsNullOrEmpty(collectionError))
+                {
+                    <MudAlert Severity="Severity.Error"
+                              Class="mt-3">
+                        @collectionError
+                    </MudAlert>
+                }
 
             </div>
         </div>
@@ -160,6 +189,13 @@
             font-weight: 500;
         }
 
+    .recipe-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 24px;
+    }
+
     .recipe-content {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -216,17 +252,45 @@
 
     private RecipeResponse? recipe;
     private bool isLoading = true;
+    private bool isSaved;
+    private bool isFavorite;
+    private bool isUpdating;
+    private bool isCollectionLoaded;
     private string? errorMessage;
+    private string? collectionError;
 
     protected override async Task OnParametersSetAsync()
     {
         isLoading = true;
+        isSaved = false;
+        isFavorite = false;
+        isUpdating = false;
+        isCollectionLoaded = false;
         errorMessage = null;
+        collectionError = null;
         recipe = null;
 
         try
         {
             recipe = await RecipesApiService.GetRecipeByIdAsync(Id);
+
+            if (recipe != null)
+            {
+                try
+                {
+                    var collection =
+                        await RecipesApiService.GetRecipeCollectionAsync(Id);
+
+                    isSaved = collection.IsSaved;
+                    isFavorite = collection.IsFavorite;
+                    isCollectionLoaded = true;
+                }
+                catch (Exception)
+                {
+                    collectionError =
+                        "Не вдалося завантажити стан рецепта.";
+                }
+            }
         }
         catch (Exception)
         {
@@ -235,6 +299,58 @@
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private async Task ToggleSaved()
+    {
+        if (isUpdating || !isCollectionLoaded)
+            return;
+
+        isUpdating = true;
+        collectionError = null;
+
+        try
+        {
+            var newValue = !isSaved;
+
+            await RecipesApiService.SetRecipeSavedAsync(Id, newValue);
+
+            isSaved = newValue;
+        }
+        catch (Exception)
+        {
+            collectionError = "Не вдалося змінити стан збереження.";
+        }
+        finally
+        {
+            isUpdating = false;
+        }
+    }
+
+    private async Task ToggleFavorite()
+    {
+        if (isUpdating || !isCollectionLoaded)
+            return;
+
+        isUpdating = true;
+        collectionError = null;
+
+        try
+        {
+            var newValue = !isFavorite;
+
+            await RecipesApiService.SetRecipeFavoriteAsync(Id, newValue);
+
+            isFavorite = newValue;
+        }
+        catch (Exception)
+        {
+            collectionError = "Не вдалося змінити стан улюбленого.";
+        }
+        finally
+        {
+            isUpdating = false;
         }
     }
 
