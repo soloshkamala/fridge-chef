@@ -3,9 +3,10 @@
 @using FridgeChef.Resources
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<ShoppingListResource> L
+@inject ProductsApiService ProductsApi
+@using FridgeChef.Services
 
 <MudPaper Class="add-product-form" Elevation="0">
-
     <MudText Typo="Typo.h6" Class="form-title">
         @L["AddProduct"]
     </MudText>
@@ -13,13 +14,21 @@
     <EditForm Model="@Model" OnValidSubmit="Submit">
         <DataAnnotationsValidator />
 
-        <MudTextField T="string"
-                      Label="@L["ProductName"]"
-                      @bind-Value="Model.Name"
-                      For="@(() => Model.Name)"
-                      Variant="Variant.Outlined"
-                      Required="true"
-                      Class="form-field" />
+        <MudSelect T="int"
+                   Label="@L["ProductName"]"
+                   Value="@SelectedProductId"
+                   ValueChanged="OnProductSelected"
+                   Variant="Variant.Outlined"
+                   Class="form-field"
+                   Required="true">
+
+            @foreach (var product in Products)
+            {
+                <MudSelectItem Value="@product.Id">
+                    @product.Name
+                </MudSelectItem>
+            }
+        </MudSelect>
 
         <MudNumericField T="double?"
                          Label="@L["Quantity"]"
@@ -33,53 +42,56 @@
                    @bind-Value="Model.Unit"
                    For="@(() => Model.Unit)"
                    Variant="Variant.Outlined"
-                   Class="form-field">
+                   Class="form-field"
+                   Disabled="@(!AllowedUnits.Any())"
+                   Required="true">
 
-            <MudSelectItem T="string" Value="@("кг")">кг</MudSelectItem>
-            <MudSelectItem T="string" Value="@("шт.")">шт.</MudSelectItem>
-            <MudSelectItem T="string" Value="@("л")">л</MudSelectItem>
-
+            @foreach (var unit in AllowedUnits)
+            {
+                <MudSelectItem Value="@unit">@unit</MudSelectItem>
+            }
         </MudSelect>
 
         <MudSelect T="string"
                    Label="@L["Category"]"
                    @bind-Value="Model.Category"
-                   For="@(() => Model.Category)"
                    Variant="Variant.Outlined"
-                   Class="form-field">
+                   Class="form-field"
+                   Required="true">
 
-            <MudSelectItem T="string" Value="@("Овочі та фрукти")">
+            <MudSelectItem Value="@("Овочі та фрукти")">
                 @L["FruitsVegetables"]
             </MudSelectItem>
 
-            <MudSelectItem T="string" Value="@("М'ясо та птиця")">
+            <MudSelectItem Value="@("М'ясо та птиця")">
                 @L["MeatPoultry"]
             </MudSelectItem>
-
         </MudSelect>
 
-        <div class="form-buttons">
+        <MudStack Row="true" Spacing="2" Class="mt-4">
+            <MudButton ButtonType="ButtonType.Submit"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Disabled="@(!Products.Any())">
+                @L["AddProduct"]
+            </MudButton>
 
-            <MudButton ButtonType="ButtonType.Button"
-                       Variant="Variant.Text"
+            <MudButton Variant="Variant.Outlined"
                        OnClick="Cancel">
                 @L["Cancel"]
             </MudButton>
-
-            <MudButton ButtonType="ButtonType.Submit"
-                       Variant="Variant.Filled"
-                       Class="save-product-button">
-                @L["Add"]
-            </MudButton>
-
-        </div>
-
+        </MudStack>
     </EditForm>
-
 </MudPaper>
 
 @code {
     private ShoppingItemForm Model = new();
+
+    private List<ProductResponse> Products = new();
+
+    private List<string> AllowedUnits = new();
+
+    private int SelectedProductId;
 
     [Parameter]
     public EventCallback<ShoppingItemForm> OnAdd { get; set; }
@@ -87,10 +99,38 @@
     [Parameter]
     public EventCallback OnCancel { get; set; }
 
+    protected override async Task OnInitializedAsync()
+    {
+        Products = await ProductsApi.GetProductsAsync();
+    }
+
+    private void OnProductSelected(int productId)
+    {
+        SelectedProductId = productId;
+
+        var product = Products.FirstOrDefault(p => p.Id == productId);
+
+        if (product == null)
+            return;
+
+        Model.Name = product.Name;
+        Model.Category = product.CategoryName;
+
+        AllowedUnits = product.AllowedUnits ?? new List<string>();
+
+        Model.Unit = AllowedUnits.FirstOrDefault() ?? string.Empty;
+    }
+
     private async Task Submit()
     {
+        if (SelectedProductId == 0)
+            return;
+
         await OnAdd.InvokeAsync(Model);
+
         Model = new ShoppingItemForm();
+        SelectedProductId = 0;
+        AllowedUnits.Clear();
     }
 
     private async Task Cancel()

@@ -1,23 +1,36 @@
 
-using Microsoft.AspNetCore.Http.HttpResults;
+using FridgeChef.Api.Services;
+using FridgeChef.Api.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FridgeChef.Api.Features.ShoppingItems;
 
 public static class DeleteShoppingItem
 {
-    public static Results<
-        NoContent,
-        ProblemHttpResult> Handle(
+    public static async Task<IResult> Handle(
         int id,
-        ShoppingItemStore store)
+        ShoppingItemStore store,
+        CurrentUserService currentUserService,
+        IHubContext<ShoppingListHub> hubContext,
+        HttpContext httpContext)
     {
-        if (!store.Delete(id))
-        {
-            return TypedResults.Problem(
-                statusCode: 404,
-                title: "Shopping item not found");
-        }
+        var userId = await currentUserService.GetUserIdAsync(
+            httpContext.User);
 
-        return TypedResults.NoContent();
+        if (userId == null)
+            return Results.Unauthorized();
+
+        var deleted = await store.DeleteAsync(
+            id,
+            userId.Value);
+
+        if (!deleted)
+            return Results.NotFound();
+
+        await hubContext.Clients
+            .Group(ShoppingListHubGroups.ForUser(userId.Value))
+            .SendAsync("ShoppingItemDeleted", id);
+
+        return Results.NoContent();
     }
 }
