@@ -11,6 +11,7 @@ public class UserApiTests : IClassFixture<ApiFactory>
 
     public UserApiTests(ApiFactory factory)
     {
+        factory.UseTestAuthentication = true;
         _client = factory.CreateClient();
     }
 

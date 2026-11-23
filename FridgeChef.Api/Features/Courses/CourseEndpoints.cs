@@ -4,7 +4,7 @@ public static class CourseEndpoints
 {
     public static IEndpointRouteBuilder MapCourses(this IEndpointRouteBuilder routes)
     {
-        var group = routes.MapGroup("/api/courses");
+        var group = routes.MapGroup("/api/courses").RequireAuthorization("ApiRead");
 
         GetCourses.MapEndpoint(group);
         GetCourse.MapEndpoint(group);

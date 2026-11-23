@@ -1,4 +1,3 @@
-
 using FridgeChef.Api.Features.Products;
 using FridgeChef.Api.Services;
 using FridgeChef.Api.Features.Auth;
@@ -92,6 +91,31 @@ builder.Services.AddAuthentication()
         builder.Configuration.GetSection("AzureAd"),
         jwtBearerScheme: JwtBearerDefaults.AuthenticationScheme);
 
+builder.Services.Configure<JwtBearerOptions>(
+    JwtBearerDefaults.AuthenticationScheme,
+    options =>
+    {
+        var clientId = builder.Configuration["AzureAd:ClientId"];
+
+        if (!string.IsNullOrWhiteSpace(clientId))
+        {
+            var audiences = options.TokenValidationParameters.ValidAudiences?
+                .ToList() ?? new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(
+                options.TokenValidationParameters.ValidAudience))
+            {
+                audiences.Add(options.TokenValidationParameters.ValidAudience);
+            }
+
+            audiences.Add(clientId);
+            audiences.Add($"api://{clientId}");
+
+            options.TokenValidationParameters.ValidAudiences =
+                audiences.Distinct().ToArray();
+        }
+    });
+
 // AUTHORIZATION
 builder.Services.AddAuthorization(options =>
 {
@@ -179,20 +203,45 @@ app.MapCourses();
 
 // SHOPPING ITEMS
 app.MapGroup("/api/shopping-items")
+    .RequireAuthorization("ApiRead")
     .MapShoppingItemEndpoints()
     .WithTags("Shopping Items");
 
 // PROFILES
 app.MapGroup("/api/profiles")
+    .RequireAuthorization("ApiRead")
     .MapProfileEndpoints()
     .WithTags("Profiles");
 
 // USERS
 app.MapGroup("/api/users")
+    .RequireAuthorization("ApiRead")
     .MapUserEndpoints()
     .WithTags("Users");
 
 // AUTHENTICATION
+app.MapGet("/api/auth/me", (System.Security.Claims.ClaimsPrincipal user) =>
+{
+    return Results.Ok(new
+    {
+        name = user.FindFirst("name")?.Value
+            ?? user.Identity?.Name,
+
+        email = user.FindFirst("preferred_username")?.Value
+            ?? user.FindFirst("email")?.Value,
+
+        roles = user.FindAll(System.Security.Claims.ClaimTypes.Role)
+            .Concat(user.FindAll("roles"))
+            .Concat(user.FindAll("role"))
+            .Select(claim => claim.Value)
+            .Distinct()
+            .ToArray()
+    });
+})
+.RequireAuthorization("ApiRead")
+.WithName("GetCurrentMicrosoftUser")
+.WithTags("Authentication");
+
 app.MapGroup("/api/auth")
     .MapAuthEndpoints()
     .WithTags("Authentication");

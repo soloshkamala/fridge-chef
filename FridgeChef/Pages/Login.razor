@@ -1,3 +1,4 @@
+@inject Microsoft.Extensions.Localization.IStringLocalizer<FridgeChef.Resources.LoginResource> L
 @page "/login"
 
 @using System.Net
@@ -12,102 +13,130 @@
 
 <PageTitle>Вхід та реєстрація — FridgeChef</PageTitle>
 
-<div class="container mt-4" style="max-width: 450px;">
-    <a class="btn btn-primary w-100"
-       href="/authentication/login">
-        Увійти через Microsoft
-    </a>
-</div>
-<div class="container mt-5" style="max-width: 450px;">
-    <h2 class="text-center mb-4">FridgeChef</h2>
+<div class="login-page">
+    <div class="login-content">
 
-    <div class="d-flex justify-content-center gap-3 mb-4">
-        <button class="btn @(!_isRegistering ? "btn-primary" : "btn-outline-primary")"
-                @onclick="() => SwitchMode(false)">
-            Вхід
-        </button>
+        <section class="login-left">
+            <p class="login-eyebrow">@L["HeroEyebrow"]</p>
+            <h1>@L["HeroTitle"]</h1>
+            <p class="login-description">
+                Discover delicious recipes, organize your ingredients,
+                and make everyday cooking easier with FridgeChef.
+            </p>
 
-        <button class="btn @(_isRegistering ? "btn-primary" : "btn-outline-primary")"
-                @onclick="() => SwitchMode(true)">
-            Реєстрація
-        </button>
+            <div class="login-feature">
+                <span>✦</span>
+                @L["HeroFeature"]
+            </div>
+        </section>
+
+        <section class="login-right">
+            <div class="login-card">
+
+                <div class="login-brand">Fridge<span>Chef.</span></div>
+
+                <h2>@L["WelcomeTitle"]</h2>
+                <p class="login-subtitle">
+                    @L["WelcomeSubtitle"]
+                </p>
+
+                <a class="btn microsoft-login w-100"
+                   href="/authentication/login">
+                    <span class="microsoft-icon">▦</span>
+                    @L["MicrosoftLogin"]
+                </a>
+
+                <div class="login-divider">
+                    <span>@L["EmailDivider"]</span>
+                </div>
+
+                <div class="login-tabs">
+                    <button type="button"
+                            class="@(!_isRegistering ? "active-tab" : "")"
+                            @onclick="() => SwitchMode(false)">
+                        @L["SignIn"]
+                    </button>
+
+                    <button type="button"
+                            class="@(_isRegistering ? "active-tab" : "")"
+                            @onclick="() => SwitchMode(true)">
+                        @L["SignUp"]
+                    </button>
+                </div>
+
+                @if (!_isRegistering)
+                {
+                    <div class="mb-3">
+                        <label class="form-label">@L["EmailAddress"]</label>
+                        <input class="form-control"
+                               type="email"
+                               @bind="_email"
+                               placeholder="@L["EmailPlaceholder"]" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">@L["Password"]</label>
+                        <input class="form-control"
+                               type="password"
+                               @bind="_password"
+                               placeholder="@L["PasswordPlaceholder"]" />
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_loginError))
+                    {
+                        <div class="alert alert-danger">@_loginError</div>
+                    }
+
+                    <button class="btn btn-primary w-100"
+                            @onclick="HandleLogin"
+                            disabled="@_processing">
+                        @(_processing ? L["SigningIn"] : L["SignIn"])
+                    </button>
+                }
+                else
+                {
+                    <div class="mb-3">
+                        <label class="form-label">@L["Name"]</label>
+                        <input class="form-control"
+                               @bind="_registerModel.DisplayName"
+                               placeholder="@L["NamePlaceholder"]" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">@L["EmailAddress"]</label>
+                        <input class="form-control"
+                               type="email"
+                               @bind="_registerModel.Email"
+                               placeholder="@L["EmailPlaceholder"]" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">@L["Password"]</label>
+                        <input class="form-control"
+                               type="password"
+                               @bind="_registerModel.Password"
+                               placeholder="@L["CreatePassword"]" />
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(_registerError))
+                    {
+                        <div class="alert alert-danger">@_registerError</div>
+                    }
+
+                    <button class="btn btn-primary w-100"
+                            @onclick="HandleRegister"
+                            disabled="@_processing">
+                        @(_processing ? L["CreatingAccount"] : L["CreateAccount"])
+                    </button>
+                }
+
+                <p class="login-bottom-text">
+                    @L["BottomText"]
+                </p>
+            </div>
+        </section>
     </div>
-
-    @if (!_isRegistering)
-    {
-        <h4 class="text-center mb-3">Вхід до акаунта</h4>
-
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input class="form-control"
-                   type="email"
-                   @bind="_email"
-                   placeholder="Введіть Email" />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Пароль</label>
-            <input class="form-control"
-                   type="password"
-                   @bind="_password"
-                   placeholder="Введіть пароль" />
-        </div>
-
-        @if (!string.IsNullOrWhiteSpace(_loginError))
-        {
-            <div class="alert alert-danger">
-                @_loginError
-            </div>
-        }
-
-        <button class="btn btn-primary w-100"
-                @onclick="HandleLogin"
-                disabled="@_processing">
-            @(_processing ? "Виконується..." : "Увійти")
-        </button>
-    }
-    else
-    {
-        <h4 class="text-center mb-3">Створення акаунта</h4>
-
-        <div class="mb-3">
-            <label class="form-label">Ім'я</label>
-            <input class="form-control"
-                   @bind="_registerModel.DisplayName"
-                   placeholder="Введіть ім'я" />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input class="form-control"
-                   type="email"
-                   @bind="_registerModel.Email"
-                   placeholder="Введіть Email" />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Пароль</label>
-            <input class="form-control"
-                   type="password"
-                   @bind="_registerModel.Password"
-                   placeholder="Створіть пароль" />
-        </div>
-
-        @if (!string.IsNullOrWhiteSpace(_registerError))
-        {
-            <div class="alert alert-danger">
-                @_registerError
-            </div>
-        }
-
-        <button class="btn btn-primary w-100"
-                @onclick="HandleRegister"
-                disabled="@_processing">
-            @(_processing ? "Виконується..." : "Зареєструватися")
-        </button>
-    }
 </div>
-
 @code {
     private bool _isRegistering;
     private bool _processing;

@@ -1,4 +1,6 @@
-﻿@page "/shopping-list"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@page "/shopping-list"
 @using FridgeChef.Models
 @using FridgeChef.Components
 @using FridgeChef.Resources

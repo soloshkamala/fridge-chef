@@ -1,4 +1,4 @@
-﻿using FridgeChef.Api.Features.FridgeItems.Endpoints;
+using FridgeChef.Api.Features.FridgeItems.Endpoints;
 
 namespace FridgeChef.Api.Features.FridgeItems;
 
@@ -7,7 +7,7 @@ public static class FridgeItemsEndpoints
     public static RouteGroupBuilder MapFridgeItemsEndpoints(
         this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/fridge-items")
+        var group = app.MapGroup("/api/fridge-items").RequireAuthorization("ApiRead")
             .WithTags("FridgeItems");
 
         GetFridgeItemsEndpoint.Map(group);

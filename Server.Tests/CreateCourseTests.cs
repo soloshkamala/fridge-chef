@@ -9,7 +9,7 @@ public sealed class CreateCourseTests
     [Fact]
     public async Task CreateCourse_DuplicateCodeReturnsConflictProblem()
     {
-        using var factory = new ApiFactory();
+        using var factory = new ApiFactory { UseTestAuthentication = true };
         using var client = factory.CreateClient();
         var request = new
         {
@@ -34,7 +34,7 @@ public sealed class CreateCourseTests
     [Fact]
     public async Task CreateCourse_InvalidInputReturnsValidationProblemDetails()
     {
-        using var factory = new ApiFactory();
+        using var factory = new ApiFactory { UseTestAuthentication = true };
         using var client = factory.CreateClient();
         using var response = await client.PostAsJsonAsync("/api/courses", new
         {

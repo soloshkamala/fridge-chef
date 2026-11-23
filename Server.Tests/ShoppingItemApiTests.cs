@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +38,62 @@ public class ShoppingItemApiTests : IAsyncLifetime
             .GetRequiredService<FridgeChef.Api.Data.FridgeChefDbContext>();
 
         await db.Database.MigrateAsync();
+
+        db.Users.Add(new FridgeChef.Api.Data.Entities.User
+        {
+            Email = "shopping-test@example.com",
+            FirstName = "Test",
+            LastName = "User",
+            EntraObjectId = "11111111-1111-1111-1111-111111111111",
+            EntraTenantId = "22222222-2222-2222-2222-222222222222"
+        });
+
+        await db.SaveChangesAsync();
+
+        var category = new FridgeChef.Api.Data.Entities.Category
+        {
+            Name = "Тестові фрукти"
+        };
+
+        var unit = new FridgeChef.Api.Data.Entities.Unit
+        {
+            Name = "Тестові штуки",
+            ShortName = "тшт"
+        };
+
+        db.Categories.Add(category);
+        db.Units.Add(unit);
+        await db.SaveChangesAsync();
+
+        var firstProduct = new FridgeChef.Api.Data.Entities.Product
+        {
+            Name = "Тестові яблука",
+            CategoryId = category.Id
+        };
+
+        var secondProduct = new FridgeChef.Api.Data.Entities.Product
+        {
+            Name = "Зелені яблука",
+            CategoryId = category.Id
+        };
+
+        db.Products.AddRange(firstProduct, secondProduct);
+        await db.SaveChangesAsync();
+
+        db.ProductUnits.AddRange(
+            new FridgeChef.Api.Data.Entities.ProductUnit
+            {
+                ProductId = firstProduct.Id,
+                UnitId = unit.Id
+            },
+            new FridgeChef.Api.Data.Entities.ProductUnit
+            {
+                ProductId = secondProduct.Id,
+                UnitId = unit.Id
+            }
+        );
+
+        await db.SaveChangesAsync();
     }
 
     public async Task DisposeAsync()
@@ -57,9 +113,10 @@ public class ShoppingItemApiTests : IAsyncLifetime
             {
                 name = "Тестові яблука",
                 quantity = 2,
-                unit = "шт",
+                unit = "тшт",
                 category = "Тестові фрукти"
             });
+
 
         Assert.Equal(
             HttpStatusCode.Created,
@@ -104,14 +161,14 @@ public class ShoppingItemApiTests : IAsyncLifetime
             {
                 name = "Зелені яблука",
                 quantity = 5,
-                unit = "шт",
+                unit = "тшт",
                 category = "Тестові фрукти",
                 isPurchased = true,
                 isInFridge = false
             });
 
         Assert.Equal(
-            HttpStatusCode.OK,
+            HttpStatusCode.NoContent,
             updateResponse.StatusCode);
 
         var updatedResponse =

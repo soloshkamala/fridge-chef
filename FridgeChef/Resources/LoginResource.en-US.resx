@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="WelcomeTitle" xml:space="preserve">
+    <value>Welcome back!</value>
+  </data>
+  <data name="WelcomeSubtitle" xml:space="preserve">
+    <value>Sign in to continue your cooking journey.</value>
+  </data>
+  <data name="HeroEyebrow" xml:space="preserve">
+    <value>YOUR SMART KITCHEN COMPANION</value>
+  </data>
+  <data name="HeroTitle" xml:space="preserve">
+    <value>Good food starts with a little inspiration.</value>
+  </data>
+  <data name="HeroDescription" xml:space="preserve">
+    <value>Discover delicious recipes, organize your ingredients, and make everyday cooking easier with FridgeChef.</value>
+  </data>
+  <data name="HeroFeature" xml:space="preserve">
+    <value>Plan less. Cook more. Enjoy every bite.</value>
+  </data>
+  <data name="MicrosoftLogin" xml:space="preserve">
+    <value>Continue with Microsoft</value>
+  </data>
+  <data name="EmailDivider" xml:space="preserve">
+    <value>or continue with email</value>
+  </data>
+  <data name="SignIn" xml:space="preserve">
+    <value>Sign In</value>
+  </data>
+  <data name="SignUp" xml:space="preserve">
+    <value>Sign Up</value>
+  </data>
+  <data name="EmailAddress" xml:space="preserve">
+    <value>Email address</value>
+  </data>
+  <data name="EmailPlaceholder" xml:space="preserve">
+    <value>Enter your email</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="PasswordPlaceholder" xml:space="preserve">
+    <value>Enter your password</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Your name</value>
+  </data>
+  <data name="NamePlaceholder" xml:space="preserve">
+    <value>Enter your name</value>
+  </data>
+  <data name="CreatePassword" xml:space="preserve">
+    <value>Create a password</value>
+  </data>
+  <data name="CreateAccount" xml:space="preserve">
+    <value>Create Account</value>
+  </data>
+  <data name="SigningIn" xml:space="preserve">
+    <value>Signing in...</value>
+  </data>
+  <data name="CreatingAccount" xml:space="preserve">
+    <value>Creating account...</value>
+  </data>
+  <data name="BottomText" xml:space="preserve">
+    <value>Fresh ideas for every meal.</value>
+  </data>
+</root>

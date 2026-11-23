@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -18,7 +19,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     public bool UseTestAuthentication { get; set; }
 
-    // Єдиний публічний конструктор для xUnit
+    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ xUnit
     public ApiFactory()
     {
     }
@@ -42,6 +43,23 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         {
             builder.ConfigureTestServices(services =>
             {
+                services.PostConfigure<AuthorizationOptions>(options =>
+                {
+                    foreach (var name in new[] { "ApiRead", "ApiWrite", "ApiAdmin" })
+                    {
+                        var policy = options.GetPolicy(name);
+
+                        if (policy is null)
+                            continue;
+
+                        var updated = new AuthorizationPolicyBuilder("Test")
+                            .Combine(policy)
+                            .Build();
+
+                        options.AddPolicy(name, updated);
+                    }
+                });
+
                 services.AddAuthentication(options =>
                 {
                     options.DefaultAuthenticateScheme = "Test";
@@ -75,7 +93,14 @@ public sealed class TestAuthHandler
             new Claim(
                 ClaimTypes.Email,
                 "shopping-test@example.com"),
-            new Claim(ClaimTypes.Name, "Test User")
+            new Claim(ClaimTypes.Name, "Test User"),
+            new Claim("scp", "access_as_user"),
+            new Claim(ClaimTypes.Role, "User"),
+            new Claim(ClaimTypes.Role, "Admin"),
+            new Claim("roles", "User"),
+            new Claim("roles", "Admin"),
+            new Claim("oid", "11111111-1111-1111-1111-111111111111"),
+            new Claim("tid", "22222222-2222-2222-2222-222222222222")
         };
 
         var identity = new ClaimsIdentity(claims, "Test");

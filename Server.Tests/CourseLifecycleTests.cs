@@ -9,7 +9,7 @@ public sealed class CourseLifecycleTests
     [Fact]
     public async Task Course_CanBeCreatedListedReadReplacedAndDeleted()
     {
-        using var factory = new ApiFactory();
+        using var factory = new ApiFactory { UseTestAuthentication = true };
         using var client = factory.CreateClient();
         var course = new
         {

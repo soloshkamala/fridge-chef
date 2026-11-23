@@ -9,18 +9,43 @@ using Xunit;
 
 namespace Server.Tests;
 
-public class ProfileApiTests : IClassFixture<ApiFactory>
+public class ProfileApiTests : IAsyncLifetime
 {
-    private readonly HttpClient _client;
-    private readonly ApiFactory _factory;
+    private readonly Testcontainers.PostgreSql.PostgreSqlContainer _postgres =
+        new Testcontainers.PostgreSql.PostgreSqlBuilder("postgres:16-alpine")
+            .WithDatabase("fridgechef_profile_test")
+            .WithUsername("postgres")
+            .WithPassword("postgres")
+            .Build();
 
-    public ProfileApiTests(ApiFactory factory)
+    private HttpClient _client = null!;
+    private ApiFactory _factory = null!;
+
+    public async Task InitializeAsync()
     {
-        _factory = factory;
-        _client = factory.CreateClient();
+        await _postgres.StartAsync();
+
+        _factory = new ApiFactory
+        {
+            ConnectionString = _postgres.GetConnectionString(),
+            UseTestAuthentication = true
+        };
+
+        _client = _factory.CreateClient();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<FridgeChefDbContext>();
+        await db.Database.MigrateAsync();
     }
 
-    // Створюємо користувача в PostgreSQL перед створенням профілю
+    public async Task DisposeAsync()
+    {
+        _client.Dispose();
+        await _factory.DisposeAsync();
+        await _postgres.DisposeAsync();
+    }
+
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ PostgreSQL пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     private async Task EnsureUserAsync(string email, string name)
     {
         using var scope = _factory.Services.CreateScope();

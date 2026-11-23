@@ -28,7 +28,8 @@ public static class ReplaceCourse
 
                 return Results.NoContent();
             })
-            .WithName("ReplaceCourse")
+            .RequireAuthorization("ApiAdmin")
+        .WithName("ReplaceCourse")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)

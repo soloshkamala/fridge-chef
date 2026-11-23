@@ -220,6 +220,7 @@ public static class CreateProfile
 
                     throw;
                 }
-            });
+            })
+        .RequireAuthorization("ApiWrite");
     }
 }

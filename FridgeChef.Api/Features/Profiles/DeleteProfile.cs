@@ -47,6 +47,7 @@ public static class DeleteProfile
                 await transaction.CommitAsync();
 
                 return TypedResults.NoContent();
-            });
+            })
+        .RequireAuthorization("ApiWrite");
     }
 }
