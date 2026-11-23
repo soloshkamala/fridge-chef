@@ -1,198 +1,231 @@
-🥗 FridgeChef
-FridgeChef — вебзастосунок для підбору рецептів за продуктами, які є вдома, керування холодильником, розрахунку калорій і БЖВ та створення списків покупок.
+# 🥗 FridgeChef
 
-Проєкт розробляється командою на Blazor WebAssembly та ASP.NET Core Web API.
-Стан розробки: частина функцій перебуває в розробці. Інтеграція Microsoft Entra ID та збереження користувачів у PostgreSQL реалізовані в гілці feature/entra-auth; до злиття цієї гілки з main вони можуть бути відсутні в основній версії.
+FridgeChef is a team-developed web application for managing food stored at home, exploring recipes, maintaining shopping lists, and calculating calorie and macronutrient targets. It consists of a **Blazor WebAssembly** client and an **ASP.NET Core Web API** backend, both targeting **.NET 8**.
 
-✨ Функціонал
-🥦 Розумний холодильник (Smart Fridge)
-- Додавання, перегляд і керування продуктами.
-- Організація інгредієнтів у холодильнику.
-- Підбір рецептів відповідно до наявних продуктів.
-- Фільтрація рецептів за різними критеріями.
-🍽️ Рецепти (Recipes)
-- Перегляд доступних рецептів.
-- Інформація про інгредієнти та приготування.
-- Пошук страв відповідно до потреб користувача.
-🔥 Калькулятор калорій та БЖВ
-- Розрахунок добової потреби в калоріях.
-- Визначення рекомендованої кількості білків, жирів і вуглеводів.
-- Урахування персональних параметрів користувача.
-🛒 Список покупок (Shopping List)
-- Додавання та видалення товарів.
-- Перегляд списку необхідних продуктів.
-- Позначення придбаних товарів.
-👤 Авторизація та користувачі
-- Вхід через Microsoft Entra ID із використанням MSAL у Blazor WebAssembly.
-- Передавання JWT Access Token до Backend API.
-- Перевірка JWT і політик доступу на сервері.
-- Створення запису користувача в PostgreSQL під час першого успішного звернення до GET /api/profiles/me.
-- Зв'язування користувача з Microsoft-ідентичністю за EntraObjectId і EntraTenantId.
-- Отримання внутрішнього ідентифікатора користувача через CurrentUserService.
-- У кодовій базі також збережено попередній механізм входу за email і паролем із cookie-сесією (legacy).
-⚙️ Особистий кабінет
-- Перегляд профілю користувача.
-- Керування персональними даними.
-📱 Сторінки застосунку
-Home, Login / Registration, Fridge, Recipes, Shopping List, Nutrition Calculator, Profile.
-🛠️ Технології
-Компонент	Технологія
-Frontend	Blazor WebAssembly (.NET 8)
-UI	MudBlazor
-Backend	ASP.NET Core Web API (.NET 8)
-Мова програмування	C#
-API	REST / Minimal API
-База даних	PostgreSQL
-ORM	Entity Framework Core (EF Core)
-Microsoft-автентифікація	Microsoft Entra ID, MSAL, Microsoft Identity Web
-Авторизація API	JWT Bearer, scopes, roles
-Попередній механізм входу	ASP.NET Core Cookie Authentication
-Документація API	Swagger / OpenAPI
-Тестування	bUnit, .NET Tests
-Контроль версій	Git, GitHub
+> **Development status:** FridgeChef is under active development. This README describes the functionality and implementation in `feature/fridgechef-auth-localization`, not necessarily the current `main` branch. Some features and authentication flows are still being refined.
 
+## Features
 
-🗄️ Зберігання даних
-Backend використовує PostgreSQL і Entity Framework Core для роботи з реляційними даними.
-- FridgeChefDbContext забезпечує доступ до таблиць через EF Core.
-- EF Core Migrations керують змінами схеми бази даних.
-- Міграція AddEntraIdentityToUsers додає до таблиці Users поля EntraObjectId і EntraTenantId.
-- Унікальний індекс на пару (EntraTenantId, EntraObjectId) запобігає дублюванню однієї Microsoft-ідентичності.
-- Поля допускають NULL для сумісності з наявними записами.
-Частина старої логіки авторизації ще використовує in-memory storage. Не всі функції застосунку вже переведено на новий механізм ідентифікації користувача.
+| Area | Functionality |
+| --- | --- |
+| Smart fridge | View, add, update, and remove fridge items; manage available ingredients. |
+| Recipes | Browse recipes, inspect ingredients, explore recipes based on available food, and work with saved recipe collections. |
+| Shopping list | Create, view, update, and delete items; track purchased and fridge status. Products, categories, and measurement units are validated against the catalog. |
+| Nutrition | Calculate estimated daily calorie and protein/fat/carbohydrate targets using user-provided parameters. |
+| Profiles | View and manage user profile information. |
+| Authentication | Sign in/out through Microsoft Entra ID with MSAL; authenticated client requests use access tokens. |
+| Localization | English (`en-US`) and Ukrainian (`uk-UA`) login resources. Do not assume every page is fully translated. |
 
-📂 Структура проєкту
+## Technology stack
+
+| Layer | Technology |
+| --- | --- |
+| Client | Blazor WebAssembly, C#, .NET 8, MudBlazor |
+| Server | ASP.NET Core Web API, Minimal APIs, C#, .NET 8 |
+| Database | PostgreSQL, Entity Framework Core, migrations |
+| Identity | Microsoft Entra ID, MSAL, Microsoft Identity Web, JWT Bearer |
+| API documentation | Swagger / OpenAPI (when enabled) |
+| Tests | xUnit, ASP.NET Core integration testing, Testcontainers for PostgreSQL; frontend test project |
+| Collaboration | Git, GitHub, feature branches, pull requests |
+
+## Repository layout
+
+```text
 fridge-chef/
-├── FridgeChef/                     # Blazor WebAssembly frontend
-│   ├── Pages/
+├── FridgeChef/                  # Blazor WebAssembly client
 │   ├── Components/
-│   ├── Services/
+│   ├── Layout/
 │   ├── Models/
+│   ├── Pages/
+│   ├── Resources/              # Localized login resources
+│   ├── Services/
 │   └── wwwroot/
-├── FridgeChef.Api/                 # ASP.NET Core Web API
-│   ├── Data/
-│   │   ├── Entities/
-│   │   └── FridgeChefDbContext.cs
-│   ├── Features/
-│   │   ├── Auth/
-│   │   ├── Users/
-│   │   ├── FridgeItems/
-│   │   ├── ShoppingItems/
-│   │   ├── Courses/
-│   │   └── Profiles/
-│   │       ├── GetMyProfile.cs
-│   │       └── ProfileEndpoints.cs
+├── FridgeChef.Api/              # ASP.NET Core API
+│   ├── Data/                   # DbContext and entities
+│   ├── Features/               # Feature-oriented endpoints and handlers
 │   ├── Migrations/
 │   ├── Middleware/
-│   ├── Services/
-│   │   └── CurrentUserService.cs
+│   ├── Services/               # Including CurrentUserService
 │   └── Program.cs
-├── FridgeChef.Tests/               # Frontend tests
+├── Server.Tests/                # Backend unit/integration tests
+├── FridgeChef.Tests/            # Frontend tests
 └── README.md
-🚀 Локальний запуск
-1. Вимоги
-- .NET SDK 8.0
+```
+
+## Local development
+
+### Prerequisites
+
+- .NET SDK 8
 - Git
-- Visual Studio або Visual Studio Code
-- Запущений PostgreSQL (наприклад, через Docker Desktop)
-- Доступ до налаштованих реєстрацій застосунків у Microsoft Entra ID для тестування Microsoft-входу
-2. Клонування репозиторію
+- PostgreSQL (locally installed or via Docker Desktop)
+- Docker Desktop running **when executing Testcontainers integration tests**
+- Access to the appropriate Microsoft Entra ID application registrations to exercise Microsoft sign-in
+- Optional: `dotnet-ef` CLI for applying migrations
+
+### 1. Clone and restore
+
+```powershell
 git clone https://github.com/soloshkamala/fridge-chef.git
 cd fridge-chef
-Щоб перевірити зміни Microsoft-авторизації до їхнього злиття з main:
-git switch feature/entra-auth
-3. Відновлення залежностей
+git switch feature/fridgechef-auth-localization
 dotnet restore
-4. Налаштування PostgreSQL
-Запустіть локальний сервер PostgreSQL і налаштуйте ConnectionStrings:DefaultConnection для FridgeChef.Api через .NET User Secrets або змінні середовища. Не додавайте паролі до Git.
+```
 
-Після налаштування підключення застосуйте міграції:
-dotnet ef database update --project FridgeChef.Api --startup-project FridgeChef.Api
-Для команди dotnet ef потрібен встановлений інструмент EF Core CLI.
-5. Налаштування Microsoft Entra ID
-Для Microsoft-входу потрібні налаштовані реєстрації SPA і Backend API в Microsoft Entra ID, відповідні ClientId, TenantId, redirect URI та делегований scope access_as_user.
+The branch switch is needed only while these changes have not been merged into `main`.
 
-Налаштування frontend і backend мають відповідати одне одному. Не публікуйте токени, client secrets або паролі. ClientId і TenantId самі по собі не є секретними ключами.
-6. Запуск Backend API
-У першому терміналі:
-dotnet run --project FridgeChef.Api --urls http://localhost:5039
-Backend: http://localhost:5039
-Swagger UI (за наявності у Development): http://localhost:5039/swagger
-7. Запуск Frontend
-У другому терміналі:
-dotnet run --project FridgeChef --urls http://localhost:5050
-Frontend: http://localhost:5050
+### 2. Configure PostgreSQL
 
-Обидва застосунки повинні працювати одночасно.
-🔐 Microsoft Entra ID Authentication
-Схема роботи
-1. Користувач входить через Microsoft Entra ID.
-2. MSAL на frontend отримує Access Token для Backend API.
-3. Frontend надсилає токен у заголовку Authorization: Bearer <token>.
-4. Backend перевіряє токен та застосовану політику авторизації.
-5. GET /api/profiles/me шукає користувача за Microsoft Object ID і Tenant ID або створює його запис у PostgreSQL.
-6. CurrentUserService знаходить внутрішній UserId для вже збереженого користувача.
-Endpoint поточного користувача
-Метод	Endpoint	Політика	Опис
-GET	/api/profiles/me	ApiRead	Повертає поточного користувача або створює його запис під час першого звернення
+Run a PostgreSQL server and configure the API's `ConnectionStrings:DefaultConnection`. For example, use .NET user secrets from the repository root:
 
+```powershell
+dotnet user-secrets init --project .\FridgeChef.Api\FridgeChef.Api.csproj
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=fridgechef;Username=postgres;Password=YOUR_LOCAL_PASSWORD" --project .\FridgeChef.Api\FridgeChef.Api.csproj
+```
 
-Приклад відповіді:
-{
-  "userId": 1,
-  "name": "Example User",
-  "email": "user@example.com"
-}
-Політики авторизації
-Політика	Умови
-ApiRead	Автентифікований користувач зі scope access_as_user
-ApiWrite	Scope access_as_user і роль User або Admin
-ApiAdmin	Scope access_as_user і роль Admin
+Replace `YOUR_LOCAL_PASSWORD` with your local database password. Ensure port `5432` is actually served by the intended PostgreSQL instance; a Windows PostgreSQL service and a Docker container cannot both bind the same host port simultaneously.
 
+Install the EF CLI if needed and apply the existing migrations:
 
-Політики діють лише на endpoints, де вони застосовані. Наявність політики в Program.cs сама по собі не захищає всі маршрути.
-Поточне обмеження: endpoints холодильника та частина інших маршрутів усе ще використовують старий підхід до визначення числового UserId. Їх потрібно окремо інтегрувати з CurrentUserService і перевірити захист авторизацією.
+```powershell
+dotnet tool install --global dotnet-ef --version 8.0.11
+dotnet ef database update --project .\FridgeChef.Api --startup-project .\FridgeChef.Api
+```
 
-🔑 Legacy Authentication API
-У проєкті збережені попередні маршрути для входу за email і паролем та cookie-сесії:
-Метод	Endpoint	Опис
-POST	/api/users	Реєстрація користувача
-POST	/api/auth/login	Вхід в обліковий запис
-GET	/api/auth/session	Перевірка сесії
-POST	/api/auth/logout	Вихід із системи
+If `dotnet-ef` is already installed, skip installation or update it to a compatible EF Core 8 version. Never commit passwords, tokens, or client secrets.
 
+### 3. Configure Microsoft Entra ID
 
-Приклад реєстрації:
-{
-  "email": "test@example.com",
-  "password": "password123",
-  "displayName": "Test User"
-}
-Приклад входу:
-{
-  "email": "test@example.com",
-  "password": "password123"
-}
-Ці маршрути належать до попереднього механізму авторизації й не слід плутати їх із Microsoft Entra ID та JWT.
-🌐 API та CORS
-Frontend і Backend запускаються на різних портах:
-- Frontend: http://localhost:5050
-- Backend: http://localhost:5039
-Backend використовує CORS для дозволених адрес клієнта. Для запитів зі старою cookie-авторизацією потрібне передавання credentials; для Microsoft-авторизації API використовує Bearer-токен.
-🧪 Тестування
-Для запуску автоматизованих тестів:
+The Microsoft login flow requires **separate client (SPA) and API registrations**, configured consistently:
+
+1. Register the Blazor SPA and configure its local redirect URI(s).
+2. Register the backend API and expose the delegated scope `access_as_user`.
+3. Configure the SPA to request that API scope and use the correct tenant/client identifiers.
+4. Configure the API to validate tokens intended for **this API** and the correct issuer/tenant.
+5. Define and assign the `User` and/or `Admin` application roles to appropriate test accounts, where required by protected operations.
+6. Match the actual configuration keys and callback routes used in the client and API project settings. Do not copy placeholder IDs into production settings.
+
+`ClientId` and `TenantId` are identifiers, not client secrets. Do not put a confidential client secret in the browser application.
+
+### 4. Run the API and client
+
+Start each process in a separate terminal:
+
+```powershell
+# Terminal 1 — API
+dotnet run --project .\FridgeChef.Api --urls http://localhost:5039
+```
+
+```powershell
+# Terminal 2 — client
+dotnet run --project .\FridgeChef --urls http://localhost:5050
+```
+
+Local addresses used in development:
+
+- Client: `http://localhost:5050`
+- API: `http://localhost:5039`
+- Swagger: `http://localhost:5039/swagger` **if enabled in the current environment**
+
+The client API base URL, Entra redirect URI, and backend CORS allowlist must match the actual local addresses. Starting both processes does not by itself configure Microsoft Entra ID.
+
+## Authentication and authorization
+
+### Microsoft Entra ID flow
+
+1. A user signs in through Microsoft Entra ID in the Blazor client.
+2. MSAL obtains an **access token for the FridgeChef API**.
+3. The client sends that token as `Authorization: Bearer <access_token>` to API requests requiring authentication. Tokens should not be attached to unrelated third-party requests.
+4. The API validates the JWT and applies the endpoint's authorization policy.
+5. `GET /api/profiles/me` can resolve the signed-in Microsoft identity and create a corresponding PostgreSQL user record on first use.
+6. `CurrentUserService` maps the validated identity to the application's internal user ID for user-specific operations.
+
+The database user is associated with `EntraObjectId` and `EntraTenantId`. The `AddEntraIdentityToUsers` migration adds these nullable fields and a unique index for their combination, preserving compatibility with existing user rows.
+
+### API policies
+
+| Policy | Requirement |
+| --- | --- |
+| `ApiRead` | Authenticated request with delegated scope `access_as_user` |
+| `ApiWrite` | `access_as_user` plus the `User` or `Admin` app role |
+| `ApiAdmin` | `access_as_user` plus the `Admin` app role |
+
+The current branch updates authorization on endpoints in the users, profiles, courses, products, fridge items, recipes, and shopping-list feature areas. **Authorization must be checked per endpoint:** defining a policy does not automatically protect every route. Role and scope checks are distinct; a valid login alone does not grant write/admin access.
+
+### Legacy authentication
+
+Earlier email/password and cookie-session routes remain in the codebase for compatibility. They are separate from the Microsoft Entra JWT flow and should not be treated as interchangeable:
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/users` | Legacy registration route |
+| `POST` | `/api/auth/login` | Legacy email/password login |
+| `GET` | `/api/auth/session` | Legacy session check |
+| `POST` | `/api/auth/logout` | Legacy logout |
+
+Verify the authorization requirements of each legacy route before using it in a deployment. The long-term relationship between the two sign-in mechanisms remains an area for cleanup.
+
+## Database and catalog validation
+
+The API uses `FridgeChefDbContext`, PostgreSQL, and EF Core migrations. Shopping-list creation and updates resolve a product by **product name and category**, resolve a measurement unit by name or short name, and require a matching product–unit association in `ProductUnits`. A product name not present in the catalog, an unknown unit, or a disallowed product/unit combination cannot be saved as a shopping item.
+
+Shopping-list records are associated with the authenticated application's user ID. The shopping-list API also uses SignalR notifications for changes; the corresponding hub and user-group behavior should be considered when testing real-time UI updates.
+
+## Localization
+
+Login-page localization resources are maintained in:
+
+```text
+FridgeChef/Resources/LoginResource.cs
+FridgeChef/Resources/LoginResource.en-US.resx
+FridgeChef/Resources/LoginResource.uk-UA.resx
+```
+
+The branch includes updates to the login page and its styling. Language coverage elsewhere in the application may be partial; do not assume full localization of every component.
+
+## Tests
+
+Run all backend tests:
+
+```powershell
+dotnet test .\Server.Tests\Server.Tests.csproj --no-restore
+```
+
+For a first-time checkout, run `dotnet restore` first, or omit `--no-restore`. Integration tests use **Testcontainers PostgreSQL**, so Docker Desktop must be available and running. Tests use an isolated temporary database and a test authentication setup rather than requiring an interactive Microsoft login.
+
+To run only the shopping-list lifecycle test:
+
+```powershell
+dotnet test .\Server.Tests\Server.Tests.csproj --filter "FullyQualifiedName~ShoppingItem_CreateGetUpdateDelete_Works"
+```
+
+**Latest verified local result (23 November 2026):** `Server.Tests` — **33 passed, 0 failed, 0 skipped** (approximately 40 seconds). This is a local test result for the feature branch, not a claim that CI has passed or that every project in the repository has been tested.
+
+The shopping-list integration test exercises **create → get → list → update → delete → not found**. Its test database seeds a user identity, sample category, two sample products, a unit, and valid product–unit associations so the test respects the real catalog rules.
+
+Additional tests cover authentication/authorization, profiles, users, and course operations. Run the full solution test suite when making cross-project changes:
+
+```powershell
 dotnet test
-Під час локальної перевірки гілки feature/entra-auth успішно виконано збірку Backend API без помилок і авторизований запит GET /api/profiles/me, який повернув внутрішній ID користувача з PostgreSQL.
+```
 
-Тимчасова сторінка AuthTest.razor використовувалася для ручної перевірки, але не включена до коміту 4e3343f.
-🌍 Локалізація
-Застосунок підтримує українську 🇺🇦 та англійську 🇬🇧 мови.
-📌 Подальший розвиток
-- Інтеграція CurrentUserService з усіма endpoints, які працюють із персональними даними.
-- Захист маршрутів холодильника та інших ресурсів відповідними політиками JWT-авторизації.
-- Узгодження нового Microsoft-входу з попередньою cookie-авторизацією.
-- Розширення підбору рецептів і персоналізованого планування харчування.
-- Покращення профілю користувача.
-- Автоматизовані тести автентифікації, авторизації та роботи з базою даних.
-👥 Командна розробка
-Проєкт розробляється командою з використанням GitHub. Нові можливості реалізуються в окремих feature/* гілках і додаються до main через Pull Request після перевірки.
+## Security and development notes
+
+- Keep connection strings containing passwords, secrets, and tokens out of Git.
+- Access tokens must target the API; tokens issued for another audience must be rejected.
+- Protected writes require the configured role as well as the required delegated scope.
+- Ensure operations on user-specific resources use the authenticated user's identity, not an arbitrary client-supplied user ID.
+- CORS origins, Entra redirect URIs, and API addresses must be aligned for each environment.
+- Temporary files (`*.backup`, `*.failed`) and local diagnostic pages should not be included in pull requests.
+
+## Next steps
+
+- Audit remaining endpoints and legacy authentication flows for consistent policy and ownership enforcement.
+- Expand localization beyond the login page.
+- Continue improving recipe discovery and saved-recipe experiences.
+- Add automated CI checks for build and tests, if not already configured.
+- Extend coverage for access-control edge cases and user-specific data isolation.
+
+## Contributing
+
+The project is developed collaboratively. Changes are made in feature branches, reviewed through GitHub pull requests, and merged into `main` after review and testing.
