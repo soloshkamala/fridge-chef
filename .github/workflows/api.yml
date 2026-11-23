@@ -1,0 +1,53 @@
+
+name: Deploy FridgeChef API
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore API
+        run: dotnet restore FridgeChef.Api/FridgeChef.Api.csproj
+
+      - name: Publish API
+        run: |
+          dotnet publish FridgeChef.Api/FridgeChef.Api.csproj \
+            -c Release \
+            -r linux-x64 \
+            --self-contained true \
+            -p:UseAppHost=true \
+            -o ./publish
+            
+      - name: Set executable permission
+        run: chmod +x ./publish/FridgeChef.Api
+        
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: fridgechef-api
+          package: ./publish
