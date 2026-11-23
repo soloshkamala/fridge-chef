@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -49,27 +50,62 @@ namespace FridgeChef.Api.Migrations
                     { 5, 390, 4, 40, "Поживна гречка з обсмаженим курячим філе та цибулею.", "", "1. Промийте гречку під проточною водою.\n2. Перекладіть її в каструлю, залийте водою та варіть до готовності відповідно до інструкції на упаковці.\n3. Наріжте куряче філе невеликими шматочками.\n4. Очистьте та наріжте цибулю.\n5. Розігрійте пательню з невеликою кількістю олії та обсмажте цибулю.\n6. Додайте куряче філе, посоліть та готуйте до повної готовності.\n7. Подавайте курку з готовою гречкою.", "Гречка з куркою", 2 }
                 });
 
-            migrationBuilder.InsertData(
-                table: "RecipeIngredients",
-                columns: new[] { "Id", "ProductId", "Quantity", "RecipeId", "UnitId" },
-                values: new object[,]
-                {
-                    { 1, 24, 200m, 1, 4 },
-                    { 2, 8, 250m, 1, 4 },
-                    { 3, 2, 50m, 1, 4 },
-                    { 4, 11, 400m, 2, 4 },
-                    { 5, 14, 100m, 2, 4 },
-                    { 6, 15, 50m, 2, 4 },
-                    { 7, 27, 500m, 2, 2 },
-                    { 8, 21, 3m, 3, 1 },
-                    { 9, 2, 50m, 3, 4 },
-                    { 10, 1, 50m, 3, 2 },
-                    { 11, 11, 200m, 4, 4 },
-                    { 12, 12, 200m, 4, 4 },
-                    { 13, 23, 200m, 5, 4 },
-                    { 14, 8, 250m, 5, 4 },
-                    { 15, 15, 50m, 5, 4 }
-                });
+            // Додаємо інгредієнти, знаходячи продукти та одиниці
+            // вимірювання за назвами, а не за фіксованими ID.
+            migrationBuilder.Sql("""
+                DO $$
+                DECLARE
+                    inserted_count integer;
+                BEGIN
+                    WITH ingredient_data
+                        ("Id", "ProductName", "Quantity", "UnitShortName", "RecipeId")
+                    AS (
+                        VALUES
+                            (1, 'Макарони', 200, 'г', 1),
+                            (2, 'Куряче філе', 250, 'г', 1),
+                            (3, 'Сир', 50, 'г', 1),
+
+                            (4, 'Помідори', 400, 'г', 2),
+                            (5, 'Морква', 100, 'г', 2),
+                            (6, 'Цибуля', 50, 'г', 2),
+                            (7, 'Вода', 500, 'мл', 2),
+
+                            (8, 'Яйця', 3, 'шт', 3),
+                            (9, 'Сир', 50, 'г', 3),
+                            (10, 'Молоко', 50, 'мл', 3),
+
+                            (11, 'Помідори', 200, 'г', 4),
+                            (12, 'Огірки', 200, 'г', 4),
+
+                            (13, 'Гречка', 200, 'г', 5),
+                            (14, 'Куряче філе', 250, 'г', 5),
+                            (15, 'Цибуля', 50, 'г', 5)
+                    )
+                    INSERT INTO "RecipeIngredients"
+                        ("Id", "ProductId", "Quantity", "RecipeId", "UnitId")
+                    SELECT
+                        i."Id",
+                        p."Id",
+                        i."Quantity",
+                        i."RecipeId",
+                        u."Id"
+                    FROM ingredient_data i
+                    INNER JOIN "Products" p
+                        ON LOWER(TRIM(p."Name")) = LOWER(TRIM(i."ProductName"))
+                    INNER JOIN "Units" u
+                        ON LOWER(TRIM(u."ShortName")) = LOWER(TRIM(i."UnitShortName"))
+                    INNER JOIN "Recipes" r
+                        ON r."Id" = i."RecipeId";
+
+                    GET DIAGNOSTICS inserted_count = ROW_COUNT;
+
+                    IF inserted_count <> 15 THEN
+                        RAISE EXCEPTION
+                            'Expected 15 recipe ingredients, inserted %',
+                            inserted_count;
+                    END IF;
+                END $$;
+                """);
 
             migrationBuilder.Sql("""
                 SELECT setval(
