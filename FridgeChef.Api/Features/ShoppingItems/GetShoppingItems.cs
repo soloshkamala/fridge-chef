@@ -1,13 +1,23 @@
 
-using Microsoft.AspNetCore.Http.HttpResults;
+using FridgeChef.Api.Services;
 
 namespace FridgeChef.Api.Features.ShoppingItems;
 
 public static class GetShoppingItems
 {
-    public static Ok<List<ShoppingItemResponse>> Handle(
-        ShoppingItemStore store)
+    public static async Task<IResult> Handle(
+        ShoppingItemStore store,
+        CurrentUserService currentUserService,
+        HttpContext httpContext)
     {
-        return TypedResults.Ok(store.GetAll());
+        var userId = await currentUserService.GetUserIdAsync(
+            httpContext.User);
+
+        if (userId == null)
+            return Results.Unauthorized();
+
+        var items = await store.GetAllAsync(userId.Value);
+
+        return Results.Ok(items);
     }
 }

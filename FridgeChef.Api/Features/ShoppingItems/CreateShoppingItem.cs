@@ -1,15 +1,18 @@
 
-using Microsoft.AspNetCore.Http.HttpResults;
+using FridgeChef.Api.Services;
+using FridgeChef.Api.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FridgeChef.Api.Features.ShoppingItems;
 
 public static class CreateShoppingItem
 {
-    public static Results<
-        Created<ShoppingItemResponse>,
-        ProblemHttpResult> Handle(
+    public static async Task<IResult> Handle(
         CreateShoppingItemRequest request,
-        ShoppingItemStore store)
+        ShoppingItemStore store,
+        CurrentUserService currentUserService,
+        IHubContext<ShoppingListHub> hubContext,
+        HttpContext httpContext)
     {
         if (!ShoppingItemValidation.IsValid(
             request.Name,
@@ -17,15 +20,28 @@ public static class CreateShoppingItem
             request.Unit,
             request.Category))
         {
-            return TypedResults.Problem(
-                statusCode: 400,
-                title: "Validation failed",
-                detail: "Invalid shopping item data.");
+            return Results.BadRequest("Некоректні дані товару.");
         }
 
-        var item = store.Add(request);
+        var userId = await currentUserService.GetUserIdAsync(
+            httpContext.User);
 
-        return TypedResults.Created(
+        if (userId == null)
+            return Results.Unauthorized();
+
+        var item = await store.AddAsync(request, userId.Value);
+
+        if (item == null)
+        {
+            return Results.BadRequest(
+                "Товар або одиниця вимірювання відсутні в каталозі або несумісні.");
+        }
+
+        await hubContext.Clients
+            .Group(ShoppingListHubGroups.ForUser(userId.Value))
+            .SendAsync("ShoppingItemAdded", item.Id);
+
+        return Results.Created(
             $"/api/shopping-items/{item.Id}",
             item);
     }

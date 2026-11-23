@@ -65,7 +65,9 @@ builder.Services.AddScoped(sp =>
 
 builder.Services.AddMsalAuthentication(options =>
 {
-    builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
+    builder.Configuration.Bind(
+        "AzureAd",
+        options.ProviderOptions.Authentication);
 
     options.ProviderOptions.DefaultAccessTokenScopes.Add(
         "api://f9f39e83-370c-4ed6-bfac-f93c39c97542/access_as_user");
@@ -93,7 +95,10 @@ builder.Services.AddScoped<ProductsApiService>();
 builder.Services.AddScoped<RecipesApiService>();
 builder.Services.AddScoped<ShoppingItemApiService>();
 builder.Services.AddScoped<ProfileService>();
+
+// SIGNALR SERVICES
 builder.Services.AddScoped<FridgeSignalRService>();
+builder.Services.AddScoped<ShoppingListSignalRService>();
 
 // =====================================
 // BUILD APPLICATION

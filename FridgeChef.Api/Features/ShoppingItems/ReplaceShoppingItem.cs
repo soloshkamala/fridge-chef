@@ -1,16 +1,19 @@
 
-using Microsoft.AspNetCore.Http.HttpResults;
+using FridgeChef.Api.Services;
+using FridgeChef.Api.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FridgeChef.Api.Features.ShoppingItems;
 
 public static class ReplaceShoppingItem
 {
-    public static Results<
-        NoContent,
-        ProblemHttpResult> Handle(
+    public static async Task<IResult> Handle(
         int id,
         UpdateShoppingItemRequest request,
-        ShoppingItemStore store)
+        ShoppingItemStore store,
+        CurrentUserService currentUserService,
+        IHubContext<ShoppingListHub> hubContext,
+        HttpContext httpContext)
     {
         if (!ShoppingItemValidation.IsValid(
             request.Name,
@@ -18,21 +21,27 @@ public static class ReplaceShoppingItem
             request.Unit,
             request.Category))
         {
-            return TypedResults.Problem(
-                statusCode: 400,
-                title: "Validation failed",
-                detail: "Invalid shopping item data.");
+            return Results.BadRequest("Некоректні дані товару.");
         }
 
-        var item = store.Update(id, request);
+        var userId = await currentUserService.GetUserIdAsync(
+            httpContext.User);
 
-        if (item is null)
-        {
-            return TypedResults.Problem(
-                statusCode: 404,
-                title: "Shopping item not found");
-        }
+        if (userId == null)
+            return Results.Unauthorized();
 
-        return TypedResults.NoContent();
+        var item = await store.UpdateAsync(
+            id,
+            request,
+            userId.Value);
+
+        if (item == null)
+            return Results.NotFound();
+
+        await hubContext.Clients
+            .Group(ShoppingListHubGroups.ForUser(userId.Value))
+            .SendAsync("ShoppingItemUpdated", item.Id);
+
+        return Results.NoContent();
     }
 }

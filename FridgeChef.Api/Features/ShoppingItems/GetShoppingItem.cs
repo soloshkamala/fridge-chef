@@ -1,25 +1,27 @@
 
-using Microsoft.AspNetCore.Http.HttpResults;
+using FridgeChef.Api.Services;
 
 namespace FridgeChef.Api.Features.ShoppingItems;
 
 public static class GetShoppingItem
 {
-    public static Results<
-        Ok<ShoppingItemResponse>,
-        ProblemHttpResult> Handle(
+    public static async Task<IResult> Handle(
         int id,
-        ShoppingItemStore store)
+        ShoppingItemStore store,
+        CurrentUserService currentUserService,
+        HttpContext httpContext)
     {
-        var item = store.GetById(id);
+        var userId = await currentUserService.GetUserIdAsync(
+            httpContext.User);
 
-        if (item is null)
-        {
-            return TypedResults.Problem(
-                statusCode: 404,
-                title: "Shopping item not found");
-        }
+        if (userId == null)
+            return Results.Unauthorized();
 
-        return TypedResults.Ok(item);
+        var item = await store.GetByIdAsync(id, userId.Value);
+
+        if (item == null)
+            return Results.NotFound();
+
+        return Results.Ok(item);
     }
 }

@@ -1,3 +1,4 @@
+
 using FridgeChef.Api.Features.Products;
 using FridgeChef.Api.Services;
 using FridgeChef.Api.Features.Auth;
@@ -9,11 +10,13 @@ using FridgeChef.Api.Features.ShoppingItems;
 using FridgeChef.Api.Features.Users;
 using FridgeChef.Api.Middleware;
 using FridgeChef.Api.Data;
+using FridgeChef.Api.Hubs;
+
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Identity.Web;
 using Microsoft.EntityFrameworkCore;
-using FridgeChef.Api.Hubs;
+using Microsoft.Identity.Web;
+
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using OpenTelemetry.Trace;
 
@@ -29,7 +32,7 @@ builder.Services.AddScoped<CurrentUserService>();
 // DATA STORES
 builder.Services.AddSingleton<CourseStore>();
 builder.Services.AddSingleton<ProfileStore>();
-builder.Services.AddSingleton<ShoppingItemStore>();
+builder.Services.AddScoped<ShoppingItemStore>();
 builder.Services.AddSingleton<UserStore>();
 builder.Services.AddSingleton<UserPasswordService>();
 
@@ -54,7 +57,7 @@ builder.Services.AddCors(options =>
             .AllowCredentials());
 });
 
-// COOKIE AUTHENTICATION
+// AUTHENTICATION
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -89,6 +92,7 @@ builder.Services.AddAuthentication()
         builder.Configuration.GetSection("AzureAd"),
         jwtBearerScheme: JwtBearerDefaults.AuthenticationScheme);
 
+// AUTHORIZATION
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("ApiRead", policy =>
@@ -144,7 +148,6 @@ var app = builder.Build();
 // MIDDLEWARE
 app.UseMiddleware<RequestLoggingMiddleware>();
 
-
 app.UseCors("Client");
 
 app.UseAuthentication();
@@ -195,7 +198,9 @@ app.MapGroup("/api/auth")
     .WithTags("Authentication");
 
 // SIGNALR HUB
+// SIGNALR HUB
 app.MapHub<FridgeChefHub>("/hubs/fridgechef");
+app.MapHub<ShoppingListHub>("/hubs/shopping-list");
 
 // RUN
 app.Run();
