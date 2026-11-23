@@ -1,4 +1,4 @@
-﻿
+
 using FridgeChef.Api.Data;
 using FridgeChef.Api.Data.Entities;
 using FridgeChef.Api.Features.FridgeItems.Models;
@@ -171,6 +171,7 @@ public static class CreateFridgeItemEndpoint
             return TypedResults.Created(
                 $"/api/fridge-items/{item.Id}", newResponse);
         })
+        .RequireAuthorization("ApiWrite")
         .ProducesProblem(400)
         .ProducesProblem(401);
     }

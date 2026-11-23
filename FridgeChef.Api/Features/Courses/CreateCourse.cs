@@ -27,7 +27,8 @@ public static class CreateCourse
                     new { id = saved.Id },
                     CourseResponse.FromCourse(saved));
             })
-            .WithName("CreateCourse")
+            .RequireAuthorization("ApiAdmin")
+        .WithName("CreateCourse")
             .Produces<CourseResponse>(StatusCodes.Status201Created)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status409Conflict);

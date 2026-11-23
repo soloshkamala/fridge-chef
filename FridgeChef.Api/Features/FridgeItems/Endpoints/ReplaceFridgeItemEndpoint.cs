@@ -1,4 +1,4 @@
-﻿
+
 using FridgeChef.Api.Data;
 using FridgeChef.Api.Features.FridgeItems.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -115,6 +115,7 @@ public static class ReplaceFridgeItemEndpoint
 
             return TypedResults.NoContent();
         })
+        .RequireAuthorization("ApiWrite")
         .ProducesProblem(400)
         .ProducesProblem(401)
         .ProducesProblem(404)

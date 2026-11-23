@@ -1,4 +1,7 @@
-﻿@page "/profile"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize]
+@page "/profile"
 @using FridgeChef.Models
 @using FridgeChef.Services
 @using FridgeChef.Components
@@ -6,6 +9,8 @@
 @using Microsoft.Extensions.Localization
 @using Microsoft.JSInterop
 
+@inject AuthenticationStateProvider AuthProvider
+@inject HttpClient Http
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject ProfileService Store
@@ -13,14 +18,14 @@
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4 profile-page">
 
-    
+
     <div class="d-flex justify-space-between align-center mb-4">
         <MudText Typo="Typo.h4" Style="font-weight: 700;">
             @L["ProfileTitle"]
         </MudText>
     </div>
 
-    
+
     @if (Store.State == ProfileViewState.Loading)
     {
         <div data-testid="loading">
@@ -55,7 +60,7 @@
     }
     else if (Store.State == ProfileViewState.Error)
     {
-        
+
         <MudPaper Class="pa-6 profile-panel"
                   Elevation="0"
                   data-testid="error">
@@ -75,7 +80,7 @@
     }
     else
     {
-        
+
         @if (Store.User is not null)
         {
             <ProfileHeader User="Store.User" />
@@ -112,7 +117,7 @@
                           OnRecipeSelected="HandleRecipeSelected" />
         }
 
-        
+
         <MudPaper Class="pa-5 mt-6 profile-panel"
                   Elevation="0">
 
@@ -125,7 +130,7 @@
 
                 <MudGrid Spacing="3">
 
-                    
+
                     <MudItem xs="12" md="6">
                         <MudTextField T="string"
                                       id="profile-name"
@@ -137,7 +142,7 @@
                                       FullWidth="true" />
                     </MudItem>
 
-                    
+
                     <MudItem xs="12" md="6">
                         <MudTextField T="string"
                                       id="profile-email"
@@ -149,7 +154,7 @@
                                       FullWidth="true" />
                     </MudItem>
 
-                    
+
                     <MudItem xs="12" md="6">
                         <div class="profile-field">
                             <label class="profile-field-label">
@@ -174,7 +179,7 @@
                         </div>
                     </MudItem>
 
-                    
+
                     <MudItem xs="12" md="6">
                         <div class="profile-field">
                             <label for="favorite-ingredients"
@@ -190,7 +195,7 @@
 
                 </MudGrid>
 
-                
+
                 <div class="d-flex align-center flex-wrap mt-5"
                      style="gap:12px;">
 
@@ -304,6 +309,61 @@
     {
         await Store.LoadAsync();
 
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var principal = authState.User;
+
+        if (principal.Identity?.IsAuthenticated == true)
+        {
+            var name = principal.FindFirst("name")?.Value
+                ?? principal.Identity.Name
+                ?? "User";
+
+            var email = principal.FindFirst("preferred_username")?.Value
+                ?? principal.FindFirst("email")?.Value
+                ?? "";
+
+            var role = principal.FindAll("roles")
+                .Concat(principal.FindAll("role"))
+                .Concat(principal.FindAll(System.Security.Claims.ClaimTypes.Role))
+                .Select(c => c.Value)
+                .FirstOrDefault(r => r == "Admin")
+                ?? "User";
+
+            try
+            {
+                var apiUser = await Http.GetFromJsonAsync<MicrosoftUserInfo>(
+                    "api/auth/me");
+
+                if (apiUser is not null)
+                {
+                    name = apiUser.Name ?? name;
+                    email = apiUser.Email ?? email;
+                    role = apiUser.Roles?.Contains("Admin") == true
+                        ? "Admin"
+                        : "User";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Could not load Microsoft role: {ex.Message}");
+            }
+
+            Store.SetMicrosoftProfile(name, email, role);
+
+            try
+            {
+                var savedRecipes = await Http.GetFromJsonAsync<List<RecipeSummary>>(
+                    "api/recipes/saved");
+
+                Store.SetSavedRecipes(savedRecipes ?? new List<RecipeSummary>());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Could not load saved recipes: {ex.Message}");
+                Store.SetSavedRecipes(new List<RecipeSummary>());
+            }
+        }
+
         if (Store.User is not null &&
             Store.State != ProfileViewState.Error)
         {
@@ -313,10 +373,7 @@
             {
                 _form = savedSettings;
 
-                Store.SaveProfile(
-                    _form.Name ?? "",
-                    _form.Email ?? ""
-                );
+
             }
             else
             {

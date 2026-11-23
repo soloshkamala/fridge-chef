@@ -1,4 +1,4 @@
-﻿
+
 using FridgeChef.Api.Data;
 using FridgeChef.Api.Features.Products.Models;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +10,7 @@ public static class ProductsEndpoints
     public static RouteGroupBuilder MapProductsEndpoints(
         this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/products")
+        var group = app.MapGroup("/api/products").RequireAuthorization("ApiRead")
             .WithTags("Products");
 
         group.MapGet("/", async (FridgeChefDbContext db) =>

@@ -192,6 +192,7 @@ public static class UpdateProfile
                 );
 
                 return TypedResults.Ok(profileDto);
-            });
+            })
+        .RequireAuthorization("ApiWrite");
     }
 }

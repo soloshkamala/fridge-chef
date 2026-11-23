@@ -1,5 +1,5 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
-
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inherits LayoutComponentBase
 @using System.Globalization
 @using Microsoft.Extensions.Localization
@@ -7,6 +7,7 @@
 
 @inject IStringLocalizer<FridgeChef.Resources.SharedResource> Localizer
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 
 <MudThemeProvider Theme="@fridgeTheme" />
 <MudPopoverProvider />
@@ -15,7 +16,6 @@
 
 <header class="site-header">
     <nav class="navbar">
-
         <span class="logo">FridgeChef</span>
 
         <div class="nav-links">
@@ -59,9 +59,11 @@
                         @auth.User.Identity?.Name
                     </NavLink>
 
-                    <NavLink href="/authentication/logout" class="logout-button">
+                    <button type="button"
+                            class="logout-button"
+                            @onclick="BeginLogOut">
                         @Localizer["NavLogout"]
-                    </NavLink>
+                    </button>
                 </Authorized>
 
                 <NotAuthorized>
@@ -71,7 +73,6 @@
                 </NotAuthorized>
             </AuthorizeView>
         </div>
-
     </nav>
 </header>
 
@@ -82,6 +83,11 @@
 @code {
     private string CurrentLanguage =>
         CultureInfo.CurrentUICulture.Name;
+
+    private void BeginLogOut()
+    {
+        Navigation.NavigateToLogout("authentication/logout");
+    }
 
     private async Task ChangeLanguage(string culture)
     {
@@ -100,5 +106,3 @@
         }
     };
 }
-
-

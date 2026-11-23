@@ -17,12 +17,14 @@ public static class UserEndpoints
 
         group.MapPost("/", CreateUser.Handle)
             .WithName("CreateUser")
+            .RequireAuthorization("ApiWrite")
             .Produces<UserResponse>(201)
             .ProducesProblem(400)
             .ProducesProblem(409);
 
         group.MapPut("/{id:int}", ReplaceUser.Handle)
             .WithName("ReplaceUser")
+            .RequireAuthorization("ApiWrite")
             .Produces(204)
             .ProducesProblem(400)
             .ProducesProblem(404)
@@ -30,6 +32,7 @@ public static class UserEndpoints
 
         group.MapDelete("/{id:int}", DeleteUser.Handle)
             .WithName("DeleteUser")
+            .RequireAuthorization("ApiWrite")
             .Produces(204)
             .ProducesProblem(404);
 

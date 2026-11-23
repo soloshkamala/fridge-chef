@@ -1,4 +1,4 @@
-﻿
+
 using FridgeChef.Models;
 using Microsoft.JSInterop;
 using System.Text.Json;
@@ -88,6 +88,29 @@ namespace FridgeChef.Services
             IsLoading = false;
         }
 
+
+    public void SetSavedRecipes(IReadOnlyList<RecipeSummary> recipes)
+    {
+        SavedRecipes.Clear();
+        SavedRecipes.AddRange(recipes);
+
+        if (User is not null)
+        {
+            User = User with { SavedCount = recipes.Count };
+        }
+    }
+    public void SetMicrosoftProfile(string name, string email, string role)
+        {
+            if (User is null)
+                return;
+
+            User = User with
+            {
+                Name = name,
+                Email = email,
+                Badge = role
+            };
+        }
         public void SaveProfile(string name, string email)
         {
             if (User is null)

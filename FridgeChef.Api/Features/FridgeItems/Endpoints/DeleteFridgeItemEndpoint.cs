@@ -1,4 +1,4 @@
-﻿using FridgeChef.Api.Data;
+using FridgeChef.Api.Data;
 using FridgeChef.Api.Hubs;
 using FridgeChef.Api.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -57,6 +57,7 @@ public static class DeleteFridgeItemEndpoint
 
             return TypedResults.NoContent();
         })
+        .RequireAuthorization("ApiWrite")
         .ProducesProblem(401)
         .ProducesProblem(404);
     }

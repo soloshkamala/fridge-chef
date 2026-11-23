@@ -1,4 +1,4 @@
-﻿
+
 using System.Security.Claims;
 using FridgeChef.Api.Data;
 using FridgeChef.Api.Data.Entities;
@@ -40,7 +40,8 @@ public static class RecipeCollectionEndpoint
                 IsSaved = collection?.IsSaved ?? false,
                 IsFavorite = collection?.IsFavorite ?? false
             });
-        });
+        })
+        .RequireAuthorization("ApiRead");
 
 
         group.MapPut("/{id:int}/collection/{type}", async (
@@ -96,9 +97,9 @@ public static class RecipeCollectionEndpoint
             await db.SaveChangesAsync(ct);
 
             return Results.NoContent();
-        });
+        })
+        .RequireAuthorization("ApiWrite");
     }
 
     public record CollectionUpdateRequest(bool Value);
 }
-

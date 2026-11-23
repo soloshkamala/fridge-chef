@@ -1,4 +1,4 @@
-﻿
+
 namespace FridgeChef.Api.Features.ShoppingItems;
 
 public static class ShoppingItemEndpoints
@@ -20,17 +20,20 @@ public static class ShoppingItemEndpoints
 
         group.MapPost("/", CreateShoppingItem.Handle)
             .WithName("CreateShoppingItem")
+            .RequireAuthorization("ApiWrite")
             .Produces<ShoppingItemResponse>(201)
             .ProducesProblem(400);
 
         group.MapPut("/{id:int}", ReplaceShoppingItem.Handle)
             .WithName("ReplaceShoppingItem")
+            .RequireAuthorization("ApiWrite")
             .Produces(204)
             .ProducesProblem(400)
             .ProducesProblem(404);
 
         group.MapDelete("/{id:int}", DeleteShoppingItem.Handle)
             .WithName("DeleteShoppingItem")
+            .RequireAuthorization("ApiWrite")
             .Produces(204)
             .ProducesProblem(404);
 

@@ -1,4 +1,6 @@
-﻿@page "/fridge"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@page "/fridge"
 
 @implements IAsyncDisposable
 

@@ -12,6 +12,7 @@ public static class DeleteCourse
                         title: "Course not found",
                         detail: $"Course with ID {id} was not found."))
             .WithName("DeleteCourse")
+        .RequireAuthorization("ApiAdmin")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
