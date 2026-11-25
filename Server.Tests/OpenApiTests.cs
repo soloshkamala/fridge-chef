@@ -15,17 +15,28 @@ public sealed class OpenApiTests
         string method,
         string expectedCodes)
     {
-        using var factory = new ApiFactory();
+        using var factory = new ApiFactory
+        {
+            UseTestAuthentication = true
+        };
+
         using var client = factory.CreateClient();
         using var response = await client.GetAsync("/openapi/v1.json");
-        response.EnsureSuccessStatusCode();
 
-        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var body = await response.Content.ReadAsStringAsync();
+
+        Assert.True(
+            response.IsSuccessStatusCode,
+            $"OpenAPI returned {response.StatusCode}: {body}");
+
+        using var document = JsonDocument.Parse(body);
+
         var responses = document.RootElement
             .GetProperty("paths")
             .GetProperty(path)
             .GetProperty(method)
             .GetProperty("responses");
+
         var actualCodes = responses.EnumerateObject()
             .Select(response => response.Name)
             .ToHashSet(StringComparer.Ordinal);
