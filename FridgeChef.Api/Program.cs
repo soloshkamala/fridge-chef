@@ -1,4 +1,4 @@
-using FridgeChef.Api.Features.Products;
+﻿using FridgeChef.Api.Features.Products;
 using FridgeChef.Api.Services;
 using FridgeChef.Api.Features.Auth;
 using FridgeChef.Api.Features.Courses;
@@ -114,7 +114,24 @@ builder.Services.Configure<JwtBearerOptions>(
             options.TokenValidationParameters.ValidAudiences =
                 audiences.Distinct().ToArray();
         }
-    });
+    
+        var existingOnMessageReceived = options.Events.OnMessageReceived;
+
+        options.Events.OnMessageReceived = async context =>
+        {
+            if (existingOnMessageReceived != null)
+            {
+                await existingOnMessageReceived(context);
+            }
+
+            if (string.IsNullOrEmpty(context.Token) &&
+                context.Request.Path.StartsWithSegments("/hubs") &&
+                context.Request.Query.TryGetValue("access_token", out var accessToken))
+            {
+                context.Token = accessToken;
+            }
+        };
+});
 
 // AUTHORIZATION
 builder.Services.AddAuthorization(options =>
@@ -255,3 +272,4 @@ app.MapHub<ShoppingListHub>("/hubs/shopping-list");
 app.Run();
 
 public partial class Program { }
+
