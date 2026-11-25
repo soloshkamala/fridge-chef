@@ -2,10 +2,12 @@
 using Microsoft.Playwright;
 using Microsoft.Playwright.Xunit;
 using Xunit;
+using FridgeChef.Tests.Helpers;
 
 namespace FridgeChef.Tests;
 
-public class FridgePlaywrightTests : PageTest
+public class FridgePlaywrightTests
+    : PageTest, IClassFixture<FridgePlaywrightFixture>
 {
     private const string FridgeUrl = "http://localhost:5050/fridge";
     private const string HomeUrl = "http://localhost:5050/";
@@ -35,11 +37,11 @@ public class FridgePlaywrightTests : PageTest
 
         try
         {
+            await ConfigureTestAuthenticationAsync();
             await firstPage.GotoAsync(HomeUrl);
 
             Console.WriteLine("URL: " + firstPage.Url);
 
-            await firstPage.PauseAsync();
 
             await OpenFridgeAsync(firstPage);
 
@@ -66,9 +68,10 @@ public class FridgePlaywrightTests : PageTest
 
             var searchResult = secondPage
                 .Locator(".search-result-item")
-                .Filter(new LocatorFilterOptions
+                .Filter(new()
                 {
-                    HasTextString = TestProduct
+                    HasTextRegex = new System.Text.RegularExpressions.Regex(
+                        @"^\s*Молоко\s*\+\s*$")
                 });
 
             await Assertions.Expect(searchResult)
@@ -244,5 +247,50 @@ public class FridgePlaywrightTests : PageTest
                 "Fridge loading failed: " +
                 string.Join("; ", errors));
         }
+    }
+
+    private async Task ConfigureTestAuthenticationAsync()
+    {
+        await Context.RouteAsync(
+            "**/Microsoft.Authentication.WebAssembly.Msal/AuthenticationService.js",
+            async route =>
+            {
+                await route.FulfillAsync(new RouteFulfillOptions
+                {
+                    Status = 200,
+                    ContentType = "application/javascript",
+                    Body = """
+                    window.AuthenticationService = {
+                        init: async function () {},
+
+                        getUser: async function () {
+                            return {
+                                name: "Test User",
+                                email: "test@fridgechef.local",
+                                preferred_username: "test@fridgechef.local",
+                                oid: "test-object-id",
+                                tid: "test-tenant-id",
+                                roles: ["User"]
+                            };
+                        },
+
+                        getAccessToken: async function () {
+                            return {
+                                status: "Success",
+                                token: {
+                                    value: "test-token",
+                                    expires: new Date(
+                                        Date.now() + 3600000
+                                    ).toISOString(),
+                                    grantedScopes: [
+                                        "api://f9f39e83-370c-4ed6-bfac-f93c39c97542/access_as_user"
+                                    ]
+                                }
+                            };
+                        }
+                    };
+                    """
+                });
+            });
     }
 }
