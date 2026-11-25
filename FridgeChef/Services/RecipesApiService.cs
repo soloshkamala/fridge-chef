@@ -8,7 +8,7 @@ namespace FridgeChef.Services
     {
         private readonly HttpClient httpClient;
 
-        private const string ApiUrl = "http://localhost:5039/api/recipes";
+        private const string ApiUrl = "api/recipes";
 
         public RecipesApiService(HttpClient httpClient)
         {

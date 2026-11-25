@@ -6,7 +6,7 @@ namespace FridgeChef.Services
     public class FridgeItemsApiService
     {
         private readonly HttpClient httpClient;
-        private const string ApiUrl = "http://localhost:5039/api/fridge-items";
+        private const string ApiUrl = "api/fridge-items";
 
         public FridgeItemsApiService(HttpClient httpClient)
         {

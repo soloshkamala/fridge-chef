@@ -33,7 +33,9 @@ builder.Services.AddLocalization();
 // API ADDRESS
 // =====================================
 
-const string apiAddress = "http://localhost:5039/";
+var apiAddress = builder.Configuration["Api:BaseAddress"]
+    ?? throw new InvalidOperationException(
+        "Api:BaseAddress is not configured.");
 
 // =====================================
 // CATALOGUE API
