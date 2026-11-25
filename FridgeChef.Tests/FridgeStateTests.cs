@@ -9,6 +9,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 
 namespace FridgeChef.Tests
 {
@@ -30,10 +31,19 @@ namespace FridgeChef.Tests
             Services.AddScoped<FridgeItemsApiService>();
             Services.AddScoped<RecipesApiService>();
             Services.AddScoped<ProductsApiService>();
+
             var tokenProvider = new Mock<IAccessTokenProvider>();
 
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Api:BaseAddress"] = "http://localhost:5039/"
+                })
+                .Build();
+
             var signalRMock = new Mock<FridgeSignalRService>(
-                tokenProvider.Object);
+                tokenProvider.Object,
+                configuration);
 
             signalRMock
                 .Setup(x => x.StartAsync())

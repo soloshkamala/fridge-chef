@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Configuration;
 
 namespace FridgeChef.Services;
 
@@ -10,8 +11,7 @@ public class FridgeSignalRService : IAsyncDisposable
 
     private readonly HashSet<int> _subscribedItemIds = new();
 
-    private const string HubUrl =
-        "http://localhost:5039/hubs/fridgechef";
+    private readonly string HubUrl;
 
     private const string ApiScope =
         "api://f9f39e83-370c-4ed6-bfac-f93c39c97542/access_as_user";
@@ -19,9 +19,16 @@ public class FridgeSignalRService : IAsyncDisposable
     public event Func<Task>? FridgeChanged;
 
     public FridgeSignalRService(
-        IAccessTokenProvider tokenProvider)
+      IAccessTokenProvider tokenProvider,
+      IConfiguration configuration)
     {
         _tokenProvider = tokenProvider;
+
+        var apiAddress = configuration["Api:BaseAddress"]
+            ?? throw new InvalidOperationException(
+                "Api:BaseAddress is not configured.");
+
+        HubUrl = $"{apiAddress.TrimEnd('/')}/hubs/fridgechef";
     }
 
     public virtual async Task SubscribeToItemsAsync(IEnumerable<int> itemIds)

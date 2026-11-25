@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Moq;
 using System.Reflection;
 using Xunit;
+using Microsoft.Extensions.Configuration;
 
 namespace FridgeChef.Tests;
 
@@ -12,7 +13,16 @@ public class FridgeSignalRReconnectTests
     {
         var tokenProvider = new Mock<IAccessTokenProvider>();
 
-        return new FridgeSignalRService(tokenProvider.Object);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Api:BaseAddress"] = "http://localhost:5039/"
+            })
+            .Build();
+
+        return new FridgeSignalRService(
+            tokenProvider.Object,
+            configuration);
     }
 
     private static void SetSubscribedItems(
@@ -170,8 +180,7 @@ public class FridgeSignalRReconnectTests
     [Fact]
     public async Task Reconnected_Handler_Without_Connection_Does_Not_Throw()
     {
-        var tokenProvider = new Mock<IAccessTokenProvider>();
-        var service = new FridgeSignalRService(tokenProvider.Object);
+        var service = CreateService();
 
         var method = typeof(FridgeSignalRService).GetMethod(
             "HandleReconnectedAsync",
