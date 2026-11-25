@@ -1,5 +1,5 @@
-
 using System;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -18,16 +18,26 @@ namespace FridgeChef.Tests;
 
 public class LoginTests : BunitContext, IAsyncLifetime
 {
-    // Налаштування тестового середовища
+    private readonly CultureInfo previousCulture =
+        CultureInfo.CurrentCulture;
+
+    private readonly CultureInfo previousUICulture =
+        CultureInfo.CurrentUICulture;
+
     public LoginTests()
     {
+        CultureInfo.CurrentCulture = new CultureInfo("uk-UA");
+        CultureInfo.CurrentUICulture = new CultureInfo("uk-UA");
+
         Services.AddMudServices();
+        Services.AddLocalization();
         Services.AddSingleton<TimeProvider>(TimeProvider.System);
 
         Services.AddScoped<AuthStateService>();
-        Services.AddScoped<AuthService>();
 
         JSInterop.Mode = JSRuntimeMode.Loose;
+
+        MockLoginResponse(HttpStatusCode.OK);
     }
 
     Task IAsyncLifetime.InitializeAsync()
@@ -38,90 +48,140 @@ public class LoginTests : BunitContext, IAsyncLifetime
     async Task IAsyncLifetime.DisposeAsync()
     {
         await base.DisposeAsync();
+
+        CultureInfo.CurrentCulture = previousCulture;
+        CultureInfo.CurrentUICulture = previousUICulture;
     }
 
-    // Тест 1. Перевірка заголовка сторінки
     [Fact]
     public void LoginPage_ShowsWelcomeTitle()
     {
         var page = Render<Login>();
 
-        Assert.Contains("Ласкаво просимо", page.Markup);
+        Assert.Equal(
+            "З поверненням!",
+            page.Find("h2").TextContent.Trim()
+        );
     }
 
-    // Тест 2. Перевірка наявності форми
     [Fact]
     public void LoginPage_ShowsLoginForm()
     {
         var page = Render<Login>();
 
-        Assert.Contains("Email", page.Markup);
-        Assert.Contains("Пароль", page.Markup);
+        Assert.Contains(
+            "Електронна пошта",
+            page.Markup
+        );
 
         Assert.Contains(
+            "Пароль",
+            page.Markup
+        );
+
+        Assert.NotNull(page.Find("input[type='email']"));
+        Assert.NotNull(page.Find("input[type='password']"));
+
+        Assert.Equal(
             "Увійти",
-            page.Markup,
-            StringComparison.OrdinalIgnoreCase
+            page.Find("button.btn-primary").TextContent.Trim()
+        );
+
+        Assert.Equal(
+            "/authentication/login",
+            page.Find("a.microsoft-login").GetAttribute("href")
         );
     }
 
-    // Тест 3. Валідація порожніх полів
     [Fact]
     public void LoginForm_ShowsErrors_WhenFieldsAreEmpty()
     {
         var page = Render<Login>();
 
-        page.Find("button[type='submit']").Click();
+        page.Find("button.btn-primary").Click();
 
         page.WaitForAssertion(() =>
         {
             Assert.Contains(
-                "Введіть електронну пошту",
-                page.Markup
-            );
-
-            Assert.Contains(
-                "Введіть пароль",
-                page.Markup
+                "Заповніть Email та пароль.",
+                page.Find(".alert-danger").TextContent
             );
         });
     }
 
-    // Тест 4. Перевірка стану завантаження
     [Fact]
-    public void LoginPage_ShowsLoadingState()
+    public async Task LoginPage_ShowsLoadingState()
     {
-        var authState =
-            Services.GetRequiredService<AuthStateService>();
+        var pendingResponse =
+            new TaskCompletionSource<HttpResponseMessage>(
+                TaskCreationOptions.RunContinuationsAsynchronously
+            );
 
-        authState.SetLoading();
+        ConfigureHttpClient(
+            new FakeHttpMessageHandler(
+                () => pendingResponse.Task
+            )
+        );
 
         var page = Render<Login>();
 
-        Assert.Contains(
-            "Виконується вхід...",
-            page.Markup
-        );
+        page.Find("input[type='email']")
+            .Change("student@example.com");
+
+        page.Find("input[type='password']")
+            .Change("password123");
+
+        var clickTask = page.Find("button.btn-primary")
+            .ClickAsync(new Microsoft.AspNetCore.Components.Web.MouseEventArgs());
+
+        try
+        {
+            page.WaitForAssertion(() =>
+            {
+                var button = page.Find("button.btn-primary");
+
+                Assert.True(button.HasAttribute("disabled"));
+
+                Assert.Contains(
+                    "Виконується вхід...",
+                    button.TextContent
+                );
+            });
+        }
+        finally
+        {
+            pendingResponse.TrySetResult(
+                new HttpResponseMessage(HttpStatusCode.Unauthorized)
+            );
+
+            await clickTask;
+        }
     }
 
-    // Тест 5. Відображення повідомлення про помилку
     [Fact]
     public void LoginPage_ShowsErrorState()
     {
-        var authState =
-            Services.GetRequiredService<AuthStateService>();
-
-        authState.SetError("Неправильний Email або пароль");
+        MockLoginResponse(HttpStatusCode.Unauthorized);
 
         var page = Render<Login>();
 
-        Assert.Contains(
-            "Неправильний Email або пароль",
-            page.Markup
-        );
+        page.Find("input[type='email']")
+            .Change("student@example.com");
+
+        page.Find("input[type='password']")
+            .Change("wrongpassword");
+
+        page.Find("button.btn-primary").Click();
+
+        page.WaitForAssertion(() =>
+        {
+            Assert.Contains(
+                "Неправильний Email або пароль.",
+                page.Find(".alert-danger").TextContent
+            );
+        });
     }
 
-    // Тест 6. Успішний стан авторизації
     [Fact]
     public void LoginPage_SetsSuccessState()
     {
@@ -135,11 +195,11 @@ public class LoginTests : BunitContext, IAsyncLifetime
             authState.UserEmail
         );
 
+        Assert.True(authState.IsAuthenticated);
         Assert.False(authState.IsLoading);
         Assert.True(string.IsNullOrEmpty(authState.ErrorMessage));
     }
 
-    // Тест 7. Перевірка виклику EventCallback
     [Fact]
     public void LoginForm_CallsCallback_WhenSubmitted()
     {
@@ -166,7 +226,6 @@ public class LoginTests : BunitContext, IAsyncLifetime
         Assert.True(callbackCalled);
     }
 
-    // Тест 8. Передавання Email і пароля
     [Fact]
     public void LoginForm_PassesEmailAndPassword()
     {
@@ -203,11 +262,9 @@ public class LoginTests : BunitContext, IAsyncLifetime
         );
     }
 
-    // Тест 9. Успішний вхід і перехід на Profile
     [Fact]
     public void LoginPage_NavigatesToProfileAfterValidSubmit()
     {
-        // Імітуємо успішну відповідь сервера
         MockLoginResponse(HttpStatusCode.OK);
 
         var authState =
@@ -218,13 +275,13 @@ public class LoginTests : BunitContext, IAsyncLifetime
 
         var page = Render<Login>();
 
-        page.FindAll("input")[0]
+        page.Find("input[type='email']")
             .Change("student@example.com");
 
-        page.FindAll("input")[1]
+        page.Find("input[type='password']")
             .Change("password123");
 
-        page.Find("form").Submit();
+        page.Find("button.btn-primary").Click();
 
         page.WaitForAssertion(() =>
         {
@@ -233,6 +290,8 @@ public class LoginTests : BunitContext, IAsyncLifetime
                 authState.UserEmail
             );
 
+            Assert.True(authState.IsAuthenticated);
+
             Assert.EndsWith(
                 "/profile",
                 navigation.Uri
@@ -240,63 +299,88 @@ public class LoginTests : BunitContext, IAsyncLifetime
         });
     }
 
-    // Тест 10. Помилка входу з неправильним паролем
     [Fact]
     public void LoginPage_ShowsErrorAfterInvalidSubmit()
     {
-        // Імітуємо відмову сервера
         MockLoginResponse(HttpStatusCode.Unauthorized);
+
+        var authState =
+            Services.GetRequiredService<AuthStateService>();
+
+        var navigation =
+            Services.GetRequiredService<NavigationManager>();
 
         var page = Render<Login>();
 
-        page.FindAll("input")[0]
+        page.Find("input[type='email']")
             .Change("student@example.com");
 
-        page.FindAll("input")[1]
+        page.Find("input[type='password']")
             .Change("wrongpassword");
 
-        page.Find("form").Submit();
+        page.Find("button.btn-primary").Click();
 
         page.WaitForAssertion(() =>
         {
             Assert.Contains(
-                "Неправильний Email або пароль",
-                page.Markup
+                "Неправильний Email або пароль.",
+                page.Find(".alert-danger").TextContent
+            );
+
+            Assert.False(authState.IsAuthenticated);
+            Assert.Null(authState.UserEmail);
+
+            Assert.False(
+                navigation.Uri.EndsWith("/profile")
+            );
+
+            Assert.False(
+                page.Find("button.btn-primary")
+                    .HasAttribute("disabled")
             );
         });
     }
 
-    // Допоміжний метод для імітації відповіді API
     private void MockLoginResponse(HttpStatusCode statusCode)
     {
-        var client = new HttpClient(
-            new FakeHttpMessageHandler(statusCode))
+        ConfigureHttpClient(
+            new FakeHttpMessageHandler(
+                () => Task.FromResult(
+                    new HttpResponseMessage(statusCode)
+                )
+            )
+        );
+    }
+
+    private void ConfigureHttpClient(HttpMessageHandler handler)
+    {
+        var client = new HttpClient(handler)
         {
             BaseAddress = new Uri("http://localhost:5039/")
         };
+
+        Services.AddSingleton<HttpClient>(client);
 
         Services.AddScoped<AuthService>(
             _ => new AuthService(client)
         );
     }
 
-    // Імітація HTTP-сервера для тестів
     private sealed class FakeHttpMessageHandler : HttpMessageHandler
     {
-        private readonly HttpStatusCode _statusCode;
+        private readonly Func<Task<HttpResponseMessage>> responseFactory;
 
-        public FakeHttpMessageHandler(HttpStatusCode statusCode)
+        public FakeHttpMessageHandler(
+            Func<Task<HttpResponseMessage>> responseFactory)
         {
-            _statusCode = statusCode;
+            this.responseFactory = responseFactory;
         }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
-            return Task.FromResult(
-                new HttpResponseMessage(_statusCode)
-            );
+            return responseFactory();
         }
     }
 }

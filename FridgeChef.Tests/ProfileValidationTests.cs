@@ -1,4 +1,6 @@
-﻿using Bunit;
+﻿using System.Globalization;
+using Bunit;
+using Bunit.TestDoubles;
 using FridgeChef.Pages;
 using FridgeChef.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,44 +14,56 @@ public class ProfileValidationTests
     [Fact]
     public async Task EmptyForm_ShouldShowRequiredErrors()
     {
-        await using var ctx = new BunitContext();
+        var oldCulture = CultureInfo.CurrentCulture;
+        var oldUICulture = CultureInfo.CurrentUICulture;
 
-       
-        ctx.JSInterop.Mode = JSRuntimeMode.Loose;
-
-        
-        ctx.Services.AddMudServices();
-        ctx.Services.AddLocalization(options =>
-            options.ResourcesPath = "Resources");
-        ctx.Services.AddScoped<ProfileService>();
-
-        
-        var cut = ctx.Render<Profile>();
-
-        cut.WaitForAssertion(() =>
+        try
         {
-            Assert.NotEmpty(cut.FindAll("form"));
-        }, TimeSpan.FromSeconds(5));
+            CultureInfo.CurrentCulture = new CultureInfo("uk-UA");
+            CultureInfo.CurrentUICulture = new CultureInfo("uk-UA");
 
-        
-        cut.Find("#profile-name").Input("");
+            await using var ctx = new BunitContext();
 
-        
-        cut.Find("#profile-email").Input("");
+            var authContext = ctx.AddAuthorization();
+            authContext.SetAuthorized("Test User");
+            authContext.SetRoles("User");
 
-       
-        cut.Find("form").Submit();
+            ctx.JSInterop.Mode = JSRuntimeMode.Loose;
 
-        
-        cut.WaitForAssertion(() =>
+            ctx.Services.AddMudServices();
+            ctx.Services.AddLocalization(options =>
+                options.ResourcesPath = "Resources");
+
+            ctx.Services.AddScoped<ProfileService>();
+
+            var cut = ctx.Render<Profile>();
+
+            cut.WaitForAssertion(() =>
+            {
+                Assert.NotEmpty(cut.FindAll("form"));
+            }, TimeSpan.FromSeconds(5));
+
+            cut.Find("#profile-name").Input("");
+
+            cut.Find("#profile-email").Input("");
+
+            cut.Find("form").Submit();
+
+            cut.WaitForAssertion(() =>
+            {
+                var nameField = cut.Find("#profile-name");
+                var emailField = cut.Find("#profile-email");
+
+                Assert.Equal("true", nameField.GetAttribute("aria-invalid"));
+                Assert.Equal("true", emailField.GetAttribute("aria-invalid"));
+                Assert.Contains("Вкажіть ім'я", cut.Markup);
+                Assert.Contains("Вкажіть email", cut.Markup);
+            }, TimeSpan.FromSeconds(5));
+        }
+        finally
         {
-            var nameField = cut.Find("#profile-name");
-            var emailField = cut.Find("#profile-email");
-
-            Assert.Equal("true", nameField.GetAttribute("aria-invalid"));
-            Assert.Equal("true", emailField.GetAttribute("aria-invalid"));
-            Assert.Contains("Вкажіть ім'я", cut.Markup);
-            Assert.Contains("Вкажіть email", cut.Markup);
-        }, TimeSpan.FromSeconds(5));
+            CultureInfo.CurrentCulture = oldCulture;
+            CultureInfo.CurrentUICulture = oldUICulture;
+        }
     }
 }

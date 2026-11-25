@@ -18,12 +18,16 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-         var claims = new[]
-         {
+        var claims = new[]
+        {
             new Claim(ClaimTypes.NameIdentifier, "1"),
             new Claim(ClaimTypes.Name, "Test User"),
             new Claim("oid", "test-object-id"),
-            new Claim("tid", "test-tenant-id")
+            new Claim("tid", "test-tenant-id"),
+            new Claim("scp", "access_as_user"),
+            new Claim(ClaimTypes.Role, "User"),
+            new Claim(ClaimTypes.Email, "test@fridgechef.local"),
+            new Claim("preferred_username", "test@fridgechef.local")
         };
 
         var identity = new ClaimsIdentity(claims, Scheme.Name);
