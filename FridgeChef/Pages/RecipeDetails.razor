@@ -1,13 +1,19 @@
 ﻿@page "/recipes/{Id:int}"
 
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Localization
 @using FridgeChef.Models
 @using FridgeChef.Models.Recipes
 @using FridgeChef.Services
+@using FridgeChef.Resources
+
+@attribute [Authorize]
 
 @inject RecipesApiService RecipesApiService
 @inject NavigationManager Navigation
+@inject IStringLocalizer<RecipeDetailsResource> L
 
-<PageTitle>Рецепт</PageTitle>
+<PageTitle>@L["PageTitle"]</PageTitle>
 
 <div class="recipe-details-page">
 
@@ -15,7 +21,7 @@
     {
         <MudProgressCircular Color="Color.Warning"
                              Indeterminate="true" />
-        <MudText>Завантаження рецепта...</MudText>
+        <MudText>@L["Loading"]</MudText>
     }
     else if (!string.IsNullOrEmpty(errorMessage))
     {
@@ -25,13 +31,13 @@
     }
     else if (recipe == null)
     {
-        <MudText>Рецепт не знайдено.</MudText>
+        <MudText>@L["NotFound"]</MudText>
     }
     else
     {
         <MudButton Variant="Variant.Text"
                    OnClick="GoBack">
-            ← Назад до холодильника
+            ← @L["BackToFridge"]
         </MudButton>
 
         <div class="recipe-header">
@@ -57,9 +63,9 @@
                 <p>@recipe.Description</p>
 
                 <div class="recipe-stats">
-                    <span>⏱ @recipe.CookingTime хв</span>
-                    <span>🔥 @recipe.Calories ккал</span>
-                    <span>🍽 @recipe.Servings порцій</span>
+                    <span>⏱ @recipe.CookingTime @L["Minutes"]</span>
+                    <span>🔥 @recipe.Calories @L["Calories"]</span>
+                    <span>🍽 @recipe.Servings @L["Servings"]</span>
                 </div>
 
                 <div class="recipe-actions">
@@ -69,7 +75,7 @@
                                StartIcon="@(isSaved ? Icons.Material.Filled.Bookmark : Icons.Material.Filled.BookmarkBorder)"
                                Disabled="@(isUpdating || !isCollectionLoaded)"
                                OnClick="ToggleSaved">
-                        @(isSaved ? "Збережено" : "Зберегти рецепт")
+                        @(isSaved? L["Saved"] : L["SaveRecipe"])
                     </MudButton>
 
                     <MudButton Variant="Variant.Outlined"
@@ -77,7 +83,7 @@
                                StartIcon="@(isFavorite ? Icons.Material.Filled.Favorite : Icons.Material.Filled.FavoriteBorder)"
                                Disabled="@(isUpdating || !isCollectionLoaded)"
                                OnClick="ToggleFavorite">
-                        @(isFavorite ? "В улюблених" : "До улюблених")
+                        @(isFavorite? L["InFavorites"] : L["AddToFavorites"])
                     </MudButton>
 
                 </div>
@@ -96,11 +102,11 @@
         <div class="recipe-content">
 
             <section class="recipe-section">
-                <h2>Інгредієнти</h2>
+                <h2>@L["Ingredients"]</h2>
 
                 @if (recipe.Ingredients.Count == 0)
                 {
-                    <p>Інгредієнти не вказані.</p>
+                    <p>@L["NoIngredients"]</p>
                 }
                 else
                 {
@@ -120,7 +126,7 @@
             </section>
 
             <section class="recipe-section">
-                <h2>Спосіб приготування</h2>
+                <h2>@L["Instructions"]</h2>
 
                 <p class="recipe-instructions">
                     @recipe.Instructions
@@ -287,14 +293,13 @@
                 }
                 catch (Exception)
                 {
-                    collectionError =
-                        "Не вдалося завантажити стан рецепта.";
+                    collectionError = L["CollectionLoadingError"];
                 }
             }
         }
         catch (Exception)
         {
-            errorMessage = "Не вдалося завантажити рецепт.";
+            errorMessage = L["LoadingError"];
         }
         finally
         {
@@ -320,7 +325,7 @@
         }
         catch (Exception)
         {
-            collectionError = "Не вдалося змінити стан збереження.";
+            collectionError = L["SaveError"];
         }
         finally
         {
@@ -346,7 +351,7 @@
         }
         catch (Exception)
         {
-            collectionError = "Не вдалося змінити стан улюбленого.";
+            collectionError = L["FavoriteError"];
         }
         finally
         {
