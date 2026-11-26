@@ -5,7 +5,9 @@ using Microsoft.Extensions.Configuration;
 
 namespace FridgeChef.Services;
 
-public class ShoppingListSignalRService : IAsyncDisposable
+public class ShoppingListSignalRService :
+    IShoppingListSignalRService,
+    IAsyncDisposable
 {
     private readonly IAccessTokenProvider _tokenProvider;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);

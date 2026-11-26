@@ -32,6 +32,10 @@ namespace FridgeChef.Tests
 
             context.Services.AddScoped<ShoppingItemApiService>();
 
+            context.Services.AddSingleton<
+                IShoppingListSignalRService,
+                FakeShoppingListSignalRService>();
+
             return context;
         }
 
@@ -85,6 +89,22 @@ namespace FridgeChef.Tests
                     ShoppingListState.WithData));
 
             Assert.DoesNotContain("shopping-loading", component.Markup);
+        }
+    }
+
+    public class FakeShoppingListSignalRService :
+        IShoppingListSignalRService
+    {
+        public event Func<Task>? ShoppingListChanged;
+
+        public Task StartAsync()
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync()
+        {
+            return Task.CompletedTask;
         }
     }
 }
