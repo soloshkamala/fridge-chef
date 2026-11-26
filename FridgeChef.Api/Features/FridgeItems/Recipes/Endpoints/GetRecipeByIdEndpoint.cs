@@ -1,6 +1,6 @@
-﻿
-using FridgeChef.Api.Data;
+﻿using FridgeChef.Api.Data;
 using FridgeChef.Api.Features.Recipes.Models;
+using FridgeChef.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace FridgeChef.Api.Features.Recipes.Endpoints;
@@ -11,9 +11,12 @@ public static class GetRecipeByIdEndpoint
     {
         group.MapGet("/{id:int}", async (
             int id,
+            HttpRequest request,
             FridgeChefDbContext dbContext,
             CancellationToken cancellationToken) =>
         {
+            var isEnglish = CatalogLocalizationService.IsEnglish(request);
+
             var recipe = await dbContext.Recipes
                 .AsNoTracking()
                 .Include(r => r.Category)
@@ -30,27 +33,7 @@ public static class GetRecipeByIdEndpoint
                 return Results.NotFound();
             }
 
-            var result = new RecipeResponse
-            {
-                Id = recipe.Id,
-                Name = recipe.Name,
-                Description = recipe.Description,
-                ImageUrl = recipe.ImageUrl,
-                CategoryName = recipe.Category.Name,
-                CookingTime = recipe.CookingTime,
-                Calories = recipe.Calories,
-                Servings = recipe.Servings,
-                Instructions = recipe.Instructions,
-
-                Ingredients = recipe.Ingredients
-                    .Select(i => new RecipeIngredientResponse
-                    {
-                        Name = i.Product.Name,
-                        Quantity = i.Quantity,
-                        Unit = i.Unit.ShortName
-                    })
-                    .ToList()
-            };
+            var result = RecipeResponseMapper.Map(recipe, isEnglish);
 
             return Results.Ok(result);
         });

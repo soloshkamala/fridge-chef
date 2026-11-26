@@ -6,9 +6,9 @@
 <MudPaper Class="pa-4" data-testid="@($"fridge-item-{Item.Id}")">
     <div class="d-flex justify-space-between align-center">
         <div>
-            <strong>@Item.Ingredient.Name</strong>
+            <strong>@Item.Ingredient.LocalizedName</strong>
             <div>
-                @Item.Quantity @GetUnitTranslation(Item.Unit)
+                @Item.Quantity @(string.IsNullOrWhiteSpace(Item.DisplayUnit) ? GetUnitTranslation(Item.Unit) : Item.LocalizedUnit)
             </div>
         </div>
 
@@ -57,3 +57,4 @@
         };
     }
 }
+

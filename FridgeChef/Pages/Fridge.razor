@@ -1,4 +1,4 @@
-@using Microsoft.AspNetCore.Authorization
+﻿@using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @page "/fridge"
 
@@ -75,7 +75,7 @@
                                       Class="search-result-item"
                                       Elevation="0"
                                       @onclick="() => OpenIngredientDialog(ingredient)">
-                                <span>@ingredient.Name</span>
+                                <span>@ingredient.LocalizedName</span>
                                 <span class="add-symbol">+</span>
                             </MudPaper>
                         }
@@ -264,9 +264,13 @@
 
     private IEnumerable<Ingredient> FilteredIngredients =>
         FridgeService.Ingredients
-            .Where(x => x.Name.Contains(
-                searchText,
-                StringComparison.CurrentCultureIgnoreCase));
+            .Where(x =>
+                x.LocalizedName.Contains(
+                    searchText,
+                    StringComparison.CurrentCultureIgnoreCase) ||
+                x.Name.Contains(
+                    searchText,
+                    StringComparison.CurrentCultureIgnoreCase));
 
     private async Task OpenIngredientDialog(Ingredient ingredient)
     {
@@ -492,3 +496,4 @@
         await SignalRService.DisposeAsync();
     }
 }
+

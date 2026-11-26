@@ -14,8 +14,15 @@ namespace FridgeChef.Services
 
         public async Task<List<ProductResponse>> GetProductsAsync()
         {
-            var products = await _httpClient.GetFromJsonAsync<List<ProductResponse>>(
-                "api/products");
+            using var request = LocalizedApiRequest.Create(
+                HttpMethod.Get, "api/products");
+
+            using var response = await _httpClient.SendAsync(request);
+
+            response.EnsureSuccessStatusCode();
+
+            var products = await response.Content
+                .ReadFromJsonAsync<List<ProductResponse>>();
 
             return products ?? new List<ProductResponse>();
         }

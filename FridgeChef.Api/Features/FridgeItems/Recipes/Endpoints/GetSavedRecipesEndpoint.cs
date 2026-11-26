@@ -10,6 +10,7 @@ public static class GetSavedRecipesEndpoint
     public static void Map(RouteGroupBuilder group)
     {
         group.MapGet("/saved", async (
+            HttpRequest request,
             ClaimsPrincipal user,
             CurrentUserService currentUserService,
             FridgeChefDbContext db,
@@ -20,6 +21,8 @@ public static class GetSavedRecipesEndpoint
             if (userId is null)
                 return Results.Unauthorized();
 
+            var isEnglish = CatalogLocalizationService.IsEnglish(request);
+
             var recipes = await db.UserRecipeCollections
                 .AsNoTracking()
                 .Where(x => x.UserId == userId.Value && x.IsSaved)
@@ -27,13 +30,24 @@ public static class GetSavedRecipesEndpoint
                 {
                     Id = x.Recipe.Id.ToString(),
                     Title = x.Recipe.Name,
+                    TitleEn = x.Recipe.NameEn,
                     ImageUrl = x.Recipe.ImageUrl,
                     Minutes = x.Recipe.CookingTime,
                     Kcal = x.Recipe.Calories
                 })
                 .ToListAsync(ct);
 
-            return Results.Ok(recipes);
+            var result = recipes.Select(recipe => new
+            {
+                recipe.Id,
+                Title = CatalogLocalizationService.Translate(
+                    recipe.Title, recipe.TitleEn, isEnglish),
+                recipe.ImageUrl,
+                recipe.Minutes,
+                recipe.Kcal
+            }).ToList();
+
+            return Results.Ok(result);
         })
         .RequireAuthorization("ApiRead");
     }

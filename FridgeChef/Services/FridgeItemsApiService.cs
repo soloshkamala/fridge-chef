@@ -15,40 +15,56 @@ namespace FridgeChef.Services
 
         public async Task<List<FridgeItem>> GetItemsAsync()
         {
-            var response = await httpClient.GetFromJsonAsync<List<ApiFridgeItem>>(ApiUrl);
+            using var request = LocalizedApiRequest.Create(
+                HttpMethod.Get, ApiUrl);
 
-            if (response == null)
+            using var response = await httpClient.SendAsync(request);
+
+            response.EnsureSuccessStatusCode();
+
+            var items = await response.Content
+                .ReadFromJsonAsync<List<ApiFridgeItem>>();
+
+            if (items == null)
             {
                 return new List<FridgeItem>();
             }
 
-            return response.Select(item => new FridgeItem
+            return items.Select(item => new FridgeItem
             {
                 Id = item.Id,
                 Ingredient = new Ingredient
                 {
                     Id = 0,
-                    Name = item.Name
+                    Name = item.Name,
+                    DisplayName = item.DisplayName
                 },
                 Quantity = (double)item.Quantity,
-                Unit = item.Unit
+                Unit = item.Unit,
+                DisplayUnit = item.DisplayUnit
             }).ToList();
         }
 
         public async Task<FridgeItem> AddItemAsync(FridgeItem item)
         {
-            var request = new
+            var data = new
             {
                 item.Ingredient.Name,
                 Quantity = (decimal)item.Quantity,
                 item.Unit
             };
 
-            var response = await httpClient.PostAsJsonAsync(ApiUrl, request);
+            using var request = LocalizedApiRequest.Create(
+                HttpMethod.Post, ApiUrl);
+
+            request.Content = JsonContent.Create(data);
+
+            using var response = await httpClient.SendAsync(request);
 
             response.EnsureSuccessStatusCode();
 
-            var savedItem = await response.Content.ReadFromJsonAsync<ApiFridgeItem>();
+            var savedItem = await response.Content
+                .ReadFromJsonAsync<ApiFridgeItem>();
 
             if (savedItem == null)
             {
@@ -61,13 +77,14 @@ namespace FridgeChef.Services
                 Ingredient = new Ingredient
                 {
                     Id = 0,
-                    Name = savedItem.Name
+                    Name = savedItem.Name,
+                    DisplayName = savedItem.DisplayName
                 },
                 Quantity = (double)savedItem.Quantity,
-                Unit = savedItem.Unit
+                Unit = savedItem.Unit,
+                DisplayUnit = savedItem.DisplayUnit
             };
         }
-
 
         public async Task UpdateItemAsync(FridgeItem item)
         {
@@ -99,8 +116,10 @@ namespace FridgeChef.Services
         {
             public int Id { get; set; }
             public string Name { get; set; } = "";
+            public string DisplayName { get; set; } = "";
             public decimal Quantity { get; set; }
             public string Unit { get; set; } = "";
+            public string DisplayUnit { get; set; } = "";
         }
     }
 }

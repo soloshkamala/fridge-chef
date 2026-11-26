@@ -1,7 +1,7 @@
-﻿
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using FridgeChef.Models.Recipes;
 using FridgeChef.Models;
+
 namespace FridgeChef.Services
 {
     public class RecipesApiService
@@ -17,15 +17,25 @@ namespace FridgeChef.Services
 
         public async Task<List<RecommendedRecipeResponse>> GetRecommendedRecipesAsync()
         {
-            var response = await httpClient.GetFromJsonAsync<List<RecommendedRecipeResponse>>(
-                $"{ApiUrl}/recommended");
+            using var request = LocalizedApiRequest.Create(
+                HttpMethod.Get, $"{ApiUrl}/recommended");
 
-            return response ?? new List<RecommendedRecipeResponse>();
+            using var response = await httpClient.SendAsync(request);
+
+            response.EnsureSuccessStatusCode();
+
+            var recipes = await response.Content
+                .ReadFromJsonAsync<List<RecommendedRecipeResponse>>();
+
+            return recipes ?? new List<RecommendedRecipeResponse>();
         }
 
         public async Task<RecipeResponse?> GetRecipeByIdAsync(int id)
         {
-            var response = await httpClient.GetAsync($"{ApiUrl}/{id}");
+            using var request = LocalizedApiRequest.Create(
+                HttpMethod.Get, $"{ApiUrl}/{id}");
+
+            using var response = await httpClient.SendAsync(request);
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
@@ -36,7 +46,6 @@ namespace FridgeChef.Services
 
             return await response.Content.ReadFromJsonAsync<RecipeResponse>();
         }
-
 
         public async Task<RecipeCollectionResponse> GetRecipeCollectionAsync(int id)
         {

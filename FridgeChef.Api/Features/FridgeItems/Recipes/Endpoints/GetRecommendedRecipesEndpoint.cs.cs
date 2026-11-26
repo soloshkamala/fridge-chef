@@ -10,20 +10,23 @@ public static class GetRecommendedRecipesEndpoint
 {
     public static void Map(RouteGroupBuilder group)
     {
-            group.MapGet("/recommended", async (
-               FridgeChefDbContext dbContext,
-               ClaimsPrincipal user,
-               CurrentUserService currentUserService,
-               CancellationToken cancellationToken) =>
+        group.MapGet("/recommended", async (
+            HttpRequest request,
+            FridgeChefDbContext dbContext,
+            ClaimsPrincipal user,
+            CurrentUserService currentUserService,
+            CancellationToken cancellationToken) =>
+        {
+            var userId = await currentUserService.GetUserIdAsync(user);
+
+            if (userId == null)
             {
-                var userId = await currentUserService.GetUserIdAsync(user);
+                return Results.Unauthorized();
+            }
 
-                if (userId == null)
-                {
-                    return Results.Unauthorized();
-                }
+            var isEnglish = CatalogLocalizationService.IsEnglish(request);
 
-                var fridgeProductIds = await dbContext.FridgeItems
+            var fridgeProductIds = await dbContext.FridgeItems
                 .Where(item => item.UserId == userId.Value)
                 .Select(item => item.ProductId)
                 .ToListAsync(cancellationToken);
@@ -32,6 +35,7 @@ public static class GetRecommendedRecipesEndpoint
 
             var recipes = await dbContext.Recipes
                 .AsNoTracking()
+                .Include(recipe => recipe.Category)
                 .Include(recipe => recipe.Ingredients)
                     .ThenInclude(ingredient => ingredient.Product)
                 .Include(recipe => recipe.Ingredients)
@@ -47,13 +51,21 @@ public static class GetRecommendedRecipesEndpoint
                 var availableIngredients = requiredIngredients
                     .Where(ingredient =>
                         fridgeProductIdSet.Contains(ingredient.ProductId))
-                    .Select(ingredient => ingredient.Product.Name)
+                    .Select(ingredient =>
+                        CatalogLocalizationService.Translate(
+                            ingredient.Product.Name,
+                            ingredient.Product.NameEn,
+                            isEnglish))
                     .ToList();
 
                 var missingIngredients = requiredIngredients
                     .Where(ingredient =>
                         !fridgeProductIdSet.Contains(ingredient.ProductId))
-                    .Select(ingredient => ingredient.Product.Name)
+                    .Select(ingredient =>
+                        CatalogLocalizationService.Translate(
+                            ingredient.Product.Name,
+                            ingredient.Product.NameEn,
+                            isEnglish))
                     .ToList();
 
                 decimal matchPercentage = requiredIngredients.Count == 0
@@ -63,25 +75,7 @@ public static class GetRecommendedRecipesEndpoint
 
                 return new RecommendedRecipeResponse
                 {
-                    Recipe = new RecipeResponse
-                    {
-                        Id = recipe.Id,
-                        Name = recipe.Name,
-                        Description = recipe.Description,
-                        ImageUrl = recipe.ImageUrl,
-                        CookingTime = recipe.CookingTime,
-                        Calories = recipe.Calories,
-                        Servings = recipe.Servings,
-                        Instructions = recipe.Instructions,
-
-                        Ingredients = recipe.Ingredients.Select(ingredient =>
-                            new RecipeIngredientResponse
-                            {
-                                Name = ingredient.Product.Name,
-                                Quantity = ingredient.Quantity,
-                                Unit = ingredient.Unit.ShortName
-                            }).ToList()
-                    },
+                    Recipe = RecipeResponseMapper.Map(recipe, isEnglish),
                     AvailableIngredients = availableIngredients,
                     MissingIngredients = missingIngredients,
                     MatchPercentage = Math.Round(matchPercentage, 2)
@@ -95,4 +89,3 @@ public static class GetRecommendedRecipesEndpoint
         });
     }
 }
-
