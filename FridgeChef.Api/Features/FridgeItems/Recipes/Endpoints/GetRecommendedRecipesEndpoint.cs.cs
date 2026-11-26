@@ -40,22 +40,26 @@ public static class GetRecommendedRecipesEndpoint
 
             var result = recipes.Select(recipe =>
             {
-                var availableIngredients = recipe.Ingredients
+                var requiredIngredients = recipe.Ingredients
+                    .Where(ingredient => !ingredient.Product.IsPantryStaple)
+                    .ToList();
+
+                var availableIngredients = requiredIngredients
                     .Where(ingredient =>
                         fridgeProductIdSet.Contains(ingredient.ProductId))
                     .Select(ingredient => ingredient.Product.Name)
                     .ToList();
 
-                var missingIngredients = recipe.Ingredients
+                var missingIngredients = requiredIngredients
                     .Where(ingredient =>
                         !fridgeProductIdSet.Contains(ingredient.ProductId))
                     .Select(ingredient => ingredient.Product.Name)
                     .ToList();
 
-                decimal matchPercentage = recipe.Ingredients.Count == 0
+                decimal matchPercentage = requiredIngredients.Count == 0
                     ? 0
                     : (decimal)availableIngredients.Count /
-                      recipe.Ingredients.Count * 100;
+                      requiredIngredients.Count * 100;
 
                 return new RecommendedRecipeResponse
                 {
@@ -91,3 +95,4 @@ public static class GetRecommendedRecipesEndpoint
         });
     }
 }
+
