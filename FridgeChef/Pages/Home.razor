@@ -1,9 +1,108 @@
 ﻿@page "/"
+@using System.Globalization
+@inject NavigationManager Navigation
 
 <PageTitle>FridgeChef</PageTitle>
 
-<h1>FridgeChef</h1>
+<div class="home-page">
+    <main class="home-layout">
+        <section class="home-hero">
+            <span class="home-pill">@T("Smart kitchen & macros", "Розумна кухня та КБЖВ")</span>
+            <h1>
+                @if (IsEnglish)
+                {
+                    <text>Your space for flavor with <span>FridgeChef!</span></text>
+                }
+                else
+                {
+                    <text>Твій простір смаку разом із <span>FridgeChef!</span></text>
+                }
+            </h1>
+            <p class="home-subtitle">
+                @T(
+                    "Keep track of ingredients in your fridge, plan your shopping list, and calculate daily calorie and macro targets without the hassle.",
+                    "Зберігай продукти в холодильнику, плануй список покупок та розраховуй добову норму КБЖВ без зайвого клопоту."
+                )
+            </p>
 
-<MudButton Variant="Variant.Filled">
-    Тест MudBlazor
-</MudButton>
+            <div class="home-actions">
+                <button class="btn-cream-primary" type="button" @onclick='() => Navigation.NavigateTo("/fridge")'>
+                    @T("Open fridge", "Відкрити холодильник")
+                </button>
+                <button class="btn-cream-outline" type="button" @onclick='() => Navigation.NavigateTo("/kbzhv")'>
+                    @T("Macro calculator", "Калькулятор КБЖВ")
+                </button>
+            </div>
+
+            <div class="home-highlights">
+                <div class="highlight-card">
+                    <div class="highlight-icon" aria-hidden="true">🥗</div>
+                    <div>
+                        <strong>@T("Fewer impulse buys", "Менше зайвих покупок")</strong>
+                        <p>@T("Check what you already have before heading to the store.", "Перевіряй наявні інгредієнти перед походом у магазин.")</p>
+                    </div>
+                </div>
+
+                <div class="highlight-card">
+                    <div class="highlight-icon" aria-hidden="true">✨</div>
+                    <div>
+                        <strong>@T("Quick start", "Швидкий перехід")</strong>
+                        <p>@T("All key sections of the app in one convenient place.", "Усі головні розділи застосунку зібрані поруч в одному місці.")</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="home-panel" aria-label='@T("Application sections", "Розділи застосунку")'>
+            <div class="panel-surface">
+                <div class="panel-top">
+                    <div>
+                        <h2>@T("Quick navigation", "Швидка навігація")</h2>
+                        <p>@T("Choose a section to get started", "Обери потрібний розділ для роботи")</p>
+                    </div>
+                    <span class="panel-badge">FridgeChef</span>
+                </div>
+
+                <div class="section-grid">
+                    <button class="section-card" type="button" @onclick='() => Navigation.NavigateTo("/fridge")'>
+                        <span class="section-emoji" aria-hidden="true">🧊</span>
+                        <span class="section-title">@T("Fridge", "Холодильник")</span>
+                        <span class="section-text">@T("Ingredients and home stock", "Інгредієнти та запаси вдома")</span>
+                    </button>
+
+                    <button class="section-card" type="button" @onclick='() => Navigation.NavigateTo("/shopping-list")'>
+                        <span class="section-emoji" aria-hidden="true">🛍️</span>
+                        <span class="section-title">@T("Shopping list", "Список покупок")</span>
+                        <span class="section-text">@T("Items, categories, and units", "Товари, категорії та одиниці")</span>
+                    </button>
+
+                    <button class="section-card" type="button" @onclick='() => Navigation.NavigateTo("/kbzhv")'>
+                        <span class="section-emoji" aria-hidden="true">🥑</span>
+                        <span class="section-title">@T("Macro calculator", "Калькулятор КБЖВ")</span>
+                        <span class="section-text">@T("Calories, protein, fat, and carbs", "Калорії, білки, жири та вуглеводи")</span>
+                    </button>
+
+                    <button class="section-card" type="button" @onclick='() => Navigation.NavigateTo("/profile")'>
+                        <span class="section-emoji" aria-hidden="true">🌿</span>
+                        <span class="section-title">@T("Profile", "Профіль")</span>
+                        <span class="section-text">@T("Personal details and settings", "Особисті дані та налаштування")</span>
+                    </button>
+                </div>
+
+                <div class="panel-bottom">
+                    <span>@T("Need to sign in?", "Потрібно увійти в акаунт?")</span>
+                    <button class="panel-link" type="button" @onclick='() => Navigation.NavigateTo("/login")'>
+                        @T("Go to sign in →", "Перейти до входу →")
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+@code {
+    private bool IsEnglish =>
+        string.Equals(CultureInfo.CurrentUICulture.TwoLetterISOLanguageName, "en", StringComparison.OrdinalIgnoreCase);
+
+    private string T(string en, string uk) => IsEnglish ? en : uk;
+}
