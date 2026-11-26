@@ -1,4 +1,4 @@
-
+﻿
 using FridgeChef.Api.Data;
 using FridgeChef.Api.Data.Entities;
 using FridgeChef.Api.Features.FridgeItems.Models;
@@ -17,7 +17,7 @@ public static class CreateFridgeItemEndpoint
     public static void Map(RouteGroupBuilder group)
     {
         group.MapPost("/", async Task<Results<Created<FridgeItemResponse>, ProblemHttpResult>>
-            (SaveFridgeItemRequest request, FridgeChefDbContext dbContext, ClaimsPrincipal user, CurrentUserService currentUserService,
+            (HttpRequest httpRequest, SaveFridgeItemRequest request, FridgeChefDbContext dbContext, ClaimsPrincipal user, CurrentUserService currentUserService,
             IHubContext<FridgeChefHub> hubContext, ILogger<FridgeChefHub> logger) =>
         {
             if (string.IsNullOrWhiteSpace(request.Name) ||
@@ -37,6 +37,8 @@ public static class CreateFridgeItemEndpoint
                     statusCode: 401,
                     title: "User is not authenticated");
             }
+
+            var isEnglish = CatalogLocalizationService.IsEnglish(httpRequest);
 
             var productName = request.Name.Trim();
             var unitName = request.Unit.Trim();
@@ -127,8 +129,16 @@ public static class CreateFridgeItemEndpoint
                 {
                     Id = existingItem.Id,
                     Name = existingItem.Product.Name,
+                    DisplayName = CatalogLocalizationService.Translate(
+                        existingItem.Product.Name,
+                        existingItem.Product.NameEn,
+                        isEnglish),
                     Quantity = existingItem.Quantity,
-                    Unit = existingItem.Unit.ShortName
+                    Unit = existingItem.Unit.ShortName,
+                    DisplayUnit = CatalogLocalizationService.Translate(
+                        existingItem.Unit.ShortName,
+                        existingItem.Unit.ShortNameEn,
+                        isEnglish)
                 };
 
                 return TypedResults.Created(
@@ -164,8 +174,12 @@ public static class CreateFridgeItemEndpoint
             {
                 Id = item.Id,
                 Name = product.Name,
+                DisplayName = CatalogLocalizationService.Translate(
+                    product.Name, product.NameEn, isEnglish),
                 Quantity = item.Quantity,
-                Unit = unit.ShortName
+                Unit = unit.ShortName,
+                DisplayUnit = CatalogLocalizationService.Translate(
+                    unit.ShortName, unit.ShortNameEn, isEnglish)
             };
 
             return TypedResults.Created(
@@ -176,3 +190,4 @@ public static class CreateFridgeItemEndpoint
         .ProducesProblem(401);
     }
 }
+

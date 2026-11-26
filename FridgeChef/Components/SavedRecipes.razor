@@ -27,7 +27,7 @@
                          style="cursor:pointer;"
                          @onclick="() => SelectRecipe(r.Id)"
                          @onkeydown="e => HandleRecipeKeyDown(e, r.Id)">
-                        <RecipeCard Recipe="r" />
+                        <RecipeCard Recipe="r" UseLocalizedApiTitle="true" />
                     </div>
                 </MudItem>
             }

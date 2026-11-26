@@ -1,5 +1,4 @@
-﻿
-using FridgeChef.Api.Data;
+﻿using FridgeChef.Api.Data;
 using FridgeChef.Api.Features.FridgeItems.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +12,10 @@ public static class GetFridgeItemsEndpoint
     public static void Map(RouteGroupBuilder group)
     {
         group.MapGet("/", async Task<Results<Ok<List<FridgeItemResponse>>, ProblemHttpResult>>
-            (FridgeChefDbContext dbContext, ClaimsPrincipal user, CurrentUserService currentUserService) =>
+            (HttpRequest request,
+             FridgeChefDbContext dbContext,
+             ClaimsPrincipal user,
+             CurrentUserService currentUserService) =>
         {
             var userId = await currentUserService.GetUserIdAsync(user);
 
@@ -23,6 +25,8 @@ public static class GetFridgeItemsEndpoint
                     statusCode: 401,
                     title: "User is not authenticated");
             }
+
+            var isEnglish = CatalogLocalizationService.IsEnglish(request);
 
             var fridgeItems = await dbContext.FridgeItems
                 .AsNoTracking()
@@ -35,8 +39,12 @@ public static class GetFridgeItemsEndpoint
             {
                 Id = x.Id,
                 Name = x.Product.Name,
+                DisplayName = CatalogLocalizationService.Translate(
+                    x.Product.Name, x.Product.NameEn, isEnglish),
                 Quantity = x.Quantity,
-                Unit = x.Unit.ShortName
+                Unit = x.Unit.ShortName,
+                DisplayUnit = CatalogLocalizationService.Translate(
+                    x.Unit.ShortName, x.Unit.ShortNameEn, isEnglish)
             }).ToList();
 
             return TypedResults.Ok(items);

@@ -1,4 +1,4 @@
-@using Microsoft.AspNetCore.Authorization
+﻿@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @attribute [Authorize]
 @page "/profile"
@@ -352,8 +352,15 @@
 
             try
             {
-                var savedRecipes = await Http.GetFromJsonAsync<List<RecipeSummary>>(
-                    "api/recipes/saved");
+                using var request = FridgeChef.Services.LocalizedApiRequest.Create(
+                    HttpMethod.Get, "api/recipes/saved");
+
+                using var response = await Http.SendAsync(request);
+
+                response.EnsureSuccessStatusCode();
+
+                var savedRecipes = await response.Content
+                    .ReadFromJsonAsync<List<RecipeSummary>>();
 
                 Store.SetSavedRecipes(savedRecipes ?? new List<RecipeSummary>());
             }
@@ -450,3 +457,4 @@
             forceLoad: true);
     }
 }
+

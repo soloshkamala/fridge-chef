@@ -23,4 +23,11 @@ public class Recipe
     public RecipeCategory Category { get; set; } = null!;
 
     public ICollection<RecipeIngredient> Ingredients { get; set; } = new List<RecipeIngredient>();
+
+    public string? NameEn { get; set; }
+
+    public string? DescriptionEn { get; set; }
+
+    public string? InstructionsEn { get; set; }
+
 }

@@ -33,7 +33,7 @@
 
         <MudText Typo="Typo.subtitle2"
                  Class="recipe-title">
-            @(UseDatabaseTitle? Recipe.Title: GetLocalizedTitle())
+            @((UseDatabaseTitle || UseLocalizedApiTitle) ? Recipe.Title : GetLocalizedTitle())
         </MudText>
 
         <div class="d-flex align-center flex-wrap mt-2"
@@ -127,6 +127,9 @@
 
     [Parameter]
     public bool UseDatabaseTitle { get; set; } = false;
+
+    [Parameter]
+    public bool UseLocalizedApiTitle { get; set; } = false;
 
     private string GetLocalizedTitle()
     {

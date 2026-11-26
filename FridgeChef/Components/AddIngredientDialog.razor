@@ -5,7 +5,7 @@
 
 <MudDialog Class="ingredient-dialog" Options="@(new DialogOptions { BackdropClick = false })">
     <TitleContent>
-        <MudText Typo="Typo.h6">@Ingredient.Name</MudText>
+        <MudText Typo="Typo.h6">@Ingredient.LocalizedName</MudText>
     </TitleContent>
     <DialogContent>
         <EditForm Model="@model" OnValidSubmit="Add">
@@ -113,7 +113,11 @@
         MudDialog.Cancel();
     }
 
-    private string GetUnitTranslation(string unit) => unit switch
+    private string GetUnitTranslation(string unit) =>
+        Ingredient.DisplayUnits.TryGetValue(unit, out var translated)
+            && !string.IsNullOrWhiteSpace(translated)
+            ? translated
+            : unit switch
     {
         "шт" => Localizer["UnitPieces"].Value,
         "мл" => Localizer["UnitMilliliters"].Value,
@@ -123,3 +127,4 @@
         _ => unit
     };
 }
+

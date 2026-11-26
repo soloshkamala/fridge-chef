@@ -1,5 +1,4 @@
-﻿
-using FridgeChef.Api.Data;
+﻿using FridgeChef.Api.Data;
 using FridgeChef.Api.Features.FridgeItems.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +12,11 @@ public static class GetFridgeItemByIdEndpoint
     public static void Map(RouteGroupBuilder group)
     {
         group.MapGet("/{id:int}", async Task<Results<Ok<FridgeItemResponse>, ProblemHttpResult>>
-            (int id, FridgeChefDbContext dbContext, ClaimsPrincipal user, CurrentUserService currentUserService) =>
+            (int id,
+             HttpRequest request,
+             FridgeChefDbContext dbContext,
+             ClaimsPrincipal user,
+             CurrentUserService currentUserService) =>
         {
             var userId = await currentUserService.GetUserIdAsync(user);
 
@@ -23,6 +26,8 @@ public static class GetFridgeItemByIdEndpoint
                     statusCode: 401,
                     title: "User is not authenticated");
             }
+
+            var isEnglish = CatalogLocalizationService.IsEnglish(request);
 
             var fridgeItem = await dbContext.FridgeItems
                 .AsNoTracking()
@@ -42,8 +47,16 @@ public static class GetFridgeItemByIdEndpoint
             {
                 Id = fridgeItem.Id,
                 Name = fridgeItem.Product.Name,
+                DisplayName = CatalogLocalizationService.Translate(
+                    fridgeItem.Product.Name,
+                    fridgeItem.Product.NameEn,
+                    isEnglish),
                 Quantity = fridgeItem.Quantity,
-                Unit = fridgeItem.Unit.ShortName
+                Unit = fridgeItem.Unit.ShortName,
+                DisplayUnit = CatalogLocalizationService.Translate(
+                    fridgeItem.Unit.ShortName,
+                    fridgeItem.Unit.ShortNameEn,
+                    isEnglish)
             };
 
             return TypedResults.Ok(item);

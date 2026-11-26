@@ -9,5 +9,12 @@
         public double Quantity { get; set; }
 
         public string Unit { get; set; } = "";
+
+        public string DisplayUnit { get; set; } = "";
+
+        public string LocalizedUnit =>
+            string.IsNullOrWhiteSpace(DisplayUnit)
+                ? Ingredient.GetLocalizedUnit(Unit)
+                : DisplayUnit;
     }
 }

@@ -8,4 +8,10 @@ public class Unit
     public string Name { get; set; } = "";
 
     public string ShortName { get; set; } = "";
+
+    public string? NameEn { get; set; }
+
+    public string? ShortNameEn { get; set; }
+
 }
+

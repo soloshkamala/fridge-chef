@@ -9,4 +9,10 @@ public class Product
     public int CategoryId { get; set; }
 
     public Category Category { get; set; } = null!;
+
+    public bool IsPantryStaple { get; set; } = false;
+
+    public string? NameEn { get; set; }
+
 }
+

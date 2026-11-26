@@ -34,6 +34,10 @@ namespace FridgeChef.Api.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("NameEn")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
@@ -140,8 +144,17 @@ namespace FridgeChef.Api.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("IsPantryStaple")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("NameEn")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
@@ -191,6 +204,9 @@ namespace FridgeChef.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("DescriptionEn")
+                        .HasColumnType("text");
+
                     b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasColumnType("text");
@@ -199,8 +215,14 @@ namespace FridgeChef.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("InstructionsEn")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NameEn")
                         .HasColumnType("text");
 
                     b.Property<int>("Servings")
@@ -211,68 +233,6 @@ namespace FridgeChef.Api.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("Recipes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Calories = 450,
-                            CategoryId = 4,
-                            CookingTime = 35,
-                            Description = "Паста з курячим філе у ніжному сирному соусі.",
-                            ImageUrl = "",
-                            Instructions = "1. Закип'ятіть воду, посоліть та відваріть макарони відповідно до інструкції на упаковці.\n2. Наріжте куряче філе невеликими шматочками.\n3. Розігрійте пательню з невеликою кількістю олії та обсмажте курку до повної готовності.\n4. Додайте молоко та натертий сир. Перемішуйте на невеликому вогні, поки сир не розплавиться.\n5. Додайте готові макарони до соусу та добре перемішайте.\n6. Прогрійте все разом ще хвилину та подавайте.",
-                            Name = "Паста з куркою",
-                            Servings = 2
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Calories = 180,
-                            CategoryId = 2,
-                            CookingTime = 40,
-                            Description = "Ароматний овочевий суп із помідорами, морквою та цибулею.",
-                            ImageUrl = "",
-                            Instructions = "1. Помийте помідори, моркву та цибулю.\n2. Наріжте цибулю невеликими шматочками, а моркву натріть на тертці.\n3. Обсмажте цибулю та моркву в каструлі з невеликою кількістю олії протягом кількох хвилин.\n4. Додайте нарізані помідори та тушкуйте овочі приблизно 5–7 хвилин.\n5. Влийте воду, доведіть до кипіння та варіть на невеликому вогні приблизно 15 хвилин.\n6. За бажанням подрібніть суп блендером. Додайте сіль і спеції за смаком.",
-                            Name = "Томатний суп",
-                            Servings = 2
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Calories = 320,
-                            CategoryId = 1,
-                            CookingTime = 15,
-                            Description = "Ніжний омлет із яйцями, молоком та розплавленим сиром.",
-                            ImageUrl = "",
-                            Instructions = "1. Розбийте яйця в глибоку миску.\n2. Додайте молоко, сіль і перець. Збийте виделкою до однорідності.\n3. Натріть сир на тертці.\n4. Розігрійте пательню з невеликою кількістю масла або олії.\n5. Вилийте яєчну суміш на пательню та готуйте на невеликому вогні.\n6. Коли омлет почне застигати, додайте сир.\n7. Накрийте кришкою та готуйте до повної готовності яєць.",
-                            Name = "Омлет із сиром",
-                            Servings = 1
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Calories = 120,
-                            CategoryId = 3,
-                            CookingTime = 10,
-                            Description = "Легкий свіжий салат із сезонних овочів.",
-                            ImageUrl = "",
-                            Instructions = "1. Ретельно помийте помідори та огірки.\n2. Наріжте помідори невеликими часточками.\n3. Наріжте огірки кружальцями або півкружальцями.\n4. Перекладіть овочі в салатницю та обережно перемішайте.\n5. Додайте сіль, перець та заправку за смаком.\n6. Перемішайте салат ще раз і подавайте.",
-                            Name = "Салат із помідорами та огірками",
-                            Servings = 2
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Calories = 390,
-                            CategoryId = 4,
-                            CookingTime = 40,
-                            Description = "Поживна гречка з обсмаженим курячим філе та цибулею.",
-                            ImageUrl = "",
-                            Instructions = "1. Промийте гречку під проточною водою.\n2. Перекладіть її в каструлю, залийте водою та варіть до готовності відповідно до інструкції на упаковці.\n3. Наріжте куряче філе невеликими шматочками.\n4. Очистьте та наріжте цибулю.\n5. Розігрійте пательню з невеликою кількістю олії та обсмажте цибулю.\n6. Додайте куряче філе, посоліть та готуйте до повної готовності.\n7. Подавайте курку з готовою гречкою.",
-                            Name = "Гречка з куркою",
-                            Servings = 2
-                        });
                 });
 
             modelBuilder.Entity("FridgeChef.Api.Data.Entities.RecipeCategory", b =>
@@ -287,34 +247,15 @@ namespace FridgeChef.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("NameEn")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
                         .IsUnique();
 
                     b.ToTable("RecipeCategories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Сніданки"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Супи"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "Салати"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Name = "Основні страви"
-                        });
                 });
 
             modelBuilder.Entity("FridgeChef.Api.Data.Entities.RecipeIngredient", b =>
@@ -399,8 +340,16 @@ namespace FridgeChef.Api.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("NameEn")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("ShortName")
                         .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("ShortNameEn")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 

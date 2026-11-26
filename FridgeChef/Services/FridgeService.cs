@@ -18,7 +18,9 @@ namespace FridgeChef.Services
             {
                 Id = product.Id,
                 Name = product.Name,
-                AllowedUnits = product.AllowedUnits
+                DisplayName = product.DisplayName,
+                AllowedUnits = product.AllowedUnits,
+                DisplayUnits = product.DisplayUnits
             }).ToList();
         }
 
@@ -64,3 +66,4 @@ namespace FridgeChef.Services
         }
     }
 }
+

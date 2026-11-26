@@ -10,20 +10,23 @@ public static class GetRecommendedRecipesEndpoint
 {
     public static void Map(RouteGroupBuilder group)
     {
-            group.MapGet("/recommended", async (
-               FridgeChefDbContext dbContext,
-               ClaimsPrincipal user,
-               CurrentUserService currentUserService,
-               CancellationToken cancellationToken) =>
+        group.MapGet("/recommended", async (
+            HttpRequest request,
+            FridgeChefDbContext dbContext,
+            ClaimsPrincipal user,
+            CurrentUserService currentUserService,
+            CancellationToken cancellationToken) =>
+        {
+            var userId = await currentUserService.GetUserIdAsync(user);
+
+            if (userId == null)
             {
-                var userId = await currentUserService.GetUserIdAsync(user);
+                return Results.Unauthorized();
+            }
 
-                if (userId == null)
-                {
-                    return Results.Unauthorized();
-                }
+            var isEnglish = CatalogLocalizationService.IsEnglish(request);
 
-                var fridgeProductIds = await dbContext.FridgeItems
+            var fridgeProductIds = await dbContext.FridgeItems
                 .Where(item => item.UserId == userId.Value)
                 .Select(item => item.ProductId)
                 .ToListAsync(cancellationToken);
@@ -32,6 +35,7 @@ public static class GetRecommendedRecipesEndpoint
 
             var recipes = await dbContext.Recipes
                 .AsNoTracking()
+                .Include(recipe => recipe.Category)
                 .Include(recipe => recipe.Ingredients)
                     .ThenInclude(ingredient => ingredient.Product)
                 .Include(recipe => recipe.Ingredients)
@@ -40,44 +44,38 @@ public static class GetRecommendedRecipesEndpoint
 
             var result = recipes.Select(recipe =>
             {
-                var availableIngredients = recipe.Ingredients
+                var requiredIngredients = recipe.Ingredients
+                    .Where(ingredient => !ingredient.Product.IsPantryStaple)
+                    .ToList();
+
+                var availableIngredients = requiredIngredients
                     .Where(ingredient =>
                         fridgeProductIdSet.Contains(ingredient.ProductId))
-                    .Select(ingredient => ingredient.Product.Name)
+                    .Select(ingredient =>
+                        CatalogLocalizationService.Translate(
+                            ingredient.Product.Name,
+                            ingredient.Product.NameEn,
+                            isEnglish))
                     .ToList();
 
-                var missingIngredients = recipe.Ingredients
+                var missingIngredients = requiredIngredients
                     .Where(ingredient =>
                         !fridgeProductIdSet.Contains(ingredient.ProductId))
-                    .Select(ingredient => ingredient.Product.Name)
+                    .Select(ingredient =>
+                        CatalogLocalizationService.Translate(
+                            ingredient.Product.Name,
+                            ingredient.Product.NameEn,
+                            isEnglish))
                     .ToList();
 
-                decimal matchPercentage = recipe.Ingredients.Count == 0
+                decimal matchPercentage = requiredIngredients.Count == 0
                     ? 0
                     : (decimal)availableIngredients.Count /
-                      recipe.Ingredients.Count * 100;
+                      requiredIngredients.Count * 100;
 
                 return new RecommendedRecipeResponse
                 {
-                    Recipe = new RecipeResponse
-                    {
-                        Id = recipe.Id,
-                        Name = recipe.Name,
-                        Description = recipe.Description,
-                        ImageUrl = recipe.ImageUrl,
-                        CookingTime = recipe.CookingTime,
-                        Calories = recipe.Calories,
-                        Servings = recipe.Servings,
-                        Instructions = recipe.Instructions,
-
-                        Ingredients = recipe.Ingredients.Select(ingredient =>
-                            new RecipeIngredientResponse
-                            {
-                                Name = ingredient.Product.Name,
-                                Quantity = ingredient.Quantity,
-                                Unit = ingredient.Unit.ShortName
-                            }).ToList()
-                    },
+                    Recipe = RecipeResponseMapper.Map(recipe, isEnglish),
                     AvailableIngredients = availableIngredients,
                     MissingIngredients = missingIngredients,
                     MatchPercentage = Math.Round(matchPercentage, 2)
