@@ -165,12 +165,26 @@ Earlier email/password and cookie-session routes remain in the codebase for comp
 
 Verify the authorization requirements of each legacy route before using it in a deployment. The long-term relationship between the two sign-in mechanisms remains an area for cleanup.
 
-## Database and catalog validation
+## Database
 
-The API uses `FridgeChefDbContext`, PostgreSQL, and EF Core migrations. Shopping-list creation and updates resolve a product by **product name and category**, resolve a measurement unit by name or short name, and require a matching product–unit association in `ProductUnits`. A product name not present in the catalog, an unknown unit, or a disallowed product/unit combination cannot be saved as a shopping item.
+FridgeChef uses PostgreSQL as its relational database and Entity Framework Core (EF Core) for data access, relationship management, and database migrations.
 
-Shopping-list records are associated with the authenticated application's user ID. The shopping-list API also uses SignalR notifications for changes; the corresponding hub and user-group behavior should be considered when testing real-time UI updates.
+The database consists of interconnected tables organized into the following functional groups:
 
+- **User management:** `Users`, `UserProfiles`, `NutritionProfiles`, `Diets`, and `UserDiets` store user information, nutritional profiles, and dietary preferences.
+- **Product catalog:** `Products`, `Categories`, `Units`, and `ProductUnits` store products, product categories, measurement units, and allowed product-unit combinations.
+- **Fridge management:** `FridgeItems` stores products available in each user's fridge, their quantities, and measurement units.
+- **Shopping list:** `ShoppingItems` stores products added to the user's shopping list, their quantities, measurement units, and purchase status.
+- **Recipe catalog:** `Recipes`, `RecipeCategories`, and `RecipeIngredients` store recipes, their categories, ingredients, nutritional information, and cooking instructions.
+- **User preferences:** `UserFavoriteProducts` and `UserRecipeCollections` store favorite products, saved recipes, and favorite recipes.
+
+Primary and foreign keys ensure referential integrity and maintain relationships between database entities.
+
+The database also supports Ukrainian and English localization of product names, categories, measurement units, recipe names, descriptions, and cooking instructions.
+
+### Entity-Relationship Diagram
+
+The following diagram illustrates the database structure, entities, attributes, and relationships between tables.
 ## Localization
 
 Login-page localization resources are maintained in:
