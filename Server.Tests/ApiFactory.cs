@@ -19,7 +19,6 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     public bool UseTestAuthentication { get; set; }
 
-    // ������ �������� ����������� ��� xUnit
     public ApiFactory()
     {
     }
@@ -87,19 +86,33 @@ public sealed class TestAuthHandler
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
+        var testUser = Request.Headers["X-Test-User"].FirstOrDefault();
+
+        var (userId, email, oid) = testUser switch
+        {
+            "user2" => (
+                "2",
+                "shopping-test2@example.com",
+                "33333333-3333-3333-3333-333333333333"
+            ),
+            _ => (
+                "1",
+                "shopping-test@example.com",
+                "11111111-1111-1111-1111-111111111111"
+            )
+        };
+
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, "1"),
-            new Claim(
-                ClaimTypes.Email,
-                "shopping-test@example.com"),
-            new Claim(ClaimTypes.Name, "Test User"),
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Email, email),
+            new Claim(ClaimTypes.Name, $"Test User {userId}"),
             new Claim("scp", "access_as_user"),
             new Claim(ClaimTypes.Role, "User"),
             new Claim(ClaimTypes.Role, "Admin"),
             new Claim("roles", "User"),
             new Claim("roles", "Admin"),
-            new Claim("oid", "11111111-1111-1111-1111-111111111111"),
+            new Claim("oid", oid),
             new Claim("tid", "22222222-2222-2222-2222-222222222222")
         };
 

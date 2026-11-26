@@ -1,3 +1,5 @@
+﻿
+using FridgeChef.Api.Authentication;
 using FridgeChef.Api.Features.Products;
 using FridgeChef.Api.Services;
 using FridgeChef.Api.Features.Auth;
@@ -11,6 +13,7 @@ using FridgeChef.Api.Middleware;
 using FridgeChef.Api.Data;
 using FridgeChef.Api.Hubs;
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -57,64 +60,95 @@ builder.Services.AddCors(options =>
 });
 
 // AUTHENTICATION
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.Cookie.Name = "FridgeChef.Auth";
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.None;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-
-        options.ExpireTimeSpan = TimeSpan.FromDays(7);
-        options.SlidingExpiration = true;
-
-        options.Events.OnRedirectToLogin = async context =>
+if (builder.Environment.IsEnvironment("E2E"))
+{
+    builder.Services
+        .AddAuthentication("E2E")
+        .AddScheme<AuthenticationSchemeOptions, E2ETestAuthenticationHandler>(
+            "E2E",
+            options => { });
+}
+else
+{
+    builder.Services
+        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddCookie(options =>
         {
-            await Results.Problem(
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "Unauthorized"
-            ).ExecuteAsync(context.HttpContext);
-        };
+            options.Cookie.Name = "FridgeChef.Auth";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.None;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 
-        options.Events.OnRedirectToAccessDenied = async context =>
-        {
-            await Results.Problem(
-                statusCode: StatusCodes.Status403Forbidden,
-                title: "Forbidden"
-            ).ExecuteAsync(context.HttpContext);
-        };
-    });
+            options.ExpireTimeSpan = TimeSpan.FromDays(7);
+            options.SlidingExpiration = true;
 
-builder.Services.AddAuthentication()
-    .AddMicrosoftIdentityWebApi(
-        builder.Configuration.GetSection("AzureAd"),
-        jwtBearerScheme: JwtBearerDefaults.AuthenticationScheme);
-
-builder.Services.Configure<JwtBearerOptions>(
-    JwtBearerDefaults.AuthenticationScheme,
-    options =>
-    {
-        var clientId = builder.Configuration["AzureAd:ClientId"];
-
-        if (!string.IsNullOrWhiteSpace(clientId))
-        {
-            var audiences = options.TokenValidationParameters.ValidAudiences?
-                .ToList() ?? new List<string>();
-
-            if (!string.IsNullOrWhiteSpace(
-                options.TokenValidationParameters.ValidAudience))
+            options.Events.OnRedirectToLogin = async context =>
             {
-                audiences.Add(options.TokenValidationParameters.ValidAudience);
+                await Results.Problem(
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "Unauthorized"
+                ).ExecuteAsync(context.HttpContext);
+            };
+
+            options.Events.OnRedirectToAccessDenied = async context =>
+            {
+                await Results.Problem(
+                    statusCode: StatusCodes.Status403Forbidden,
+                    title: "Forbidden"
+                ).ExecuteAsync(context.HttpContext);
+            };
+        });
+
+    builder.Services.AddAuthentication()
+        .AddMicrosoftIdentityWebApi(
+            builder.Configuration.GetSection("AzureAd"),
+            jwtBearerScheme: JwtBearerDefaults.AuthenticationScheme);
+
+    builder.Services.Configure<JwtBearerOptions>(
+        JwtBearerDefaults.AuthenticationScheme,
+        options =>
+        {
+            var clientId = builder.Configuration["AzureAd:ClientId"];
+
+            if (!string.IsNullOrWhiteSpace(clientId))
+            {
+                var audiences = options.TokenValidationParameters.ValidAudiences?
+                    .ToList() ?? new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(
+                    options.TokenValidationParameters.ValidAudience))
+                {
+                    audiences.Add(
+                        options.TokenValidationParameters.ValidAudience);
+                }
+
+                audiences.Add(clientId);
+                audiences.Add($"api://{clientId}");
+
+                options.TokenValidationParameters.ValidAudiences =
+                    audiences.Distinct().ToArray();
             }
 
-            audiences.Add(clientId);
-            audiences.Add($"api://{clientId}");
+            var existingOnMessageReceived =
+                options.Events.OnMessageReceived;
 
-            options.TokenValidationParameters.ValidAudiences =
-                audiences.Distinct().ToArray();
-        }
-    });
+            options.Events.OnMessageReceived = async context =>
+            {
+                if (existingOnMessageReceived != null)
+                {
+                    await existingOnMessageReceived(context);
+                }
+
+                if (string.IsNullOrEmpty(context.Token) &&
+                    context.Request.Path.StartsWithSegments("/hubs") &&
+                    context.Request.Query.TryGetValue(
+                        "access_token", out var accessToken))
+                {
+                    context.Token = accessToken;
+                }
+            };
+        });
+}
 
 // AUTHORIZATION
 builder.Services.AddAuthorization(options =>
@@ -220,7 +254,8 @@ app.MapGroup("/api/users")
     .WithTags("Users");
 
 // AUTHENTICATION
-app.MapGet("/api/auth/me", (System.Security.Claims.ClaimsPrincipal user) =>
+app.MapGet("/api/auth/me", (
+    System.Security.Claims.ClaimsPrincipal user) =>
 {
     return Results.Ok(new
     {
@@ -230,7 +265,8 @@ app.MapGet("/api/auth/me", (System.Security.Claims.ClaimsPrincipal user) =>
         email = user.FindFirst("preferred_username")?.Value
             ?? user.FindFirst("email")?.Value,
 
-        roles = user.FindAll(System.Security.Claims.ClaimTypes.Role)
+        roles = user.FindAll(
+                System.Security.Claims.ClaimTypes.Role)
             .Concat(user.FindAll("roles"))
             .Concat(user.FindAll("role"))
             .Select(claim => claim.Value)
@@ -246,8 +282,7 @@ app.MapGroup("/api/auth")
     .MapAuthEndpoints()
     .WithTags("Authentication");
 
-// SIGNALR HUB
-// SIGNALR HUB
+// SIGNALR HUBS
 app.MapHub<FridgeChefHub>("/hubs/fridgechef");
 app.MapHub<ShoppingListHub>("/hubs/shopping-list");
 
