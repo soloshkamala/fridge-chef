@@ -62,7 +62,7 @@ public class ShoppingListSignalRService : IAsyncDisposable
                             "Could not acquire API access token.");
                     };
                 })
-                .WithAutomaticReconnect()
+                .WithAutomaticReconnect(new InfiniteRetryPolicy())
                 .Build();
 
             connection.On<int>(
@@ -168,5 +168,16 @@ public class ShoppingListSignalRService : IAsyncDisposable
 
         _disposed = true;
         _connectionLock.Dispose();
+    }
+}
+
+public class InfiniteRetryPolicy : IRetryPolicy
+{
+    public TimeSpan? NextRetryDelay(RetryContext retryContext)
+    {
+        return TimeSpan.FromSeconds(
+            System.Math.Min(
+                System.Math.Pow(2, retryContext.PreviousRetryCount),
+                30));
     }
 }
