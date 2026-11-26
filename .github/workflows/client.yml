@@ -1,0 +1,76 @@
+name: Client CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: fridgechef-client-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build tests
+        run: dotnet build FridgeChef.Tests/FridgeChef.Tests.csproj -c Release
+
+      - name: Install Playwright
+        run: pwsh FridgeChef.Tests/bin/Release/net8.0/playwright.ps1 install --with-deps chromium
+
+      - name: Run tests
+        run: dotnet test FridgeChef.Tests/FridgeChef.Tests.csproj -c Release --no-build
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Generate production configuration
+        env:
+          API_BASE_ADDRESS: ${{ vars.API_BASE_ADDRESS }}
+        run: |
+          test -n "$API_BASE_ADDRESS"
+          jq -n --arg url "$API_BASE_ADDRESS" \
+            '{Api: {BaseAddress: $url}}' \
+            > FridgeChef/wwwroot/appsettings.Production.json
+
+      - name: Publish client
+        run: dotnet publish FridgeChef/FridgeChef.csproj -c Release -o ./publish-client
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy frontend
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: fridgechef-client
+          package: ./publish-client/wwwroot
