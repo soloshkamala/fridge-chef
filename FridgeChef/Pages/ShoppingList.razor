@@ -1,15 +1,17 @@
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @page "/shopping-list"
+@implements IAsyncDisposable
+
 @using FridgeChef.Models
 @using FridgeChef.Components
 @using FridgeChef.Resources
 @using FridgeChef.Services
 @using Microsoft.Extensions.Localization
-@using Microsoft.JSInterop
+
 @inject IStringLocalizer<ShoppingListResource> L
-@inject IJSRuntime JS
 @inject ShoppingItemApiService ShoppingApi
+@inject IShoppingListSignalRService ShoppingSignalR
 
 <PageTitle>@L["PageTitle"]</PageTitle>
 
@@ -22,17 +24,6 @@
         </div>
 
         <div class="shopping-header-actions">
-            <div class="language-switcher">
-                <MudButton Variant="Variant.Text"
-                           OnClick="@(() => ChangeLanguage("uk-UA"))">
-                    UA
-                </MudButton>
-                <MudButton Variant="Variant.Text"
-                           OnClick="@(() => ChangeLanguage("en-US"))">
-                    EN
-                </MudButton>
-            </div>
-
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Add"
@@ -170,11 +161,27 @@
         {
             await LoadItems();
         }
+
+        ShoppingSignalR.ShoppingListChanged += HandleShoppingListChanged;
+
+        try
+        {
+            await ShoppingSignalR.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Shopping List SignalR connection failed: {ex.Message}");
+        }
     }
 
-    private async Task ChangeLanguage(string language)
+    private async Task HandleShoppingListChanged()
     {
-        await JS.InvokeVoidAsync("fridgeChefLanguage.set", language);
+        await InvokeAsync(async () =>
+        {
+            await LoadItems();
+            StateHasChanged();
+        });
     }
 
     private void OpenAddForm()
@@ -225,6 +232,7 @@
                 };
 
             var createdItem = await ShoppingApi.AddAsync(item);
+
             Items.Add(createdItem);
 
             if (!Categories.Contains(createdItem.Category))
@@ -269,6 +277,7 @@
         try
         {
             await ShoppingApi.DeleteAsync(id);
+
             Items.RemoveAll(item => item.Id == id);
 
             Categories = Items
@@ -315,5 +324,12 @@
     private async Task Retry()
     {
         await LoadItems();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        ShoppingSignalR.ShoppingListChanged -= HandleShoppingListChanged;
+
+        await ShoppingSignalR.StopAsync();
     }
 }

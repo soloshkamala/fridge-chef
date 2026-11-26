@@ -98,9 +98,15 @@ builder.Services.AddScoped<RecipesApiService>();
 builder.Services.AddScoped<ShoppingItemApiService>();
 builder.Services.AddScoped<ProfileService>();
 
+// =====================================
 // SIGNALR SERVICES
+// =====================================
+
 builder.Services.AddScoped<FridgeSignalRService>();
-builder.Services.AddScoped<ShoppingListSignalRService>();
+
+builder.Services.AddScoped<
+    IShoppingListSignalRService,
+    ShoppingListSignalRService>();
 
 // =====================================
 // BUILD APPLICATION

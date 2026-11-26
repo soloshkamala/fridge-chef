@@ -5,7 +5,9 @@ using Microsoft.Extensions.Configuration;
 
 namespace FridgeChef.Services;
 
-public class ShoppingListSignalRService : IAsyncDisposable
+public class ShoppingListSignalRService :
+    IShoppingListSignalRService,
+    IAsyncDisposable
 {
     private readonly IAccessTokenProvider _tokenProvider;
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
@@ -69,7 +71,7 @@ public class ShoppingListSignalRService : IAsyncDisposable
                             "Could not acquire API access token.");
                     };
                 })
-                .WithAutomaticReconnect()
+                .WithAutomaticReconnect(new InfiniteRetryPolicy())
                 .Build();
 
             connection.On<int>(
@@ -175,5 +177,16 @@ public class ShoppingListSignalRService : IAsyncDisposable
 
         _disposed = true;
         _connectionLock.Dispose();
+    }
+}
+
+public class InfiniteRetryPolicy : IRetryPolicy
+{
+    public TimeSpan? NextRetryDelay(RetryContext retryContext)
+    {
+        return TimeSpan.FromSeconds(
+            System.Math.Min(
+                System.Math.Pow(2, retryContext.PreviousRetryCount),
+                30));
     }
 }
