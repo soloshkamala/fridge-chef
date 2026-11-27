@@ -712,11 +712,7 @@ JOIN "Recipes" r ON r."Name"=v.recipe JOIN "Products" p ON p."Name"=v.product JO
     """); migrationBuilder.Sql("""
     INSERT INTO "RecipeIngredients"
         ("RecipeId", "ProductId", "Quantity", "UnitId")
-    SELECT
-        (SELECT "Id" FROM "Recipes" WHERE "Name" = v.recipe),
-        (SELECT "Id" FROM "Products" WHERE "Name" = v.product),
-        v.q,
-        (SELECT "Id" FROM "Units" WHERE "ShortName" = v.unit)
+    SELECT r."Id", p."Id", v.q, u."Id"
     FROM (VALUES
         ('Грецький салат', 'Помідори', 250, 'г'),
         ('Грецький салат', 'Огірки', 200, 'г'),
@@ -788,7 +784,10 @@ JOIN "Recipes" r ON r."Name"=v.recipe JOIN "Products" p ON p."Name"=v.product JO
         ('Салат із капусти та моркви', 'Сіль', 0.25, 'ч. л.'),
         ('Салат із капусти та моркви', 'Чорний перець', 1, 'дрібка'),
         ('Салат із капусти та моркви', 'Петрушка', 10, 'г')
-    ) AS v(recipe, product, q, unit);
+    ) AS v(recipe, product, q, unit)
+    JOIN "Recipes" r ON r."Name" = v.recipe
+    JOIN "Products" p ON p."Name" = v.product
+    JOIN "Units" u ON u."ShortName" = v.unit;
     """);
 
             migrationBuilder.Sql("""
@@ -1051,11 +1050,7 @@ JOIN "Recipes" r ON r."Name"=v.recipe JOIN "Products" p ON p."Name"=v.product JO
             migrationBuilder.Sql("""
     INSERT INTO "RecipeIngredients"
         ("RecipeId", "ProductId", "Quantity", "UnitId")
-    SELECT
-        (SELECT "Id" FROM "Recipes" WHERE "Name" = v.recipe),
-        (SELECT "Id" FROM "Products" WHERE "Name" = v.product),
-        v.q,
-        (SELECT "Id" FROM "Units" WHERE "ShortName" = v.unit)
+    SELECT r."Id", p."Id", v.q, u."Id"
     FROM (VALUES
         ('Запечений лосось', 'Лосось', 400, 'г'),
         ('Запечений лосось', 'Лимони', 1, 'шт'),
@@ -1147,7 +1142,10 @@ JOIN "Recipes" r ON r."Name"=v.recipe JOIN "Products" p ON p."Name"=v.product JO
         ('Запечений хек', 'Кріп', 15, 'г'),
         ('Запечений хек', 'Сіль', 0.75, 'ч. л.'),
         ('Запечений хек', 'Чорний перець', 2, 'дрібка')
-    ) AS v(recipe, product, q, unit);
+    ) AS v(recipe, product, q, unit)
+    JOIN "Recipes" r ON r."Name" = v.recipe
+    JOIN "Products" p ON p."Name" = v.product
+    JOIN "Units" u ON u."ShortName" = v.unit;
     """);
             migrationBuilder.Sql("""
     INSERT INTO "Recipes"
@@ -1323,11 +1321,7 @@ JOIN "Recipes" r ON r."Name"=v.recipe JOIN "Products" p ON p."Name"=v.product JO
             migrationBuilder.Sql("""
     INSERT INTO "RecipeIngredients"
         ("RecipeId", "ProductId", "Quantity", "UnitId")
-    SELECT
-        (SELECT "Id" FROM "Recipes" WHERE "Name" = v.recipe),
-        (SELECT "Id" FROM "Products" WHERE "Name" = v.product),
-        v.q,
-        (SELECT "Id" FROM "Units" WHERE "ShortName" = v.unit)
+    SELECT r."Id", p."Id", v.q, u."Id"
     FROM (VALUES
         ('Піца Маргарита', 'Борошно', 250, 'г'),
         ('Піца Маргарита', 'Вода', 150, 'мл'),
@@ -1388,7 +1382,10 @@ JOIN "Recipes" r ON r."Name"=v.recipe JOIN "Products" p ON p."Name"=v.product JO
         ('Фокача', 'Помідори', 150, 'г'),
         ('Фокача', 'Оливки', 80, 'г'),
         ('Фокача', 'Орегано', 1, 'ч. л.')
-    ) AS v(recipe, product, q, unit);
+    ) AS v(recipe, product, q, unit)
+    JOIN "Recipes" r ON r."Name" = v.recipe
+    JOIN "Products" p ON p."Name" = v.product
+    JOIN "Units" u ON u."ShortName" = v.unit;
     """);
             migrationBuilder.Sql("""
     INSERT INTO "Recipes"
@@ -1596,11 +1593,7 @@ JOIN "Recipes" r ON r."Name"=v.recipe JOIN "Products" p ON p."Name"=v.product JO
             migrationBuilder.Sql("""
     INSERT INTO "RecipeIngredients"
         ("RecipeId", "ProductId", "Quantity", "UnitId")
-    SELECT
-        (SELECT "Id" FROM "Recipes" WHERE "Name" = v.recipe),
-        (SELECT "Id" FROM "Products" WHERE "Name" = v.product),
-        v.q,
-        (SELECT "Id" FROM "Units" WHERE "ShortName" = v.unit)
+    SELECT r."Id", p."Id", v.q, u."Id"
     FROM (VALUES
         ('Чізкейк', 'Печиво', 200, 'г'),
         ('Чізкейк', 'Масло', 80, 'г'),
@@ -1672,7 +1665,10 @@ JOIN "Recipes" r ON r."Name"=v.recipe JOIN "Products" p ON p."Name"=v.product JO
         ('Бананові мафіни', 'Кориця', 1, 'ч. л.'),
         ('Бананові мафіни', 'Сіль', 1, 'дрібка'),
         ('Бананові мафіни', 'Шоколад', 100, 'г')
-    ) AS v(recipe, product, q, unit);
+    ) AS v(recipe, product, q, unit)
+    JOIN "Recipes" r ON r."Name" = v.recipe
+    JOIN "Products" p ON p."Name" = v.product
+    JOIN "Units" u ON u."ShortName" = v.unit;
     """);
 
             migrationBuilder.Sql("""
@@ -1841,11 +1837,7 @@ JOIN "Recipes" r ON r."Name"=v.recipe JOIN "Products" p ON p."Name"=v.product JO
             migrationBuilder.Sql("""
     INSERT INTO "RecipeIngredients"
         ("RecipeId", "ProductId", "Quantity", "UnitId")
-    SELECT
-        (SELECT "Id" FROM "Recipes" WHERE "Name" = v.recipe),
-        (SELECT "Id" FROM "Products" WHERE "Name" = v.product),
-        v.q,
-        (SELECT "Id" FROM "Units" WHERE "ShortName" = v.unit)
+    SELECT r."Id", p."Id", v.q, u."Id"
     FROM (VALUES
         ('Брускети з помідорами', 'Багет', 180, 'г'),
         ('Брускети з помідорами', 'Помідори', 300, 'г'),
@@ -1892,7 +1884,10 @@ JOIN "Recipes" r ON r."Name"=v.recipe JOIN "Products" p ON p."Name"=v.product JO
         ('Рулетики з баклажанів', 'Петрушка', 15, 'г'),
         ('Рулетики з баклажанів', 'Сіль', 0.5, 'ч. л.'),
         ('Рулетики з баклажанів', 'Чорний перець', 2, 'дрібка')
-    ) AS v(recipe, product, q, unit);
+    ) AS v(recipe, product, q, unit)
+    JOIN "Recipes" r ON r."Name" = v.recipe
+    JOIN "Products" p ON p."Name" = v.product
+    JOIN "Units" u ON u."ShortName" = v.unit;
     """);
             migrationBuilder.Sql("""
     INSERT INTO "Recipes"
@@ -2016,11 +2011,7 @@ JOIN "Recipes" r ON r."Name"=v.recipe JOIN "Products" p ON p."Name"=v.product JO
             migrationBuilder.Sql("""
     INSERT INTO "RecipeIngredients"
         ("RecipeId", "ProductId", "Quantity", "UnitId")
-    SELECT
-        (SELECT "Id" FROM "Recipes" WHERE "Name" = v.recipe),
-        (SELECT "Id" FROM "Products" WHERE "Name" = v.product),
-        v.q,
-        (SELECT "Id" FROM "Units" WHERE "ShortName" = v.unit)
+    SELECT r."Id", p."Id", v.q, u."Id"
     FROM (VALUES
         ('Банановий смузі', 'Банани', 2, 'шт'),
         ('Банановий смузі', 'Молоко', 300, 'мл'),
@@ -2046,7 +2037,10 @@ JOIN "Recipes" r ON r."Name"=v.recipe JOIN "Products" p ON p."Name"=v.product JO
         ('Ягідний смузі', 'Молоко', 100, 'мл'),
         ('Ягідний смузі', 'Мед', 1, 'ст. л.'),
         ('Ягідний смузі', 'М''ята', 5, 'г')
-    ) AS v(recipe, product, q, unit);
+    ) AS v(recipe, product, q, unit)
+    JOIN "Recipes" r ON r."Name" = v.recipe
+    JOIN "Products" p ON p."Name" = v.product
+    JOIN "Units" u ON u."ShortName" = v.unit;
     """);
             migrationBuilder.Sql("""
     UPDATE "Recipes" AS r
