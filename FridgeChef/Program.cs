@@ -97,13 +97,14 @@ builder.Services.AddScoped<ProductsApiService>();
 builder.Services.AddScoped<RecipesApiService>();
 builder.Services.AddScoped<ShoppingItemApiService>();
 builder.Services.AddScoped<ProfileService>();
+builder.Services.AddScoped<ProfileApiService>();
 
 // =====================================
 // SIGNALR SERVICES
 // =====================================
 
 builder.Services.AddScoped<FridgeSignalRService>();
-
+builder.Services.AddScoped<ProfileSignalRService>();
 builder.Services.AddScoped<
     IShoppingListSignalRService,
     ShoppingListSignalRService>();

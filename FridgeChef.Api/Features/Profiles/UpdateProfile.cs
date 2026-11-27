@@ -1,8 +1,12 @@
 
+using System.Security.Claims;
 using FridgeChef.Api.Data;
 using FridgeChef.Api.Data.Entities;
+using FridgeChef.Api.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using FridgeChef.Api.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace FridgeChef.Api.Features.Profiles;
 
@@ -12,17 +16,31 @@ public static class UpdateProfile
         this RouteGroupBuilder group)
     {
         return group.MapPut("/{id:int}",
-            async Task<Results<Ok<ProfileDto>, NotFound,
-                ValidationProblem, Conflict<string>>> (
+            async Task<Results<
+                Ok<ProfileDto>,
+                NotFound,
+                ValidationProblem,
+                Conflict<string>,
+                UnauthorizedHttpResult>> (
                 int id,
                 UpdateProfileRequest request,
-                FridgeChefDbContext db) =>
+                ClaimsPrincipal user,
+                FridgeChefDbContext db,
+                CurrentUserService currentUser,
+                IHubContext<ProfileHub> profileHub) =>
             {
+                var userId = await currentUser.GetUserIdAsync(user);
+
+                if (userId is null)
+                {
+                    return TypedResults.Unauthorized();
+                }
+
                 if (string.IsNullOrWhiteSpace(request.Name) ||
                     string.IsNullOrWhiteSpace(request.Email) ||
                     !System.Net.Mail.MailAddress.TryCreate(
                         request.Email, out var emailAddress) ||
-                    emailAddress.Address != request.Email)
+                    emailAddress.Address != request.Email.Trim())
                 {
                     return TypedResults.ValidationProblem(
                         new Dictionary<string, string[]>
@@ -45,7 +63,8 @@ public static class UpdateProfile
 
                 var profile = await db.UserProfiles
                     .Include(p => p.User)
-                    .FirstOrDefaultAsync(p => p.Id == id);
+                    .FirstOrDefaultAsync(
+                        p => p.Id == id && p.UserId == userId.Value);
 
                 if (profile is null)
                 {
@@ -92,12 +111,12 @@ public static class UpdateProfile
                     nameParts.Length > 1 ? nameParts[1] : "";
 
                 var existingUserDiets = await db.UserDiets
-                    .Where(ud => ud.UserId == profile.UserId)
+                    .Where(ud => ud.UserId == userId.Value)
                     .ToListAsync();
 
                 var existingFavoriteProducts =
                     await db.UserFavoriteProducts
-                        .Where(ufp => ufp.UserId == profile.UserId)
+                        .Where(ufp => ufp.UserId == userId.Value)
                         .ToListAsync();
 
                 db.UserDiets.RemoveRange(existingUserDiets);
@@ -116,18 +135,14 @@ public static class UpdateProfile
 
                     if (diet is null)
                     {
-                        diet = new Diet
-                        {
-                            Name = dietName
-                        };
-
+                        diet = new Diet { Name = dietName };
                         db.Diets.Add(diet);
                         await db.SaveChangesAsync();
                     }
 
                     db.UserDiets.Add(new UserDiet
                     {
-                        UserId = profile.UserId,
+                        UserId = userId.Value,
                         DietId = diet.Id
                     });
 
@@ -136,47 +151,47 @@ public static class UpdateProfile
 
                 var savedFavoriteProductNames = new List<string>();
 
-                foreach (var productName in favoriteProductNames)
+                if (favoriteProductNames.Count > 0)
                 {
-                    var product = await db.Products
-                        .FirstOrDefaultAsync(p =>
-                            p.Name.ToLower() == productName.ToLower());
+                    const string defaultCategoryName = "Інгредієнти";
 
-                    if (product is null)
+                    await db.Database.ExecuteSqlInterpolatedAsync(
+                        $"""
+                        INSERT INTO "Categories" ("Name")
+                        VALUES ({defaultCategoryName})
+                        ON CONFLICT ("Name") DO NOTHING
+                        """);
+
+                    var category = await db.Categories.FirstAsync(
+                        c => c.Name == defaultCategoryName);
+
+                    foreach (var productName in favoriteProductNames)
                     {
-                        var category = await db.Categories
-                            .FirstOrDefaultAsync(c =>
-                                c.Name == "Інгредієнти");
+                        var product = await db.Products.FirstOrDefaultAsync(
+                            p => p.Name.ToLower() == productName.ToLower());
 
-                        if (category is null)
+                        if (product is null)
                         {
-                            category = new Category
-                            {
-                                Name = "Інгредієнти"
-                            };
+                            await db.Database.ExecuteSqlInterpolatedAsync(
+                                $"""
+                                INSERT INTO "Products" ("Name", "CategoryId")
+                                VALUES ({productName}, {category.Id})
+                                ON CONFLICT ("Name") DO NOTHING
+                                """);
 
-                            db.Categories.Add(category);
-                            await db.SaveChangesAsync();
+                            product = await db.Products.FirstAsync(
+                                p => p.Name.ToLower() == productName.ToLower());
                         }
 
-                        product = new Product
-                        {
-                            Name = productName,
-                            CategoryId = category.Id
-                        };
+                        db.UserFavoriteProducts.Add(
+                            new UserFavoriteProduct
+                            {
+                                UserId = userId.Value,
+                                ProductId = product.Id
+                            });
 
-                        db.Products.Add(product);
-                        await db.SaveChangesAsync();
+                        savedFavoriteProductNames.Add(product.Name);
                     }
-
-                    db.UserFavoriteProducts.Add(
-                        new UserFavoriteProduct
-                        {
-                            UserId = profile.UserId,
-                            ProductId = product.Id
-                        });
-
-                    savedFavoriteProductNames.Add(product.Name);
                 }
 
                 await db.SaveChangesAsync();
@@ -193,6 +208,6 @@ public static class UpdateProfile
 
                 return TypedResults.Ok(profileDto);
             })
-        .RequireAuthorization("ApiWrite");
+            .RequireAuthorization("ApiWrite");
     }
 }

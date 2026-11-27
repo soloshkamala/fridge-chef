@@ -1,6 +1,8 @@
 
+using System.Security.Claims;
 using FridgeChef.Api.Data;
 using FridgeChef.Api.Data.Entities;
+using FridgeChef.Api.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,10 +18,20 @@ public static class CreateProfile
             async Task<Results<
                 Created<ProfileDto>,
                 ValidationProblem,
-                Conflict<string>>> (
+                Conflict<string>,
+                UnauthorizedHttpResult>> (
                 CreateProfileRequest request,
-                FridgeChefDbContext db) =>
+                ClaimsPrincipal user,
+                FridgeChefDbContext db,
+                CurrentUserService currentUser) =>
             {
+                var userId = await currentUser.GetUserIdAsync(user);
+
+                if (userId is null)
+                {
+                    return TypedResults.Unauthorized();
+                }
+
                 if (string.IsNullOrWhiteSpace(request.Name))
                 {
                     return TypedResults.ValidationProblem(
@@ -29,21 +41,15 @@ public static class CreateProfile
                         });
                 }
 
-                if (string.IsNullOrWhiteSpace(request.Email))
+                if (string.IsNullOrWhiteSpace(request.Email) ||
+                    !System.Net.Mail.MailAddress.TryCreate(
+                        request.Email, out var emailAddress) ||
+                    emailAddress.Address != request.Email.Trim())
                 {
                     return TypedResults.ValidationProblem(
                         new Dictionary<string, string[]>
                         {
-                            ["Email"] = ["Email є обов'язковим."]
-                        });
-                }
-
-                if (!request.Email.Contains('@'))
-                {
-                    return TypedResults.ValidationProblem(
-                        new Dictionary<string, string[]>
-                        {
-                            ["Email"] = ["Некоректний email."]
+                            ["Email"] = ["Вкажіть коректний email."]
                         });
                 }
 
@@ -59,24 +65,25 @@ public static class CreateProfile
                         });
                 }
 
-                var email = request.Email.Trim();
+                var dbUser = await db.Users.FirstOrDefaultAsync(
+                    u => u.Id == userId.Value);
 
-                var user = await db.Users.FirstOrDefaultAsync(
-                    u => u.Email.ToLower() == email.ToLower());
-
-                if (user is null)
+                if (dbUser is null)
                 {
-                    return TypedResults.ValidationProblem(
-                        new Dictionary<string, string[]>
-                        {
-                            ["Email"] = [
-                                "Користувача з таким email не знайдено."
-                            ]
-                        });
+                    return TypedResults.Unauthorized();
+                }
+
+                if (!string.Equals(
+                    dbUser.Email,
+                    request.Email.Trim(),
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    return TypedResults.Conflict(
+                        "Email профілю не збігається з email користувача.");
                 }
 
                 if (await db.UserProfiles.AnyAsync(
-                    p => p.UserId == user.Id))
+                    p => p.UserId == userId.Value))
                 {
                     return TypedResults.Conflict(
                         "Профіль для цього користувача вже існує.");
@@ -104,7 +111,7 @@ public static class CreateProfile
                 {
                     var newProfile = new UserProfile
                     {
-                        UserId = user.Id
+                        UserId = userId.Value
                     };
 
                     db.UserProfiles.Add(newProfile);
@@ -119,18 +126,14 @@ public static class CreateProfile
 
                         if (diet is null)
                         {
-                            diet = new Diet
-                            {
-                                Name = dietName
-                            };
-
+                            diet = new Diet { Name = dietName };
                             db.Diets.Add(diet);
                             await db.SaveChangesAsync();
                         }
 
                         db.UserDiets.Add(new UserDiet
                         {
-                            UserId = user.Id,
+                            UserId = userId.Value,
                             DietId = diet.Id
                         });
 
@@ -144,7 +147,6 @@ public static class CreateProfile
                     {
                         const string defaultCategoryName = "Інгредієнти";
 
-                        // Створюємо категорію, якщо її ще немає.
                         await db.Database.ExecuteSqlInterpolatedAsync(
                             $"""
                             INSERT INTO "Categories" ("Name")
@@ -163,7 +165,6 @@ public static class CreateProfile
 
                             if (product is null)
                             {
-                                // Обов'язково вказуємо CategoryId.
                                 await db.Database.ExecuteSqlInterpolatedAsync(
                                     $"""
                                     INSERT INTO "Products" ("Name", "CategoryId")
@@ -179,7 +180,7 @@ public static class CreateProfile
                             db.UserFavoriteProducts.Add(
                                 new UserFavoriteProduct
                                 {
-                                    UserId = user.Id,
+                                    UserId = userId.Value,
                                     ProductId = product.Id
                                 });
 
@@ -192,8 +193,8 @@ public static class CreateProfile
 
                     var profileDto = new ProfileDto(
                         newProfile.Id,
-                        (user.FirstName + " " + user.LastName).Trim(),
-                        user.Email,
+                        (dbUser.FirstName + " " + dbUser.LastName).Trim(),
+                        dbUser.Email,
                         savedDietNames,
                         string.Join(", ", savedFavoriteProductNames)
                     );
@@ -206,11 +207,9 @@ public static class CreateProfile
                 {
                     await transaction.RollbackAsync();
 
-                    // Перевіряємо, чи профіль уже створив
-                    // паралельний запит.
                     var profileExists = await db.UserProfiles
                         .AsNoTracking()
-                        .AnyAsync(p => p.UserId == user.Id);
+                        .AnyAsync(p => p.UserId == userId.Value);
 
                     if (profileExists)
                     {
@@ -221,6 +220,6 @@ public static class CreateProfile
                     throw;
                 }
             })
-        .RequireAuthorization("ApiWrite");
+            .RequireAuthorization("ApiWrite");
     }
 }

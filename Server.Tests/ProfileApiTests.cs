@@ -5,12 +5,17 @@ using FridgeChef.Api.Data;
 using FridgeChef.Api.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using FridgeChef.Api.Features.Profiles;
 using Xunit;
 
 namespace Server.Tests;
 
 public class ProfileApiTests : IAsyncLifetime
 {
+    private const string TestEmail = "shopping-test@example.com";
+    private const string TestObjectId = "11111111-1111-1111-1111-111111111111";
+    private const string TestTenantId = "22222222-2222-2222-2222-222222222222";
+
     private readonly Testcontainers.PostgreSql.PostgreSqlContainer _postgres =
         new Testcontainers.PostgreSql.PostgreSqlBuilder("postgres:16-alpine")
             .WithDatabase("fridgechef_profile_test")
@@ -34,7 +39,9 @@ public class ProfileApiTests : IAsyncLifetime
         _client = _factory.CreateClient();
 
         using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<FridgeChefDbContext>();
+        var db = scope.ServiceProvider
+            .GetRequiredService<FridgeChefDbContext>();
+
         await db.Database.MigrateAsync();
     }
 
@@ -45,34 +52,51 @@ public class ProfileApiTests : IAsyncLifetime
         await _postgres.DisposeAsync();
     }
 
-    // ��������� ����������� � PostgreSQL ����� ���������� ������
-    private async Task EnsureUserAsync(string email, string name)
+    private async Task EnsureUserAsync(string name)
     {
         using var scope = _factory.Services.CreateScope();
 
         var db = scope.ServiceProvider
             .GetRequiredService<FridgeChefDbContext>();
 
-        var existingUser = await db.Users
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+        var user = await db.Users
+            .FirstOrDefaultAsync(
+                u => u.Email.ToLower() == TestEmail.ToLower());
 
-        if (existingUser != null)
-            return;
-
-        var nameParts = name.Split(
-            ' ',
-            2,
-            StringSplitOptions.RemoveEmptyEntries);
-
-        var user = new User
+        if (user == null)
         {
-            Email = email,
-            FirstName = nameParts.Length > 0 ? nameParts[0] : "",
-            LastName = nameParts.Length > 1 ? nameParts[1] : ""
-        };
+            var nameParts = name.Split(
+                ' ',
+                2,
+                StringSplitOptions.RemoveEmptyEntries);
 
-        db.Users.Add(user);
+            user = new User
+            {
+                Email = TestEmail,
+                FirstName = nameParts.Length > 0 ? nameParts[0] : "",
+                LastName = nameParts.Length > 1 ? nameParts[1] : "",
+                EntraObjectId = TestObjectId,
+                EntraTenantId = TestTenantId
+            };
+
+            db.Users.Add(user);
+        }
+        else
+        {
+            user.EntraObjectId = TestObjectId;
+            user.EntraTenantId = TestTenantId;
+        }
+
         await db.SaveChangesAsync();
+
+       
+        var savedUser = await db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Email == TestEmail);
+
+        Assert.NotNull(savedUser);
+        Assert.Equal(TestObjectId, savedUser.EntraObjectId);
+        Assert.Equal(TestTenantId, savedUser.EntraTenantId);
     }
 
     [Fact]
@@ -86,6 +110,8 @@ public class ProfileApiTests : IAsyncLifetime
     [Fact]
     public async Task GetProfile_WhenNotFound_Returns404()
     {
+        await EnsureUserAsync("Test User");
+
         var response = await _client.GetAsync("/api/profiles/999");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -94,14 +120,12 @@ public class ProfileApiTests : IAsyncLifetime
     [Fact]
     public async Task CreateProfile_Returns201Created()
     {
-        var email = $"newuser-{Guid.NewGuid():N}@example.com";
-
-        await EnsureUserAsync(email, "Test User");
+        await EnsureUserAsync("Test User");
 
         var request = new
         {
             name = "Test User",
-            email,
+            email = TestEmail,
             diets = new[] { "Vegetarian" },
             favoriteIngredients = "Tomatoes"
         };
@@ -116,6 +140,8 @@ public class ProfileApiTests : IAsyncLifetime
     [Fact]
     public async Task CreateProfile_WithInvalidData_Returns400()
     {
+        await EnsureUserAsync("Test User");
+
         var request = new
         {
             name = "",
@@ -133,14 +159,12 @@ public class ProfileApiTests : IAsyncLifetime
     [Fact]
     public async Task CreateProfile_WithDuplicateEmail_Returns409()
     {
-        var email = $"duplicate-{Guid.NewGuid():N}@example.com";
-
-        await EnsureUserAsync(email, "First User");
+        await EnsureUserAsync("First User");
 
         var firstProfile = new
         {
             name = "First User",
-            email,
+            email = TestEmail,
             diets = Array.Empty<string>(),
             favoriteIngredients = "Tomatoes"
         };
@@ -155,7 +179,7 @@ public class ProfileApiTests : IAsyncLifetime
         var secondProfile = new
         {
             name = "Second User",
-            email,
+            email = TestEmail,
             diets = Array.Empty<string>(),
             favoriteIngredients = "Apples"
         };
@@ -171,14 +195,12 @@ public class ProfileApiTests : IAsyncLifetime
     [Fact]
     public async Task UpdateProfile_Returns200Ok()
     {
-        var email = $"update-{Guid.NewGuid():N}@example.com";
-
-        await EnsureUserAsync(email, "Original User");
+        await EnsureUserAsync("Original User");
 
         var newProfile = new
         {
             name = "Original User",
-            email,
+            email = TestEmail,
             diets = Array.Empty<string>(),
             favoriteIngredients = "Tomatoes"
         };
@@ -197,7 +219,7 @@ public class ProfileApiTests : IAsyncLifetime
         var updatedProfile = new
         {
             name = "Updated User",
-            email,
+            email = TestEmail,
             diets = new[] { "Vegetarian" },
             favoriteIngredients = "Cheese"
         };
@@ -213,14 +235,12 @@ public class ProfileApiTests : IAsyncLifetime
     [Fact]
     public async Task DeleteProfile_Returns204AndThen404()
     {
-        var email = $"delete-{Guid.NewGuid():N}@example.com";
-
-        await EnsureUserAsync(email, "Delete Test User");
+        await EnsureUserAsync("Delete Test User");
 
         var newProfile = new
         {
             name = "Delete Test User",
-            email,
+            email = TestEmail,
             diets = Array.Empty<string>(),
             favoriteIngredients = "Apples"
         };
@@ -252,14 +272,12 @@ public class ProfileApiTests : IAsyncLifetime
     [Fact]
     public async Task CreateProfile_ConcurrentDuplicateEmail_Returns201And409()
     {
-        var email = $"concurrent-{Guid.NewGuid():N}@example.com";
-
-        await EnsureUserAsync(email, "Concurrent User");
+        await EnsureUserAsync("Concurrent User");
 
         var request = new
         {
             name = "Concurrent User",
-            email,
+            email = TestEmail,
             diets = Array.Empty<string>(),
             favoriteIngredients = "Tomatoes"
         };
@@ -284,5 +302,51 @@ public class ProfileApiTests : IAsyncLifetime
                 HttpStatusCode.Conflict
             },
             statusCodes);
+    }
+
+    [Fact]
+    public async Task GetMyProfile_WhenProfileDoesNotExist_ReturnsOkWithNull()
+    {
+        await EnsureUserAsync("Test User");
+
+        var response = await _client.GetAsync("/api/profiles/me");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var profile = await response.Content.ReadFromJsonAsync<ProfileDto>();
+
+        Assert.Null(profile);
+    }
+
+    [Fact]
+    public async Task GetMyProfile_WhenProfileExists_ReturnsFullProfile()
+    {
+        await EnsureUserAsync("Test User");
+
+        var request = new
+        {
+            name = "Test User",
+            email = TestEmail,
+            diets = new[] { "Vegetarian" },
+            favoriteIngredients = "Tomatoes"
+        };
+
+        var createResponse = await _client.PostAsJsonAsync(
+            "/api/profiles", request);
+
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var response = await _client.GetAsync("/api/profiles/me");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var profile = await response.Content.ReadFromJsonAsync<ProfileDto>();
+
+        Assert.NotNull(profile);
+        Assert.True(profile.Id > 0);
+        Assert.Equal("Test User", profile.Name);
+        Assert.Equal(TestEmail, profile.Email);
+        Assert.Contains("Vegetarian", profile.Diets);
+        Assert.Equal("Tomatoes", profile.FavoriteIngredients);
     }
 }
