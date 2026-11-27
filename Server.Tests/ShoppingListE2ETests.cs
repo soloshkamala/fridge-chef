@@ -15,8 +15,7 @@ namespace Server.Tests;
 public class ShoppingListE2ETests : IAsyncLifetime
 {
     private readonly PostgreSqlContainer postgres =
-        new PostgreSqlBuilder()
-            .WithImage("postgres:16-alpine")
+        new PostgreSqlBuilder("postgres:16-alpine")
             .WithDatabase("shopping_list_e2e")
             .WithUsername("postgres")
             .WithPassword("postgres")
@@ -25,6 +24,7 @@ public class ShoppingListE2ETests : IAsyncLifetime
     private Process? apiProcess;
     private HttpClient client = null!;
     private string apiUrl = "";
+    private readonly System.Collections.Concurrent.ConcurrentQueue<string> apiOutput = new();
 
     public async Task InitializeAsync()
     {
@@ -120,7 +120,9 @@ public class ShoppingListE2ETests : IAsyncLifetime
         {
             FileName = "dotnet",
             WorkingDirectory = apiDirectory,
-            UseShellExecute = false
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
         };
 
         startInfo.ArgumentList.Add("run");
@@ -140,6 +142,10 @@ public class ShoppingListE2ETests : IAsyncLifetime
         apiProcess = Process.Start(startInfo)
             ?? throw new InvalidOperationException(
                 "Could not start the API process.");
+        apiProcess.OutputDataReceived += (_, e) => { if (e.Data != null) apiOutput.Enqueue(e.Data); };
+        apiProcess.ErrorDataReceived += (_, e) => { if (e.Data != null) apiOutput.Enqueue(e.Data); };
+        apiProcess.BeginOutputReadLine();
+        apiProcess.BeginErrorReadLine();
 
         client = new HttpClient
         {
@@ -301,7 +307,7 @@ public class ShoppingListE2ETests : IAsyncLifetime
             if (apiProcess!.HasExited)
             {
                 throw new InvalidOperationException(
-                    $"API process exited with code {apiProcess.ExitCode}.");
+                    $"API process exited with code {apiProcess.ExitCode}." + Environment.NewLine + string.Join(Environment.NewLine, apiOutput));
             }
 
             try
