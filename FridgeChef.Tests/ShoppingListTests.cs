@@ -95,7 +95,18 @@ namespace FridgeChef.Tests
     public class FakeShoppingListSignalRService :
         IShoppingListSignalRService
     {
-        public event Func<Task>? ShoppingListChanged;
+        private Func<Task>? _shoppingListChanged;
+
+        public event Func<Task>? ShoppingListChanged
+        {
+            add => _shoppingListChanged += value;
+            remove => _shoppingListChanged -= value;
+        }
+
+        public Task NotifyShoppingListChangedAsync()
+        {
+            return _shoppingListChanged?.Invoke() ?? Task.CompletedTask;
+        }
 
         public Task StartAsync()
         {
