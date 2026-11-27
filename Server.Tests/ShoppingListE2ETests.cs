@@ -127,6 +127,8 @@ public class ShoppingListE2ETests : IAsyncLifetime
 
         startInfo.ArgumentList.Add("run");
         startInfo.ArgumentList.Add("--no-build");
+        startInfo.ArgumentList.Add("--configuration");
+        startInfo.ArgumentList.Add("Release");
         startInfo.ArgumentList.Add("--no-launch-profile");
         startInfo.ArgumentList.Add("--urls");
         startInfo.ArgumentList.Add(apiUrl);
