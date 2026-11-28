@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using FridgeChef.Api.Features.Profiles;
 using Xunit;
+using FridgeChef.Api.Hubs;
+using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Server.Tests;
 
@@ -98,6 +101,24 @@ public class ProfileApiTests : IAsyncLifetime
         Assert.Equal(TestObjectId, savedUser.EntraObjectId);
         Assert.Equal(TestTenantId, savedUser.EntraTenantId);
     }
+    private HubConnection CreateProfileHubConnection()
+    {
+        return new HubConnectionBuilder()
+            .WithUrl(
+                new Uri(
+                    _factory.Server.BaseAddress,
+                    "/hubs/profile"),
+                options =>
+                {
+                    options.Transports = HttpTransportType.LongPolling;
+
+                    options.HttpMessageHandlerFactory =
+                        _ => _factory.Server.CreateHandler();
+
+                    options.Headers["X-Test-User"] = "user1";
+                })
+            .Build();
+    }
 
     [Fact]
     public async Task GetProfiles_ReturnsOk()
@@ -118,9 +139,21 @@ public class ProfileApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task CreateProfile_Returns201Created()
+    public async Task CreateProfile_Returns201AndSendsProfileChanged()
     {
         await EnsureUserAsync("Test User");
+
+        await using var connection = CreateProfileHubConnection();
+
+        var eventReceived = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        connection.On(
+            "ProfileChanged",
+            () => eventReceived.TrySetResult(true));
+
+        await connection.StartAsync();
+        await connection.InvokeAsync("JoinProfile");
 
         var request = new
         {
@@ -135,6 +168,11 @@ public class ProfileApiTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.NotNull(response.Headers.Location);
+
+        var notificationReceived = await eventReceived.Task.WaitAsync(
+            TimeSpan.FromSeconds(5));
+
+        Assert.True(notificationReceived);
     }
 
     [Fact]
@@ -192,8 +230,9 @@ public class ProfileApiTests : IAsyncLifetime
             secondResponse.StatusCode);
     }
 
+
     [Fact]
-    public async Task UpdateProfile_Returns200Ok()
+    public async Task UpdateProfile_Returns200AndSendsProfileChanged()
     {
         await EnsureUserAsync("Original User");
 
@@ -208,13 +247,22 @@ public class ProfileApiTests : IAsyncLifetime
         var createResponse = await _client.PostAsJsonAsync(
             "/api/profiles", newProfile);
 
-        Assert.Equal(
-            HttpStatusCode.Created,
-            createResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
         var profileUrl = createResponse.Headers.Location;
-
         Assert.NotNull(profileUrl);
+
+        await using var connection = CreateProfileHubConnection();
+
+        var eventReceived = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        connection.On(
+            "ProfileChanged",
+            () => eventReceived.TrySetResult(true));
+
+        await connection.StartAsync();
+        await connection.InvokeAsync("JoinProfile");
 
         var updatedProfile = new
         {
@@ -227,9 +275,12 @@ public class ProfileApiTests : IAsyncLifetime
         var updateResponse = await _client.PutAsJsonAsync(
             profileUrl, updatedProfile);
 
-        Assert.Equal(
-            HttpStatusCode.OK,
-            updateResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+
+        var notificationReceived = await eventReceived.Task.WaitAsync(
+            TimeSpan.FromSeconds(5));
+
+        Assert.True(notificationReceived);
     }
 
     [Fact]

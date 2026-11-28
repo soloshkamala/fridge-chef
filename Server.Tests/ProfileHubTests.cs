@@ -77,19 +77,19 @@ public class ProfileHubTests : IAsyncLifetime
         await using var firstConnection = CreateConnection("user1");
         await using var secondConnection = CreateConnection("user2");
 
-        var firstReceived = new TaskCompletionSource<int>(
+        var firstReceived = new TaskCompletionSource<bool>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
-        var secondReceived = new TaskCompletionSource<int>(
+        var secondReceived = new TaskCompletionSource<bool>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
-        firstConnection.On<int>(
-            "ProfileUpdated",
-            id => firstReceived.TrySetResult(id));
+        firstConnection.On(
+            "ProfileChanged",
+            () => firstReceived.TrySetResult(true));
 
-        secondConnection.On<int>(
-            "ProfileUpdated",
-            id => secondReceived.TrySetResult(id));
+        secondConnection.On(
+            "ProfileChanged",
+            () => secondReceived.TrySetResult(true));
 
         await firstConnection.StartAsync();
         await secondConnection.StartAsync();
@@ -102,12 +102,12 @@ public class ProfileHubTests : IAsyncLifetime
 
         await hubContext.Clients
             .Group(ProfileHubGroups.ForUser(firstUserId))
-            .SendAsync("ProfileUpdated", 123);
+            .SendAsync("ProfileChanged");
 
-        var receivedId = await firstReceived.Task.WaitAsync(
+        var eventReceived = await firstReceived.Task.WaitAsync(
             TimeSpan.FromSeconds(5));
 
-        Assert.Equal(123, receivedId);
+        Assert.True(eventReceived);
 
         await Task.Delay(500);
 
@@ -124,9 +124,9 @@ public class ProfileHubTests : IAsyncLifetime
         var received = new TaskCompletionSource<int>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
-        connection.On<int>(
-            "ProfileUpdated",
-            id => received.TrySetResult(id));
+        connection.On(
+            "ProfileChanged",
+            () => received.TrySetResult(1));
 
         await connection.StartAsync();
 
@@ -138,7 +138,7 @@ public class ProfileHubTests : IAsyncLifetime
 
         await hubContext.Clients
             .Group(ProfileHubGroups.ForUser(firstUserId))
-            .SendAsync("ProfileUpdated", 456);
+            .SendAsync("ProfileChanged");
 
         await Task.Delay(500);
 
@@ -152,22 +152,22 @@ public class ProfileHubTests : IAsyncLifetime
     {
         await using var connection = CreateConnection("user1");
 
-        var received = new TaskCompletionSource<int>(
+        var received = new TaskCompletionSource<bool>(
             TaskCreationOptions.RunContinuationsAsynchronously);
 
-        connection.On<int>(
-            "ProfileUpdated",
-            id => received.TrySetResult(id));
+        connection.On(
+            "ProfileChanged",
+            () => received.TrySetResult(true));
 
         await connection.StartAsync();
 
         await connection.InvokeAsync("JoinProfile");
 
-        // Імітуємо втрату з'єднання та повторне підключення.
+        
         await connection.StopAsync();
         await connection.StartAsync();
 
-        // Після нового підключення групу потрібно приєднати знову.
+        
         await connection.InvokeAsync("JoinProfile");
 
         var hubContext = factory.Services
@@ -175,12 +175,12 @@ public class ProfileHubTests : IAsyncLifetime
 
         await hubContext.Clients
             .Group(ProfileHubGroups.ForUser(firstUserId))
-            .SendAsync("ProfileUpdated", 789);
+            .SendAsync("ProfileChanged");
 
-        var receivedId = await received.Task.WaitAsync(
+        var eventReceived = await received.Task.WaitAsync(
             TimeSpan.FromSeconds(5));
 
-        Assert.Equal(789, receivedId);
+        Assert.True(eventReceived);
     }
 
     private HubConnection CreateConnection(string testUser)
@@ -202,3 +202,4 @@ public class ProfileHubTests : IAsyncLifetime
             .Build();
     }
 }
+

@@ -1,12 +1,14 @@
 
+using System.Diagnostics;
 using System.Security.Claims;
 using FridgeChef.Api.Data;
 using FridgeChef.Api.Data.Entities;
 using FridgeChef.Api.Services;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 using FridgeChef.Api.Hubs;
+using FridgeChef.Api.Observability;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace FridgeChef.Api.Features.Profiles;
 
@@ -15,7 +17,8 @@ public static class UpdateProfile
     public static RouteHandlerBuilder MapUpdateProfile(
         this RouteGroupBuilder group)
     {
-        return group.MapPut("/{id:int}",
+        return group.MapPut(
+            "/{id:int}",
             async Task<Results<
                 Ok<ProfileDto>,
                 NotFound,
@@ -27,7 +30,8 @@ public static class UpdateProfile
                 ClaimsPrincipal user,
                 FridgeChefDbContext db,
                 CurrentUserService currentUser,
-                IHubContext<ProfileHub> profileHub) =>
+                IHubContext<ProfileHub> profileHub,
+                ILogger<Program> logger) =>
             {
                 var userId = await currentUser.GetUserIdAsync(user);
 
@@ -35,6 +39,19 @@ public static class UpdateProfile
                 {
                     return TypedResults.Unauthorized();
                 }
+
+                using var activity =
+                    FridgeTelemetry.ActivitySource.StartActivity(
+                        "Profile.Update");
+
+                activity?.SetTag("profile.operation", "update");
+                activity?.SetTag("profile.user_id", userId.Value);
+                activity?.SetTag("profile.id", id);
+
+                logger.LogInformation(
+                    "Updating profile {ProfileId} for user {UserId}",
+                    id,
+                    userId.Value);
 
                 if (string.IsNullOrWhiteSpace(request.Name) ||
                     string.IsNullOrWhiteSpace(request.Email) ||
@@ -196,6 +213,26 @@ public static class UpdateProfile
 
                 await db.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                logger.LogInformation(
+                    "Profile {ProfileId} updated successfully for user {UserId}",
+                    profile.Id,
+                    userId.Value);
+
+               
+                try
+                {
+                    await profileHub.Clients
+                        .Group(ProfileHubGroups.ForUser(userId.Value))
+                        .SendAsync("ProfileChanged");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(
+                        ex,
+                        "Failed to send ProfileChanged notification for user {UserId}",
+                        userId.Value);
+                }
 
                 var profileDto = new ProfileDto(
                     profile.Id,

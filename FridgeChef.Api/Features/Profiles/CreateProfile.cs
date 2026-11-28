@@ -3,8 +3,12 @@ using System.Security.Claims;
 using FridgeChef.Api.Data;
 using FridgeChef.Api.Data.Entities;
 using FridgeChef.Api.Services;
+using FridgeChef.Api.Hubs;
+using FridgeChef.Api.Observability;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 namespace FridgeChef.Api.Features.Profiles;
 
@@ -23,7 +27,9 @@ public static class CreateProfile
                 CreateProfileRequest request,
                 ClaimsPrincipal user,
                 FridgeChefDbContext db,
-                CurrentUserService currentUser) =>
+                CurrentUserService currentUser,
+                IHubContext<ProfileHub> profileHub,
+                ILogger<Program> logger) =>
             {
                 var userId = await currentUser.GetUserIdAsync(user);
 
@@ -190,6 +196,21 @@ public static class CreateProfile
 
                     await db.SaveChangesAsync();
                     await transaction.CommitAsync();
+
+                    // Повідомляємо лише власника профілю.
+                    try
+                    {
+                        await profileHub.Clients
+                            .Group(ProfileHubGroups.ForUser(userId.Value))
+                            .SendAsync("ProfileChanged");
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(
+                            ex,
+                            "Failed to send ProfileChanged notification for user {UserId}",
+                            userId.Value);
+                    }
 
                     var profileDto = new ProfileDto(
                         newProfile.Id,
