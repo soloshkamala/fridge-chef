@@ -1,4 +1,3 @@
-
 using FridgeChef.Models;
 using Microsoft.JSInterop;
 using System.Text.Json;
@@ -7,13 +6,19 @@ namespace FridgeChef.Services
 {
     public class ProfileService
     {
-        public bool IsLoading { get; private set; } = true;
-        public string? ErrorMessage { get; set; }
+        private readonly ProfileApiService _profileApi;
 
-        public bool SimulateError { get; set; } = false;
-        public bool SimulateEmpty { get; set; } = false;
+        public ProfileService(ProfileApiService profileApi)
+        {
+            _profileApi = profileApi;
+        }
+
+        public bool IsLoading { get; private set; } = true;
+        public string? ErrorMessage { get; private set; }
 
         public UserProfile? User { get; private set; }
+
+        public int? ProfileId { get; private set; }
 
         public List<RecipeSummary> SavedRecipes { get; } = new();
 
@@ -29,80 +34,71 @@ namespace FridgeChef.Services
             ErrorMessage = null;
             SavedRecipes.Clear();
 
-            await Task.Delay(1500);
+            try
+            {
+                var profile = await _profileApi.GetMyProfileAsync();
 
-            if (SimulateError)
+                if (profile is not null)
+                {
+                    ProfileId = profile.Id;
+
+                    User = new UserProfile(
+                        profile.Name,
+                        profile.Email,
+                        "Користувач",
+                        null,
+                        null,
+                        0,
+                        0
+                    );
+                }
+                else
+                {
+                    User = null;
+                    ProfileId = null;
+                }
+            }
+            catch (Exception)
             {
                 ErrorMessage =
-                    "Не вдалося завантажити дані профілю та збережені рецепти.";
+                    "Не вдалося завантажити дані профілю.";
 
-                IsLoading = false;
-                return;
+                User = null;
+                ProfileId = null;
             }
-
-            User = new UserProfile(
-                "Name Surname",
-                "oddbody@gmail.com",
-                "Користувач",
-                null,
-                new DateOnly(2025, 3, 10),
-                4,
-                1
-            );
-
-            if (!SimulateEmpty)
+            finally
             {
-                SavedRecipes.Add(new RecipeSummary(
-                    "1",
-                    "Паста з куркою",
-                    "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600",
-                    25,
-                    440
-                ));
-
-                SavedRecipes.Add(new RecipeSummary(
-                    "2",
-                    "Авокадо тост",
-                    "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600",
-                    15,
-                    320
-                ));
-
-                SavedRecipes.Add(new RecipeSummary(
-                    "3",
-                    "Томатний суп",
-                    "https://images.unsplash.com/photo-1547592180-85f173990554?w=600",
-                    30,
-                    230
-                ));
-
-                SavedRecipes.Add(new RecipeSummary(
-                    "4",
-                    "Салат з тунцем",
-                    "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600",
-                    20,
-                    300
-                ));
+                IsLoading = false;
             }
-
-            IsLoading = false;
         }
 
-
-    public void SetSavedRecipes(IReadOnlyList<RecipeSummary> recipes)
-    {
-        SavedRecipes.Clear();
-        SavedRecipes.AddRange(recipes);
-
-        if (User is not null)
+        public void SetSavedRecipes(IReadOnlyList<RecipeSummary> recipes)
         {
-            User = User with { SavedCount = recipes.Count };
+            SavedRecipes.Clear();
+            SavedRecipes.AddRange(recipes);
+
+            if (User is not null)
+            {
+                User = User with { SavedCount = recipes.Count };
+            }
         }
-    }
-    public void SetMicrosoftProfile(string name, string email, string role)
+
+        public void SetMicrosoftProfile(string name, string email, string role)
         {
             if (User is null)
+            {
+                User = new UserProfile(
+                    name,
+                    email,
+                    role,
+                    null,
+                    null,
+                    SavedRecipes.Count,
+                    0
+                );
+
                 return;
+            }
 
             User = User with
             {
@@ -111,16 +107,41 @@ namespace FridgeChef.Services
                 Badge = role
             };
         }
-        public void SaveProfile(string name, string email)
-        {
-            if (User is null)
-                return;
 
-            User = User with
+        public async Task SaveProfileAsync(ProfileForm form)
+        {
+            var request = new ProfileApiRequest(
+                form.Name ?? "",
+                form.Email ?? "",
+                form.Diets,
+                form.FavoriteIngredients ?? ""
+            );
+
+            ProfileApiDto profile;
+
+            if (ProfileId is null)
             {
-                Name = name,
-                Email = email
-            };
+                profile = await _profileApi.CreateProfileAsync(request);
+            }
+            else
+            {
+                profile = await _profileApi.UpdateProfileAsync(
+                    ProfileId.Value,
+                    request
+                );
+            }
+
+            ProfileId = profile.Id;
+
+            User = new UserProfile(
+                profile.Name,
+                profile.Email,
+                User?.Badge ?? "Користувач",
+                User?.AvatarUrl,
+                User?.JoinedAt,
+                SavedRecipes.Count,
+                User?.FavoriteCatalogs ?? 0
+            );
         }
 
         public async Task SaveSettingsAsync(
@@ -136,8 +157,7 @@ namespace FridgeChef.Services
             );
         }
 
-        public async Task<ProfileForm?> LoadSettingsAsync(
-            IJSRuntime js)
+        public async Task<ProfileForm?> LoadSettingsAsync(IJSRuntime js)
         {
             var json = await js.InvokeAsync<string?>(
                 "localStorage.getItem",

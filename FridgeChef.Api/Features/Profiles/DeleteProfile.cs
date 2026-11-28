@@ -1,5 +1,7 @@
 
+using System.Security.Claims;
 using FridgeChef.Api.Data;
+using FridgeChef.Api.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,12 +13,22 @@ public static class DeleteProfile
         this RouteGroupBuilder group)
     {
         return group.MapDelete("/{id:int}",
-            async Task<Results<NoContent, NotFound>> (
+            async Task<Results<NoContent, NotFound, UnauthorizedHttpResult>> (
                 int id,
-                FridgeChefDbContext db) =>
+                ClaimsPrincipal user,
+                FridgeChefDbContext db,
+                CurrentUserService currentUser) =>
             {
+                var userId = await currentUser.GetUserIdAsync(user);
+
+                if (userId is null)
+                {
+                    return TypedResults.Unauthorized();
+                }
+
                 var profile = await db.UserProfiles
-                    .FirstOrDefaultAsync(p => p.Id == id);
+                    .FirstOrDefaultAsync(
+                        p => p.Id == id && p.UserId == userId.Value);
 
                 if (profile is null)
                 {
@@ -26,21 +38,18 @@ public static class DeleteProfile
                 await using var transaction =
                     await db.Database.BeginTransactionAsync();
 
-                
                 var userDiets = await db.UserDiets
-                    .Where(ud => ud.UserId == profile.UserId)
+                    .Where(ud => ud.UserId == userId.Value)
                     .ToListAsync();
 
                 db.UserDiets.RemoveRange(userDiets);
 
-                
                 var favoriteProducts = await db.UserFavoriteProducts
-                    .Where(ufp => ufp.UserId == profile.UserId)
+                    .Where(ufp => ufp.UserId == userId.Value)
                     .ToListAsync();
 
                 db.UserFavoriteProducts.RemoveRange(favoriteProducts);
 
-               
                 db.UserProfiles.Remove(profile);
 
                 await db.SaveChangesAsync();
@@ -48,6 +57,6 @@ public static class DeleteProfile
 
                 return TypedResults.NoContent();
             })
-        .RequireAuthorization("ApiWrite");
+            .RequireAuthorization("ApiWrite");
     }
 }

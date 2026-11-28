@@ -8,23 +8,23 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.Extensions.Localization
 @using Microsoft.JSInterop
+@using System.Net.Http.Json
 
 @inject AuthenticationStateProvider AuthProvider
 @inject HttpClient Http
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject ProfileService Store
+@inject ProfileApiService ProfileApi
 @inject IStringLocalizer<FridgeChef.Resources.ProfileResource> L
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4 profile-page">
-
 
     <div class="d-flex justify-space-between align-center mb-4">
         <MudText Typo="Typo.h4" Style="font-weight: 700;">
             @L["ProfileTitle"]
         </MudText>
     </div>
-
 
     @if (Store.State == ProfileViewState.Loading)
     {
@@ -60,16 +60,13 @@
     }
     else if (Store.State == ProfileViewState.Error)
     {
-
         <MudPaper Class="pa-6 profile-panel"
                   Elevation="0"
                   data-testid="error">
 
-
             <MudAlert Severity="Severity.Error" Class="mb-4">
                 @L["ProfileLoadError"]
             </MudAlert>
-
 
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
@@ -80,12 +77,10 @@
     }
     else
     {
-
         @if (Store.User is not null)
         {
             <ProfileHeader User="Store.User" />
         }
-
 
         <MudText Typo="Typo.h6" Class="mt-6 mb-3" Style="font-weight: 700;">
             @L["SavedRecipes"]
@@ -117,7 +112,6 @@
                           OnRecipeSelected="HandleRecipeSelected" />
         }
 
-
         <MudPaper Class="pa-5 mt-6 profile-panel"
                   Elevation="0">
 
@@ -127,9 +121,9 @@
 
             <EditForm Model="_form" OnValidSubmit="Save">
                 <DataAnnotationsValidator />
+                <ValidationSummary />
 
                 <MudGrid Spacing="3">
-
 
                     <MudItem xs="12" md="6">
                         <MudTextField T="string"
@@ -142,7 +136,6 @@
                                       FullWidth="true" />
                     </MudItem>
 
-
                     <MudItem xs="12" md="6">
                         <MudTextField T="string"
                                       id="profile-email"
@@ -153,7 +146,6 @@
                                       Immediate="true"
                                       FullWidth="true" />
                     </MudItem>
-
 
                     <MudItem xs="12" md="6">
                         <div class="profile-field">
@@ -179,7 +171,6 @@
                         </div>
                     </MudItem>
 
-
                     <MudItem xs="12" md="6">
                         <div class="profile-field">
                             <label for="favorite-ingredients"
@@ -195,13 +186,33 @@
 
                 </MudGrid>
 
+                @if (!string.IsNullOrWhiteSpace(_saveError))
+                {
+                    <MudAlert Severity="Severity.Error" Class="mt-4">
+                        @_saveError
+                    </MudAlert>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(_saveSuccess))
+                {
+                    <MudAlert Severity="Severity.Success" Class="mt-4">
+                        @_saveSuccess
+                    </MudAlert>
+                }
 
                 <div class="d-flex align-center flex-wrap mt-5"
                      style="gap:12px;">
 
                     <MudButton ButtonType="ButtonType.Submit"
                                Variant="Variant.Filled"
-                               Class="profile-save-button">
+                               Class="profile-save-button"
+                               Disabled="_isSaving">
+                        @if (_isSaving)
+                        {
+                            <MudProgressCircular Size="Size.Small"
+                                                 Indeterminate="true"
+                                                 Class="mr-2" />
+                        }
                         @L["SaveChanges"]
                     </MudButton>
 
@@ -212,7 +223,6 @@
                         @L["Logout"]
                     </MudButton>
                 </div>
-
             </EditForm>
         </MudPaper>
     }
@@ -253,17 +263,17 @@
         min-height: 55px;
     }
 
-        .profile-checkboxes label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            cursor: pointer;
-        }
+    .profile-checkboxes label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        cursor: pointer;
+    }
 
-        .profile-checkboxes input {
-            accent-color: #f97316;
-        }
+    .profile-checkboxes input {
+        accent-color: #f97316;
+    }
 
     .profile-input {
         width: 100%;
@@ -275,10 +285,10 @@
         font-size: 14px;
     }
 
-        .profile-input:focus {
-            outline: 2px solid #fb923c;
-            outline-offset: 1px;
-        }
+    .profile-input:focus {
+        outline: 2px solid #fb923c;
+        outline-offset: 1px;
+    }
 
     .profile-save-button.mud-button-root {
         background-color: #f97316;
@@ -289,115 +299,117 @@
         text-transform: none;
     }
 
-        .profile-save-button.mud-button-root:hover {
-            background-color: #ea580c;
-        }
+    .profile-save-button.mud-button-root:hover {
+        background-color: #ea580c;
+    }
 </style>
 
 @code {
     private ProfileForm _form = new();
     private string? _selectedRecipeId;
 
+    private bool _isSaving;
+    private string? _saveError;
+    private string? _saveSuccess;
+
     protected override async Task OnInitializedAsync()
     {
         await LoadProfileAsync();
     }
 
-
-
     private async Task LoadProfileAsync()
     {
         await Store.LoadAsync();
 
+        if (Store.State == ProfileViewState.Error)
+            return;
+
         var authState = await AuthProvider.GetAuthenticationStateAsync();
         var principal = authState.User;
 
-        if (principal.Identity?.IsAuthenticated == true)
+        if (principal.Identity?.IsAuthenticated != true)
+            return;
+
+        var name = principal.FindFirst("name")?.Value
+            ?? principal.Identity.Name
+            ?? "User";
+
+        var email = principal.FindFirst("preferred_username")?.Value
+            ?? principal.FindFirst("email")?.Value
+            ?? "";
+
+        var role = principal.FindAll("roles")
+            .Concat(principal.FindAll("role"))
+            .Concat(principal.FindAll(
+                System.Security.Claims.ClaimTypes.Role))
+            .Select(c => c.Value)
+            .FirstOrDefault(r => r == "Admin")
+            ?? "User";
+
+        try
         {
-            var name = principal.FindFirst("name")?.Value
-                ?? principal.Identity.Name
-                ?? "User";
+            var apiUser = await Http.GetFromJsonAsync<MicrosoftUserInfo>(
+                "api/auth/me");
 
-            var email = principal.FindFirst("preferred_username")?.Value
-                ?? principal.FindFirst("email")?.Value
-                ?? "";
-
-            var role = principal.FindAll("roles")
-                .Concat(principal.FindAll("role"))
-                .Concat(principal.FindAll(System.Security.Claims.ClaimTypes.Role))
-                .Select(c => c.Value)
-                .FirstOrDefault(r => r == "Admin")
-                ?? "User";
-
-            try
+            if (apiUser is not null)
             {
-                var apiUser = await Http.GetFromJsonAsync<MicrosoftUserInfo>(
-                    "api/auth/me");
-
-                if (apiUser is not null)
-                {
-                    name = apiUser.Name ?? name;
-                    email = apiUser.Email ?? email;
-                    role = apiUser.Roles?.Contains("Admin") == true
-                        ? "Admin"
-                        : "User";
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Could not load Microsoft role: {ex.Message}");
-            }
-
-            Store.SetMicrosoftProfile(name, email, role);
-
-            try
-            {
-                using var request = FridgeChef.Services.LocalizedApiRequest.Create(
-                    HttpMethod.Get, "api/recipes/saved");
-
-                using var response = await Http.SendAsync(request);
-
-                response.EnsureSuccessStatusCode();
-
-                var savedRecipes = await response.Content
-                    .ReadFromJsonAsync<List<RecipeSummary>>();
-
-                Store.SetSavedRecipes(savedRecipes ?? new List<RecipeSummary>());
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Could not load saved recipes: {ex.Message}");
-                Store.SetSavedRecipes(new List<RecipeSummary>());
+                name = apiUser.Name ?? name;
+                email = apiUser.Email ?? email;
+                role = apiUser.Roles?.Contains("Admin") == true
+                    ? "Admin"
+                    : "User";
             }
         }
-
-        if (Store.User is not null &&
-            Store.State != ProfileViewState.Error)
+        catch (Exception ex)
         {
-            var savedSettings = await Store.LoadSettingsAsync(JS);
+            Console.WriteLine(
+                $"Could not load Microsoft user: {ex.Message}");
+        }
 
-            if (savedSettings is not null)
-            {
-                _form = savedSettings;
+        Store.SetMicrosoftProfile(name, email, role);
 
+        try
+        {
+            using var request = LocalizedApiRequest.Create(
+                HttpMethod.Get,
+                "api/recipes/saved");
 
-            }
-            else
-            {
-                _form.Name = Store.User.Name == "Name Surname" &&
-                             System.Globalization.CultureInfo.CurrentUICulture.Name == "uk-UA"
-                    ? "Ім'я Прізвище"
-                    : Store.User.Name;
+            using var response = await Http.SendAsync(request);
+            response.EnsureSuccessStatusCode();
 
-                _form.Email = Store.User.Email;
-            }
+            var savedRecipes = await response.Content
+                .ReadFromJsonAsync<List<RecipeSummary>>();
+
+            Store.SetSavedRecipes(
+                savedRecipes ?? new List<RecipeSummary>());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Could not load saved recipes: {ex.Message}");
+
+            Store.SetSavedRecipes(new List<RecipeSummary>());
+        }
+
+        var savedSettings = await Store.LoadSettingsAsync(JS);
+
+        if (savedSettings is not null)
+        {
+            _form = savedSettings;
+        }
+        else
+        {
+            _form.Name = Store.User?.Name;
+            _form.Email = Store.User?.Email;
+            _form.Diets = new HashSet<string>();
+            _form.FavoriteIngredients = "";
         }
     }
 
-
-
     private Task ReloadAsync()
     {
+        _saveError = null;
+        _saveSuccess = null;
         return LoadProfileAsync();
     }
 
@@ -411,13 +423,9 @@
         var diets = _form.Diets.ToHashSet();
 
         if (selected)
-        {
             diets.Add(diet);
-        }
         else
-        {
             diets.Remove(diet);
-        }
 
         _form.Diets = diets;
     }
@@ -437,13 +445,29 @@
         _selectedRecipeId = recipeId;
     }
 
-
     private async Task Save()
     {
-        Store.SaveProfile(_form.Name!, _form.Email!);
-        await Store.SaveSettingsAsync(JS, _form);
-    }
+        _isSaving = true;
+        _saveError = null;
+        _saveSuccess = null;
 
+        try
+        {
+            await Store.SaveProfileAsync(_form);
+            await Store.SaveSettingsAsync(JS, _form);
+
+            _saveSuccess = "Профіль успішно збережено.";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Could not save profile: {ex.Message}");
+            _saveError = "Не вдалося зберегти профіль. Спробуйте ще раз.";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
 
     private async Task ChangeLanguage(string culture)
     {
@@ -457,4 +481,3 @@
             forceLoad: true);
     }
 }
-

@@ -285,7 +285,7 @@ app.MapGroup("/api/auth")
 // SIGNALR HUBS
 app.MapHub<FridgeChefHub>("/hubs/fridgechef");
 app.MapHub<ShoppingListHub>("/hubs/shopping-list");
-
+app.MapHub<ProfileHub>("/hubs/profile");
 // RUN
 app.Run();
 

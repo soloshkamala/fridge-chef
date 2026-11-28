@@ -111,12 +111,33 @@ public static class GetMyProfile
                 return Results.Unauthorized();
             }
 
-            return Results.Ok(new
-            {
-                UserId = currentUserId.Value,
-                Name = name,
-                Email = dbUser.Email
-            });
+            var profile = await db.UserProfiles
+                .AsNoTracking()
+                .Where(p => p.UserId == currentUserId.Value)
+                .Select(p => new ProfileDto(
+                    p.Id,
+                    (p.User.FirstName + " " + p.User.LastName).Trim(),
+                    p.User.Email,
+                    db.UserDiets
+                        .Where(ud => ud.UserId == p.UserId)
+                        .Select(ud => ud.Diet.Name)
+                        .ToList(),
+                    string.Join(", ",
+                        db.UserFavoriteProducts
+                            .Where(ufp => ufp.UserId == p.UserId)
+                            .OrderBy(ufp => ufp.ProductId)
+                            .Select(ufp => ufp.Product.Name)
+                            .ToList())
+                ))
+                .FirstOrDefaultAsync();
+
+            return Results.Content(
+     profile is null
+         ? "null"
+         : System.Text.Json.JsonSerializer.Serialize(profile),
+     "application/json",
+     System.Text.Encoding.UTF8,
+     StatusCodes.Status200OK);
         })
         .RequireAuthorization("ApiRead");
     }

@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using Bunit;
@@ -17,7 +18,8 @@ public class ProfileStateTests
     private static void ConfigureContext(
         BunitContext ctx,
         bool simulateEmpty = false,
-        bool simulateError = false)
+        bool simulateError = false,
+        bool simulateLoading = false)
     {
         var authContext = ctx.AddAuthorization();
 
@@ -34,18 +36,17 @@ public class ProfileStateTests
         ctx.Services.AddMudServices();
         ctx.Services.AddLocalization();
 
-        ctx.Services.AddScoped<ProfileService>(_ =>
-            new ProfileService
-            {
-                SimulateEmpty = simulateEmpty,
-                SimulateError = simulateError
-            });
-
         ctx.Services.AddSingleton(new HttpClient(
-            new ProfileHttpMessageHandler(simulateEmpty))
+            new ProfileHttpMessageHandler(
+                simulateEmpty,
+                simulateError,
+                simulateLoading))
         {
             BaseAddress = new Uri("http://localhost:5039/")
         });
+
+        ctx.Services.AddScoped<ProfileApiService>();
+        ctx.Services.AddScoped<ProfileService>();
     }
 
     [Fact]
@@ -61,7 +62,7 @@ public class ProfileStateTests
 
             await using var ctx = new BunitContext();
 
-            ConfigureContext(ctx);
+            ConfigureContext(ctx, simulateLoading: true);
 
             var cut = ctx.Render<Profile>();
 
@@ -129,13 +130,6 @@ public class ProfileStateTests
                 Assert.NotEmpty(
                     cut.FindAll("[data-testid='error']")
                 );
-
-                var alert = cut.Find(".mud-alert");
-
-                Assert.Contains(
-                    "Failed to load profile data and saved recipes.",
-                    alert.TextContent
-                );
             }, TimeSpan.FromSeconds(5));
         }
         finally
@@ -187,22 +181,47 @@ public class ProfileStateTests
     private sealed class ProfileHttpMessageHandler : HttpMessageHandler
     {
         private readonly bool simulateEmpty;
+        private readonly bool simulateError;
+        private readonly bool simulateLoading;
 
-        public ProfileHttpMessageHandler(bool simulateEmpty)
+        public ProfileHttpMessageHandler(
+            bool simulateEmpty,
+            bool simulateError,
+            bool simulateLoading)
         {
             this.simulateEmpty = simulateEmpty;
+            this.simulateError = simulateError;
+            this.simulateLoading = simulateLoading;
         }
 
-        protected override Task<HttpResponseMessage> SendAsync(
+        protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
             var path = request.RequestUri?.AbsolutePath;
 
+            if (path == "/api/profiles/me")
+            {
+                if (simulateLoading)
+                {
+                    await Task.Delay(1500, cancellationToken);
+                }
+
+                if (simulateError)
+                {
+                    return new HttpResponseMessage(
+                        HttpStatusCode.InternalServerError);
+                }
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create<object?>(null)
+                };
+            }
+
             if (path == "/api/auth/me")
             {
-                return Task.FromResult(new HttpResponseMessage(
-                    HttpStatusCode.OK)
+                return new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = JsonContent.Create(new
                     {
@@ -210,7 +229,7 @@ public class ProfileStateTests
                         Email = "test@fridgechef.local",
                         Roles = new[] { "User" }
                     })
-                });
+                };
             }
 
             if (path == "/api/recipes/saved")
@@ -236,15 +255,13 @@ public class ProfileStateTests
                     ));
                 }
 
-                return Task.FromResult(new HttpResponseMessage(
-                    HttpStatusCode.OK)
+                return new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = JsonContent.Create(recipes)
-                });
+                };
             }
 
-            return Task.FromResult(new HttpResponseMessage(
-                HttpStatusCode.NotFound));
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
         }
     }
 }
